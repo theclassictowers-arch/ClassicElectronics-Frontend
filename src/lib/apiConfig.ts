@@ -15,8 +15,10 @@ export const API_URL = normalizedApiUrl ||
 
 // Ensure SERVER_BASE hamesha domain + protocol ho (e.g., http://localhost:5001)
 // Is se browser requests seedha backend par jayengi, Next.js router par nahi.
-const baseFromApi = API_URL.split('/api')[0];
-export const SERVER_BASE = trimTrailingSlash(baseFromApi) || (process.env.NODE_ENV === 'production' ? 'https://api.classicelectronics.com.pk' : 'http://localhost:5001');
+const baseFromApi = API_URL.startsWith('http') ? API_URL.split('/api')[0] : '';
+export const SERVER_BASE = normalizedBackendUrl || 
+                          trimTrailingSlash(baseFromApi) || 
+                          (process.env.NODE_ENV === 'production' ? 'https://api.classicelectronics.com.pk' : 'http://localhost:5001');
 
 const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
 

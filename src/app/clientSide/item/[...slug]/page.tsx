@@ -502,7 +502,7 @@ export default function ValveItemDetailPage() {
             {pdfDownloadUrl && (
               <a
                 href={pdfDownloadUrl}
-                download
+                download={`${itemData.name?.replace(/\s+/g, '_') || 'product'}_specifications.pdf`}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-transparent border border-gray-600 text-gray-200 hover:border-white hover:text-white px-8 py-3 rounded-lg font-semibold transition"
