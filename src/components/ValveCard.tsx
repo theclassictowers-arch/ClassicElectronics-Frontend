@@ -83,7 +83,7 @@ const ValveCard: React.FC<ValveCardProps> = ({ valve }) => {
 
             {/* Content */}
             <div className="p-4 flex flex-col flex-1">
-                <Link href={`/clientSide/product/${valve.slug}`} className="block">
+                <Link href={`/clientSide/item/${valve.slug}`} className="block">
                     <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                             <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">
