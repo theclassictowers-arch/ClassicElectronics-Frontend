@@ -11,11 +11,11 @@ interface ProductImageProps {
 }
 
 export default function ProductImage({ src, alt, className, fill, width, height }: ProductImageProps) {
-  // Check if image is an absolute URL (e.g. Unsplash) or a relative backend path
+  // Full URL ensures production requests reach the backend for static files
   const finalSrc = src?.startsWith('http')
     ? src
     : src
-      ? `${SERVER_BASE}${src}`
+      ? `${SERVER_BASE.replace(/\/$/, '')}/${src.replace(/^\//, '')}`
       : '/placeholder-product.png';
 
   return (

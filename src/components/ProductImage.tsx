@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { resolveAssetUrl } from '@/lib/apiConfig';
+import { SERVER_BASE } from '@/lib/apiConfig';
 
 interface ProductImageProps {
   src?: string;
@@ -21,7 +21,10 @@ export default function ProductImage({ src, alt, className, fill, width, height 
     );
   }
 
-  const finalSrc = resolveAssetUrl(src) || '/placeholder-product.png';
+  // Hamesha absolute (full) URL construct karein taake production mein routing issues na hon
+  const finalSrc = src.startsWith('http')
+    ? src
+    : `${SERVER_BASE.replace(/\/$/, '')}/${src.replace(/^\//, '')}`;
 
   return (
     <Image
@@ -31,7 +34,7 @@ export default function ProductImage({ src, alt, className, fill, width, height 
       fill={fill}
       width={!fill ? (width || 800) : undefined}
       height={!fill ? (height || 800) : undefined}
-      unoptimized={true} // Taake local server se image fetch hone mein issue na ho
+      unoptimized={true}
     />
   );
 }
