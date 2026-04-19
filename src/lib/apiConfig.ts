@@ -24,11 +24,11 @@ export const resolveAssetUrl = (value?: string | null): string => {
   if (!url) return '';
   if (ABSOLUTE_URL_PATTERN.test(url)) return url;
 
-  if (url.startsWith('/uploads/')) return `${SERVER_BASE}${url}`;
-  if (url.startsWith('uploads/')) return `${SERVER_BASE}/${url}`;
-
-  if (url.startsWith('/images/')) return url;
-  if (url.startsWith('images/')) return `/${url}`;
-
-  return url;
+  // Agar / se shuru ho raha hai to base URL ke sath concatenate karein
+  // Agar pehle se http se shuru ho raha hai to wahi rehne dein
+  if (url.startsWith('/')) {
+    return `${SERVER_BASE}${url}`;
+  }
+  
+  return `${SERVER_BASE}/${url}`;
 };

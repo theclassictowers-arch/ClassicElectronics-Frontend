@@ -4,14 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react';
 import { getSliders, DEFAULT_SLIDES, type Slide } from '@/services/api';
-import { SERVER_BASE } from '@/lib/apiConfig';
+import { resolveAssetUrl } from '@/lib/apiConfig';
 
-const getFullUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/uploads')) return `${SERVER_BASE}${url}`;
-  return url;
-};
 
 const fallbackSlides: Slide[] = DEFAULT_SLIDES.map((s, i) => ({ ...s, _id: String(i + 1) }));
 

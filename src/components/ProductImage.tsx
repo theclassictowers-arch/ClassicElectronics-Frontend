@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { SERVER_BASE } from '@/lib/apiConfig';
+import { resolveAssetUrl } from '@/lib/apiConfig';
 
 interface ProductImageProps {
   src?: string;
@@ -21,10 +21,7 @@ export default function ProductImage({ src, alt, className, fill, width, height 
     );
   }
 
-  // Hamesha absolute (full) URL construct karein taake production mein routing issues na hon
-  const finalSrc = src.startsWith('http')
-    ? src
-    : `${SERVER_BASE.replace(/\/$/, '')}/${src.replace(/^\//, '')}`;
+  const finalSrc = resolveAssetUrl(src) || '/placeholder-product.png';
 
   return (
     <Image
