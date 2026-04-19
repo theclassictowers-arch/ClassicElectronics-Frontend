@@ -10,6 +10,25 @@ export const API_URL = normalizedApiUrl
   ? normalizedApiUrl
   : normalizedBackendUrl
     ? `${normalizedBackendUrl}/api`
-    : 'http://127.0.0.1:5001/api';
+    : process.env.NODE_ENV === 'production'
+      ? '/api'
+      : 'http://127.0.0.1:5001/api';
 
 export const SERVER_BASE = API_URL.replace(/\/api\/?$/, '');
+
+const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
+
+export const resolveAssetUrl = (value?: string | null): string => {
+  const url = value?.trim();
+
+  if (!url) return '';
+  if (ABSOLUTE_URL_PATTERN.test(url)) return url;
+
+  if (url.startsWith('/uploads/')) return `${SERVER_BASE}${url}`;
+  if (url.startsWith('uploads/')) return `${SERVER_BASE}/${url}`;
+
+  if (url.startsWith('/images/')) return url;
+  if (url.startsWith('images/')) return `/${url}`;
+
+  return url;
+};

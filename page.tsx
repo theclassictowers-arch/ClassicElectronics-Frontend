@@ -1,8 +1,9 @@
 import ProductImage from '@/components/ProductImage';
 import axios from 'axios';
+import { API_URL as API_BASE } from '@/lib/apiConfig';
 
 async function getProduct(id: string) {
-  const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/${id}`);
+  const res = await axios.get(`${API_BASE}/products/${id}`);
   return res.data;
 }
 

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { SERVER_BASE } from '@/lib/apiConfig';
+import { resolveAssetUrl } from '@/lib/apiConfig';
 
 interface ProductImageProps {
   src?: string;
@@ -21,10 +21,7 @@ export default function ProductImage({ src, alt, className, fill, width, height 
     );
   }
 
-  // Check if image is an absolute URL (e.g. Unsplash) or a local path
-  const finalSrc = src.startsWith('http') 
-    ? src 
-    : `${SERVER_BASE}${src}`;
+  const finalSrc = resolveAssetUrl(src) || '/placeholder-product.png';
 
   return (
     <Image

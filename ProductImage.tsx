@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { SERVER_BASE } from '@/lib/apiConfig';
 
 interface ProductImageProps {
   src: string;
@@ -10,12 +11,12 @@ interface ProductImageProps {
 }
 
 export default function ProductImage({ src, alt, className, fill, width, height }: ProductImageProps) {
-  const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
-  
-  // Check if image is an absolute URL (e.g. Unsplash) or a local path
-  const finalSrc = src?.startsWith('http') 
-    ? src 
-    : src ? `${backendURL}${src}` : '/placeholder-product.png';
+  // Check if image is an absolute URL (e.g. Unsplash) or a relative backend path
+  const finalSrc = src?.startsWith('http')
+    ? src
+    : src
+      ? `${SERVER_BASE}${src}`
+      : '/placeholder-product.png';
 
   return (
     <Image

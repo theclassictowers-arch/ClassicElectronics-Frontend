@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import ImageUploader from '@/components/admin/ImageUploader';
 import PdfUploader from '@/components/admin/PdfUploader';
 import { API_URL } from '@/lib/apiConfig';
+import {
+  uploadProductImages,
+  uploadProductPdf,
+  validateImageFiles,
+  validatePdfFile,
+} from '@/services/uploadService';
 
 type AdminCategory = {
   _id: string;
@@ -117,6 +123,14 @@ const sanitizeKeyValueRows = (rows: KeyValueSpecRow[]): KeyValueSpecRow[] =>
 const sanitizeTextRows = (rows: string[]): string[] =>
   rows.map((row) => row.trim()).filter(Boolean);
 
+const getRequestErrorMessage = (error: unknown, fallbackMessage: string) => {
+  if (axios.isAxiosError(error) && typeof error.response?.data?.message === 'string') {
+    return error.response.data.message;
+  }
+
+  return error instanceof Error ? error.message : fallbackMessage;
+};
+
 const ProductsAdmin = () => {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
@@ -124,10 +138,26 @@ const ProductsAdmin = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM_DATA);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [pendingPdf, setPendingPdf] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [pdfUploadError, setPdfUploadError] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
 
   const resetForm = () => {
     setFormData(EMPTY_FORM_DATA);
     setEditingProductId(null);
+    setPendingImages([]);
+    setPendingPdf(null);
+    setSaving(false);
+    setSubmitError(null);
+    setImageUploadError(null);
+    setPdfUploadError(null);
+    setImageUploading(false);
+    setPdfUploading(false);
   };
 
   const closeModal = () => {
@@ -167,7 +197,7 @@ const ProductsAdmin = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -177,7 +207,7 @@ const ProductsAdmin = () => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
     if (!token) {
-      alert('Please login as admin first');
+      setSubmitError('Please login as admin first.');
       return;
     }
 
@@ -189,11 +219,48 @@ const ProductsAdmin = () => {
       !Number.isFinite(parsedStock) ||
       parsedStock < 0
     ) {
-      alert('Price and stock must be valid numbers');
+      setSubmitError('Price and stock must be valid numbers.');
       return;
     }
 
+    const imageValidationError = pendingImages.length > 0
+      ? validateImageFiles(pendingImages, formData.images.length)
+      : null;
+    if (imageValidationError) {
+      setImageUploadError(imageValidationError);
+      return;
+    }
+
+    const pdfValidationError = pendingPdf ? validatePdfFile(pendingPdf) : null;
+    if (pdfValidationError) {
+      setPdfUploadError(pdfValidationError);
+      return;
+    }
+
+    setSubmitError(null);
+    setImageUploadError(null);
+    setPdfUploadError(null);
+    setSaving(true);
+
     try {
+      let uploadedImages = [...formData.images];
+      let uploadedPdfUrl = formData.pdfUrl || '';
+
+      if (pendingImages.length > 0) {
+        setImageUploading(true);
+        const newImageUrls = await uploadProductImages(token, pendingImages);
+        uploadedImages = [...uploadedImages, ...newImageUrls];
+        setFormData((prev) => ({ ...prev, images: uploadedImages }));
+        setPendingImages([]);
+      }
+
+      if (pendingPdf) {
+        setPdfUploading(true);
+        uploadedPdfUrl = await uploadProductPdf(token, pendingPdf);
+        setFormData((prev) => ({ ...prev, pdfUrl: uploadedPdfUrl }));
+        setPendingPdf(null);
+      }
+
       const basicInformation = sanitizeKeyValueRows(formData.specifications.basicInformation);
       const operatingSpecifications = sanitizeKeyValueRows(formData.specifications.operatingSpecifications);
       const electricalSpecifications = sanitizeTextRows(formData.specifications.electricalSpecifications);
@@ -228,9 +295,9 @@ const ProductsAdmin = () => {
         ...formData,
         price: parsedPrice,
         stock: parsedStock,
-        images: formData.images,
+        images: uploadedImages,
         showPrice: formData.showPrice,
-        pdfUrl: formData.pdfUrl || '',
+        pdfUrl: uploadedPdfUrl,
         specifications,
       };
 
@@ -248,7 +315,11 @@ const ProductsAdmin = () => {
       await fetchData();
     } catch (error) {
       console.error('Failed to save product', error);
-      alert('Error saving product');
+      setSubmitError(getRequestErrorMessage(error, 'Error saving product.'));
+    } finally {
+      setSaving(false);
+      setImageUploading(false);
+      setPdfUploading(false);
     }
   };
 
@@ -277,6 +348,14 @@ const ProductsAdmin = () => {
 
   const openEditModal = (product: AdminProduct) => {
     setEditingProductId(product._id);
+    setPendingImages([]);
+    setPendingPdf(null);
+    setSubmitError(null);
+    setImageUploadError(null);
+    setPdfUploadError(null);
+    setImageUploading(false);
+    setPdfUploading(false);
+    setSaving(false);
     setFormData({
       name: product.name || '',
       categoryId: getCategoryId(product.categoryId),
@@ -297,13 +376,57 @@ const ProductsAdmin = () => {
         operatingSpecifications: getKeyValueSections(product.specifications?.operatingSpecifications, [
           { label: 'Connection Type', value: product.specifications?.connectionType || '' },
         ]),
-        electricalSpecifications: getTextSections(product.specifications?.electricalSpecifications, product.specifications?.voltageOptions),
+        electricalSpecifications: getTextSections(
+          product.specifications?.electricalSpecifications,
+          product.specifications?.voltageOptions,
+        ),
         certifications: getTextSections(product.specifications?.certifications),
         features: getTextSections(product.specifications?.features),
         applications: getTextSections(product.specifications?.applications),
       },
     });
     setShowModal(true);
+  };
+
+  const handleAddImageFiles = (files: File[]) => {
+    const validationError = validateImageFiles(files, formData.images.length + pendingImages.length);
+    setImageUploadError(validationError);
+
+    if (validationError) return;
+
+    setPendingImages((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveUploadedImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, imageIndex) => imageIndex !== index),
+    }));
+  };
+
+  const handleRemovePendingImage = (index: number) => {
+    setPendingImages((prev) => prev.filter((_, imageIndex) => imageIndex !== index));
+    setImageUploadError(null);
+  };
+
+  const handleSelectPdf = (file: File | null) => {
+    if (!file) return;
+
+    const validationError = validatePdfFile(file);
+    setPdfUploadError(validationError);
+
+    if (validationError) return;
+
+    setPendingPdf(file);
+  };
+
+  const handleRemoveUploadedPdf = () => {
+    setFormData((prev) => ({ ...prev, pdfUrl: '' }));
+  };
+
+  const handleRemovePendingPdf = () => {
+    setPendingPdf(null);
+    setPdfUploadError(null);
   };
 
   const addKeyValueRow = (section: 'basicInformation' | 'operatingSpecifications') => {
@@ -479,6 +602,12 @@ const ProductsAdmin = () => {
               {editingProductId ? 'Edit Product' : 'Add New Product'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {submitError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  {submitError}
+                </div>
+              )}
+
               <input
                 placeholder="Product Name"
                 className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
@@ -541,11 +670,21 @@ const ProductsAdmin = () => {
               </label>
               <ImageUploader
                 images={formData.images}
-                onChange={(imgs) => setFormData({ ...formData, images: imgs })}
+                pendingFiles={pendingImages}
+                onAddFiles={handleAddImageFiles}
+                onRemoveImage={handleRemoveUploadedImage}
+                onRemovePendingFile={handleRemovePendingImage}
+                uploading={imageUploading}
+                error={imageUploadError}
               />
               <PdfUploader
                 value={formData.pdfUrl}
-                onChange={(pdfUrl) => setFormData({ ...formData, pdfUrl })}
+                pendingFile={pendingPdf}
+                onSelectFile={handleSelectPdf}
+                onRemoveUploaded={handleRemoveUploadedPdf}
+                onRemovePending={handleRemovePendingPdf}
+                uploading={pdfUploading}
+                error={pdfUploadError}
               />
               <textarea
                 placeholder="Description"
@@ -655,14 +794,18 @@ const ProductsAdmin = () => {
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-cyan-600 text-white py-3 rounded font-bold hover:bg-cyan-500"
+                  disabled={saving}
+                  className="flex-1 bg-cyan-600 text-white py-3 rounded font-bold hover:bg-cyan-500 disabled:opacity-60"
                 >
-                  {editingProductId ? 'Update Product' : 'Save Product'}
+                  {saving
+                    ? (editingProductId ? 'Updating Product...' : 'Saving Product...')
+                    : (editingProductId ? 'Update Product' : 'Save Product')}
                 </button>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 bg-transparent border border-gray-600 text-white py-3 rounded font-bold hover:bg-gray-700"
+                  disabled={saving}
+                  className="flex-1 bg-transparent border border-gray-600 text-white py-3 rounded font-bold hover:bg-gray-700 disabled:opacity-60"
                 >
                   Cancel
                 </button>

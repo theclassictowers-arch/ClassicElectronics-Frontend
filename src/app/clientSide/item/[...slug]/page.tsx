@@ -7,7 +7,7 @@ import { ArrowLeft, Check, FileText, Package, Shield, ShoppingCart, Truck, Wrenc
 import { getProductBySlug, getProducts } from '@/services/api';
 import { useCart } from '@/context/CartContext';
 import { matchImagesByProductName } from '@/lib/productImageMatcher';
-import { SERVER_BASE } from '@/lib/apiConfig';
+import { resolveAssetUrl } from '@/lib/apiConfig';
 import ProductImage from '@/components/ProductImage';
 import { allValves } from '@/data/valvesData';
 import { allGoyenValves } from '@/data/goyenValvesData';
@@ -77,12 +77,17 @@ export default function ValveItemDetailPage() {
           const searchResults = await getProducts({ q: lastSegment });
           if (Array.isArray(searchResults) && searchResults.length > 0) {
             product =
-              searchResults.find((p: any) =>
-                p.slug === lastSegment ||
-                p.slug === slug ||
-                p.slug?.includes(lastSegment) ||
-                p.name?.toLowerCase().includes(lastSegment.toLowerCase()),
-              ) || searchResults[0];
+              searchResults.find((p: unknown) => {
+                if (!isProductLookup(p)) return false;
+
+                return (
+                  p.slug === lastSegment ||
+                  p.slug === slug ||
+                  p.slug?.includes(lastSegment) ||
+                  p.name?.toLowerCase().includes(lastSegment.toLowerCase())
+                );
+              }) ||
+              searchResults[0];
           }
         }
 
@@ -157,9 +162,7 @@ export default function ValveItemDetailPage() {
         : ['/images/products/valvesSliderimg.jpeg'];
   const stockLabel = itemData.stockStatus || (itemData.stock ? `${itemData.stock} in stock` : 'In Stock');
   const pdfDownloadUrl = itemData.pdfUrl
-    ? (itemData.pdfUrl.startsWith('http://') || itemData.pdfUrl.startsWith('https://')
-        ? itemData.pdfUrl
-        : `${SERVER_BASE}${itemData.pdfUrl}`)
+    ? resolveAssetUrl(itemData.pdfUrl)
     : '';
   const features = itemData.specifications?.features || itemData.features || [
     'Built with industrial-grade materials',
