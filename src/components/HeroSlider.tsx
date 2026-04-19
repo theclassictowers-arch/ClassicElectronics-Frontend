@@ -47,7 +47,7 @@ const HeroSlider = () => {
             <div
               className="absolute inset-0 bg-center bg-cover opacity-10 mix-blend-overlay transition-transform duration-[10000ms]"
               style={{
-                backgroundImage: `url('${getFullUrl(slide.bgImage)}')`,
+                backgroundImage: `url('${resolveAssetUrl(slide.bgImage)}')`,
                 transform: index === currentSlide ? 'scale(1.1)' : 'scale(1)',
               }}
             />
@@ -108,7 +108,7 @@ const HeroSlider = () => {
               <div
                 className="w-full h-[360px] bg-no-repeat bg-center bg-contain"
                 style={{
-                  backgroundImage: `url('${getFullUrl(slide.bgImage)}')`,
+                  backgroundImage: `url('${resolveAssetUrl(slide.bgImage)}')`,
                 }}
               />
             </div>
