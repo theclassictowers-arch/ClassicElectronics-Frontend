@@ -145,3 +145,17 @@ export const uploadProductPdf = async (token: string, file: File): Promise<strin
     throw new Error(getUploadErrorMessage(error, 'Failed to upload PDF. Please try again.'));
   }
 };
+
+export const deleteFileFromServer = async (token: string, fileUrl: string): Promise<void> => {
+  if (!token?.trim() || !fileUrl) return;
+
+  try {
+    await axios.delete(`${API_URL}/upload/delete`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { fileUrl }, // Backend ko batayen ke kaunsi file hatani hai
+    });
+    console.log(`File deleted successfully: ${fileUrl}`);
+  } catch (error) {
+    console.error('Failed to delete file from server storage:', error);
+  }
+};

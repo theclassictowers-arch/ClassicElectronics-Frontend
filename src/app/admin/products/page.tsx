@@ -12,6 +12,7 @@ import {
   uploadProductPdf,
   validateImageFiles,
   validatePdfFile,
+  deleteFileFromServer,
 } from '@/services/uploadService';
 
 type AdminCategory = {
@@ -331,6 +332,19 @@ const ProductsAdmin = () => {
     }
 
     try {
+      // Pehle product ka data dhoondhen taake files ka pata chal sake
+      const productToDelete = products.find((p) => p._id === id);
+      
+      // Database se delete karne se pehle server se files delete karen
+      if (productToDelete) {
+        if (productToDelete.pdfUrl) await deleteFileFromServer(token, productToDelete.pdfUrl);
+        if (productToDelete.images && productToDelete.images.length > 0) {
+          for (const img of productToDelete.images) {
+            await deleteFileFromServer(token, img);
+          }
+        }
+      }
+
       await api.delete(`products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -397,6 +411,13 @@ const ProductsAdmin = () => {
   };
 
   const handleRemoveUploadedImage = (index: number) => {
+    const token = localStorage.getItem('adminToken');
+    const imageUrl = formData.images[index];
+    
+    if (token && imageUrl) {
+      deleteFileFromServer(token, imageUrl);
+    }
+
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, imageIndex) => imageIndex !== index),
@@ -420,6 +441,10 @@ const ProductsAdmin = () => {
   };
 
   const handleRemoveUploadedPdf = () => {
+    const token = localStorage.getItem('adminToken');
+    if (token && formData.pdfUrl) {
+      deleteFileFromServer(token, formData.pdfUrl);
+    }
     setFormData((prev) => ({ ...prev, pdfUrl: '' }));
   };
 
