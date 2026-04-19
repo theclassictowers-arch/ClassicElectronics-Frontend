@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import api from '@/services/api';
 import axios from 'axios';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import ImageUploader from '@/components/admin/ImageUploader';
@@ -180,16 +181,14 @@ const ProductsAdmin = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
-      const categoryRequest = token
-        ? axios.get(`${API_URL}/categories/admin`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        : axios.get(`${API_URL}/categories`);
-
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // Use the centralized 'api' instance and correct the endpoints
       const [prodRes, catRes] = await Promise.all([
-        axios.get(`${API_URL}/products`),
-        categoryRequest,
+        api.get('products'),
+        api.get('categories', { headers }),
       ]);
+
       setProducts(Array.isArray(prodRes.data) ? (prodRes.data as AdminProduct[]) : []);
       setCategories(Array.isArray(catRes.data) ? (catRes.data as AdminCategory[]) : []);
     } catch (error) {
@@ -302,11 +301,11 @@ const ProductsAdmin = () => {
       };
 
       if (editingProductId) {
-        await axios.put(`${API_URL}/products/${editingProductId}`, payload, {
+        await api.put(`products/${editingProductId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.post(`${API_URL}/products`, payload, {
+        await api.post('products', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -332,7 +331,7 @@ const ProductsAdmin = () => {
     }
 
     try {
-      await axios.delete(`${API_URL}/products/${id}`, {
+      await api.delete(`products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchData();

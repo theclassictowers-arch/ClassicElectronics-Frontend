@@ -6,11 +6,6 @@ import Image from 'next/image';
 import { ModeToggle } from '@/components/ModeToggle';
 
 const TopHeader = () => {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <div className="bg-slate-950 text-white text-xs py-2 px-4 border-b border-gray-800 hidden md:block">
       <div className="container mx-auto flex justify-between items-center">
@@ -42,7 +37,7 @@ const TopHeader = () => {
             +923 111 777 510
           </a>
           <div className="border-l border-gray-700 pl-4">
-            {mounted && <ModeToggle />}
+            <ModeToggle />
           </div>
         </div>
       </div>

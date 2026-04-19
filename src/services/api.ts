@@ -48,7 +48,7 @@ export type GetProductsParams = Partial<{
 
 export const getProducts = async (params?: GetProductsParams) => {
   try {
-    const response = await api.get('/products', {
+    const response = await api.get('products', {
       params: params
         ? {
             ...params,
@@ -66,7 +66,7 @@ export const getProducts = async (params?: GetProductsParams) => {
 
 export const getProduct = async (id: string) => {
   try {
-    const response = await api.get(`/products/${id}`);
+    const response = await api.get(`products/${id}`);
     const data = response.data as unknown;
     if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
     return withMatchedImages(data as Record<string, unknown>);
@@ -78,7 +78,7 @@ export const getProduct = async (id: string) => {
 
 export const getProductBySlug = async (slug: string) => {
   try {
-    const response = await api.get('/products/by-slug', { params: { slug } });
+    const response = await api.get('products/by-slug', { params: { slug } });
     const data = response.data as unknown;
     if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
     return withMatchedImages(data as Record<string, unknown>);
@@ -167,7 +167,7 @@ const findCategoryIdForDummyProduct = (
 
 const productExistsBySlug = async (slug: string): Promise<boolean> => {
   try {
-    await api.get('/products/by-slug', { params: { slug } });
+    await api.get('products/by-slug', { params: { slug } });
     return true;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -185,7 +185,7 @@ export const seedProductsIfMissing = async (
     throw new Error('Admin token is required to seed products');
   }
 
-  const categoriesResponse = await api.get('/categories');
+  const categoriesResponse = await api.get('categories');
   const categories = Array.isArray(categoriesResponse.data)
     ? (categoriesResponse.data as SeedCategory[]).filter(
         (category) => typeof category?._id === 'string' && typeof category?.slug === 'string',
