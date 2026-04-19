@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Camera, Save, Lock, User, Mail, Phone, MapPin } from 'lucide-react';
 import { getAdminProfile, updateAdminProfile, uploadAdminProfileImage } from '@/services/api';
-import { API_URL } from '@/lib/apiConfig';
+import { resolveAssetUrl } from '@/lib/apiConfig';
 
 type AdminProfile = {
   _id: string;
@@ -30,8 +30,6 @@ const AdminProfilePage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const getToken = () => localStorage.getItem('adminToken') || '';
-
-  const backendUrl = API_URL.replace(/\/api$/, '');
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -146,7 +144,7 @@ const AdminProfilePage = () => {
           <div className="relative">
             {profile?.profileImage ? (
               <img
-                src={`${backendUrl}${profile.profileImage}`}
+                src={resolveAssetUrl(profile.profileImage)}
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
               />
