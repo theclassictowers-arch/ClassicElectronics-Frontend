@@ -92,7 +92,8 @@ export default function PdfUploader({
           <a
             href={resolveAssetUrl(value)}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
+            download
             className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm break-all"
           >
             <FileText size={16} />

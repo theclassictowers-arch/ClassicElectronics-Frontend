@@ -3,15 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, Upload, X, Loader2, ImagePlus, ChevronUp, ChevronDown, Link as LinkIcon, Type, AlignLeft, Sparkles } from 'lucide-react';
-import { API_URL as API_BASE, SERVER_BASE } from '@/lib/apiConfig';
+import { API_URL as API_BASE, resolveAssetUrl } from '@/lib/apiConfig';
 import { getSliders, createSlider, updateSlider, deleteSlider, reorderSliders, type Slide } from '@/services/api';
-
-const getFullUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${SERVER_BASE}${url}`;
-  return url;
-};
 
 type SlideFormData = {
   title: string;
@@ -240,7 +233,7 @@ const SlidersAdmin = () => {
                 {/* Thumbnail */}
                 <div className="w-28 h-16 rounded-lg overflow-hidden bg-gray-900 flex-shrink-0 border border-gray-700">
                   {slide.bgImage ? (
-                    <img src={getFullUrl(slide.bgImage)} alt={slide.title} className="w-full h-full object-cover" />
+                    <img src={resolveAssetUrl(slide.bgImage)} alt={slide.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-600">
                       <ImagePlus size={20} />
@@ -356,7 +349,7 @@ const SlidersAdmin = () => {
                 {formData.bgImage ? (
                   <div className="relative mb-3 rounded-xl overflow-hidden border border-gray-700 group">
                     <img
-                      src={getFullUrl(formData.bgImage)}
+                      src={resolveAssetUrl(formData.bgImage)}
                       alt="Slide preview"
                       className="w-full h-48 object-cover"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -472,7 +465,7 @@ const SlidersAdmin = () => {
                       {formData.bgImage && (
                         <div
                           className="absolute inset-0 bg-center bg-cover opacity-10 mix-blend-overlay"
-                          style={{ backgroundImage: `url('${getFullUrl(formData.bgImage)}')` }}
+                          style={{ backgroundImage: `url('${resolveAssetUrl(formData.bgImage)}')` }}
                         />
                       )}
                     </div>

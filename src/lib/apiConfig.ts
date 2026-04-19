@@ -6,15 +6,17 @@ const rawBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
 const normalizedApiUrl = rawApiUrl ? trimTrailingSlash(rawApiUrl) : '';
 const normalizedBackendUrl = rawBackendUrl ? trimTrailingSlash(rawBackendUrl) : '';
 
-export const API_URL = normalizedApiUrl
-  ? normalizedApiUrl
-  : normalizedBackendUrl
-    ? `${normalizedBackendUrl}/api`
-    : process.env.NODE_ENV === 'production'
-      ? '/api'
-      : 'http://127.0.0.1:5001/api';
+const DEFAULT_PROD_API = 'https://api.classicelectronics.com.pk/api';
+const DEFAULT_DEV_API = 'http://localhost:5001/api';
 
-export const SERVER_BASE = API_URL.replace(/\/api\/?$/, '');
+export const API_URL = normalizedApiUrl || 
+                      (normalizedBackendUrl ? `${normalizedBackendUrl}/api` : 
+                      (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API : DEFAULT_DEV_API));
+
+// Ensure SERVER_BASE hamesha domain + protocol ho (e.g., http://localhost:5001)
+// Is se browser requests seedha backend par jayengi, Next.js router par nahi.
+export const SERVER_BASE = API_URL.replace(/\/api\/?$/, '') || 
+                          (process.env.NODE_ENV === 'production' ? 'https://api.classicelectronics.com.pk' : 'http://localhost:5001');
 
 const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
 
