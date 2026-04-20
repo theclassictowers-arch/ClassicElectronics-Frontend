@@ -294,9 +294,6 @@ export default function ValveItemDetailPage() {
               {itemData.name}
               {itemData.specifications?.model && <span className="text-xl md:text-2xl font-medium text-cyan-500/90 ml-3">[{itemData.specifications.model}]</span>}
             </h1>
-            <p className="text-gray-300 leading-relaxed">
-              {itemData.description || `High-quality ${itemData.name} for industrial applications.`}
-            </p>
           </div>
 
           <div className="flex items-center justify-between border-b border-gray-800 pb-6 gap-4">
