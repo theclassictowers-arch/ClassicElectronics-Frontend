@@ -245,7 +245,10 @@ export default function ValveItemDetailPage() {
             {parentCategory}
           </Link>
           <span>/</span>
-          <span className="text-white">{itemData.name}</span>
+          <span className="text-white">
+            {itemData.name}
+            {itemData.specifications?.model && <span className="opacity-60 ml-1">({itemData.specifications.model})</span>}
+          </span>
         </nav>
       </div>
 
@@ -287,7 +290,10 @@ export default function ValveItemDetailPage() {
             <span className="text-cyan-500 font-bold uppercase tracking-wider text-sm mb-2 block">
               {parentCategory}
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{itemData.name}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              {itemData.name}
+              {itemData.specifications?.model && <span className="text-xl md:text-2xl font-medium text-cyan-500/90 ml-3">[{itemData.specifications.model}]</span>}
+            </h1>
             <p className="text-gray-300 leading-relaxed">
               {itemData.description || `High-quality ${itemData.name} for industrial applications.`}
             </p>

@@ -107,7 +107,10 @@ const ItemDetailView = ({ itemData, categorySlug }: { itemData: any, categorySlu
                         )}
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{itemName}</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                        {itemName}
+                        {itemData.specifications?.model && <span className="text-xl md:text-2xl font-normal text-gray-400 ml-2">({itemData.specifications.model})</span>}
+                    </h1>
 
                     <p className="text-gray-300 leading-relaxed mb-6">{description}</p>
 

@@ -32,7 +32,10 @@ const ValveDetailCard: React.FC<ValveDetailCardProps> = ({ valve, showFullSpecs 
             <div className={`px-6 py-4 ${seriesColor.replace('bg-', 'bg-').replace('/20', '/10')} border-b border-gray-800`}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">{valve.name}</h1>
+                        <h1 className="text-2xl font-bold text-white">
+                            {valve.name}
+                            {specs.model && <span className="text-lg font-normal text-gray-400 ml-2">({specs.model})</span>}
+                        </h1>
                         <p className="text-gray-300 mt-1">{specs.type} • {specs.series} Series</p>
                     </div>
                     <div className="flex items-center gap-3">
