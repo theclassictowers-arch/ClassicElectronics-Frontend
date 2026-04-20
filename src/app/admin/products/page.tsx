@@ -638,56 +638,73 @@ const ProductsAdmin = () => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  placeholder="Product Name"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-                <input
-                  placeholder="Product Code / Model (e.g. SCG353-A044)"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  required
-                />
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Product Name</label>
+                  <input
+                    placeholder="Product Name"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Product Code / Model</label>
+                  <input
+                    placeholder="Product Code / Model (e.g. SCG353-A044)"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
-              <select
-                className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                value={formData.categoryId}
-                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Category</label>
+                <select
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="number"
-                  placeholder="Price"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Stock"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  required
-                />
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Price (Rs.)</label>
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Stock Quantity</label>
+                  <input
+                    type="number"
+                    placeholder="Stock"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
-              <select
-                className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                value={formData.status}
-                onChange={(e) =>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Product Status</label>
+                <select
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                  value={formData.status}
+                  onChange={(e) =>
                   setFormData({
                     ...formData,
                     status: e.target.value === 'inactive' ? 'inactive' : 'active',
@@ -696,9 +713,10 @@ const ProductsAdmin = () => {
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
+                </select>
+              </div>
               <label className="flex items-center gap-3 cursor-pointer">
-                <div
+                <div 
                   className={`relative w-11 h-6 rounded-full transition-colors ${formData.showPrice ? 'bg-cyan-600' : 'bg-gray-600'}`}
                   onClick={() => setFormData({ ...formData, showPrice: !formData.showPrice })}
                 >
@@ -724,13 +742,16 @@ const ProductsAdmin = () => {
                 uploading={pdfUploading}
                 error={pdfUploadError}
               />
-              <textarea
-                placeholder="Description"
-                className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white h-24"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Product Description</label>
+                <textarea
+                  placeholder="Description"
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white h-24"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
+                />
+              </div>
 
               <div className="border border-gray-700 rounded-lg p-4 bg-[#0f172a] space-y-4">
                 <h3 className="text-lg font-semibold text-white">Technical Specifications</h3>
