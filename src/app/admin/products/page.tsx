@@ -69,6 +69,7 @@ type ProductSpecificationsFormData = {
 
 type ProductFormData = {
   name: string;
+  model: string;
   categoryId: string;
   price: string;
   description: string;
@@ -91,6 +92,7 @@ const EMPTY_SPECIFICATIONS: ProductSpecificationsFormData = {
 
 const EMPTY_FORM_DATA: ProductFormData = {
   name: '',
+  model: '',
   categoryId: '',
   price: '',
   description: '',
@@ -186,7 +188,7 @@ const ProductsAdmin = () => {
       
       // Use the centralized 'api' instance and correct the endpoints
       const [prodRes, catRes] = await Promise.all([
-        api.get('products'),
+        api.get('products', { params: { includeSpecs: '1' } }),
         api.get('categories', { headers }),
       ]);
 
@@ -280,7 +282,7 @@ const ProductsAdmin = () => {
         applications,
         features,
         certifications,
-        model: getBasicValue(['model']) || formData.name.trim(),
+        model: formData.model.trim() || getBasicValue(['model']) || formData.name.trim(),
         series: getBasicValue(['series']),
         type: getBasicValue(['type']) || 'Solenoid Valve',
         portSize: getBasicValue(['port size']) || 'N/A',
@@ -371,6 +373,7 @@ const ProductsAdmin = () => {
     setSaving(false);
     setFormData({
       name: product.name || '',
+      model: product.specifications?.model || '',
       categoryId: getCategoryId(product.categoryId),
       price: String(product.price ?? ''),
       description: product.description || '',
@@ -548,6 +551,7 @@ const ProductsAdmin = () => {
           <thead className="bg-[#0b1120] text-gray-400 font-medium text-sm uppercase">
             <tr>
               <th className="p-4">Product Name</th>
+              <th className="p-4">Code</th>
               <th className="p-4">Category</th>
               <th className="p-4">Price</th>
               <th className="p-4">Stock</th>
@@ -572,6 +576,7 @@ const ProductsAdmin = () => {
               products.map((product) => (
                 <tr key={product._id} className="hover:bg-white/5 transition-colors">
                   <td className="p-4 font-medium text-white">{product.name}</td>
+                  <td className="p-4 text-cyan-400 font-mono text-sm">{product.specifications?.model || '-'}</td>
                   <td className="p-4 text-gray-400">{getCategoryName(product.categoryId)}</td>
                   <td className="p-4">Rs. {Number(product.price || 0).toLocaleString()}</td>
                   <td className="p-4">
@@ -632,13 +637,22 @@ const ProductsAdmin = () => {
                 </div>
               )}
 
-              <input
-                placeholder="Product Name"
-                className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  placeholder="Product Name"
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+                <input
+                  placeholder="Product Code / Model (e.g. SCG353-A044)"
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  required
+                />
+              </div>
               <select
                 className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
                 value={formData.categoryId}
