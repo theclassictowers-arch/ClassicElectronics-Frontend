@@ -21,14 +21,15 @@ const dummyToMenus = (): NavMenuNode[] => {
       _id: vc._id,
       name: vc.name,
       slug: vc.slug,
-      children: (vc.children ?? []).map((child: { _id: string; name: string; slug: string; items?: { _id: string; name: string; slug: string }[] }) => ({
+      children: (vc.children ?? []).map((child: { _id: string; name: string; slug: string; items?: { _id: string; name: string; slug: string; model?: string; code?: string }[] }) => ({
         _id: child._id,
         name: child.name,
         slug: child.slug,
-        items: (child.items ?? []).map((item: { _id: string; name: string; slug: string }) => ({
+        items: (child.items ?? []).map((item: { _id: string; name: string; slug: string; model?: string; code?: string }) => ({
           _id: item._id,
           name: item.name,
           slug: item.slug,
+          model: item.model || item.code,
         })),
       })),
     })),
@@ -85,6 +86,7 @@ const Navbar = () => {
     (async () => {
       const data = await getNavbarData();
       if (cancelled || !data) return;
+      console.log("Navbar API Response:", data.menus); // Debugging ke liye log
       if (data.menus.length > 0) {
         setMenus(data.menus);
       }
@@ -107,7 +109,14 @@ const Navbar = () => {
         href={`/clientSide/item/${item.slug}`}
         className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
       >
-        {item.name}
+        <div className="flex flex-col gap-1">
+          <span className="block font-medium">{item.name}</span>
+          {((item as any).code || (item as any).model || (item as any).specifications?.model) && (
+            <span className="text-[10px] text-cyan-400/80 italic font-normal">
+              {(item as any).code || (item as any).model || (item as any).specifications?.model}
+            </span>
+          )}
+        </div>
       </Link>
     ));
   };

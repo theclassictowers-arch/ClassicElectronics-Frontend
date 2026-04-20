@@ -247,7 +247,9 @@ export default function ValveItemDetailPage() {
           <span>/</span>
           <span className="text-white">
             {itemData.name}
-            {itemData.specifications?.model && <span className="opacity-60 ml-1">({itemData.specifications.model})</span>}
+            {(itemData.specifications?.model || (itemData as any).code) && (
+              <span className="opacity-60 ml-1">({itemData.specifications?.model || (itemData as any).code})</span>
+            )}
           </span>
         </nav>
       </div>
@@ -292,7 +294,9 @@ export default function ValveItemDetailPage() {
             </span>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
               {itemData.name}
-              {itemData.specifications?.model && <span className="text-xl md:text-2xl font-medium text-cyan-500/90 ml-3">[{itemData.specifications.model}]</span>}
+              {(itemData.specifications?.model || (itemData as any).code) && (
+                <span className="text-xl md:text-2xl font-medium text-cyan-500/90 ml-3">[{itemData.specifications?.model || (itemData as any).code}]</span>
+              )}
             </h1>
           </div>
 
