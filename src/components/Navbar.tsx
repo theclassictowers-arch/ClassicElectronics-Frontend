@@ -96,9 +96,9 @@ const Navbar = () => {
   }, []);
 
   // Dropdown styles
-  const dropdownStyle = "absolute left-0 top-full w-64 bg-[#1e293b] border border-gray-700 shadow-xl rounded-b-md z-50 transition-all duration-200 origin-top opacity-0 scale-y-0 pointer-events-none group-hover:opacity-100 group-hover:scale-y-100 group-hover:pointer-events-auto";
-  const subDropdownStyle = "md:absolute md:left-full md:top-0 md:w-56 bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/item:opacity-100 md:group-hover/item:scale-x-100 md:group-hover/item:pointer-events-auto";
-  const thirdDropdownStyle = "md:absolute md:left-full md:top-0 md:w-56 bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/subitem:opacity-100 md:group-hover/subitem:scale-x-100 md:group-hover/subitem:pointer-events-auto";
+  const dropdownStyle = "absolute left-0 top-full min-w-[300px] w-max max-w-[400px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-b-md z-50 transition-all duration-200 origin-top opacity-0 scale-y-0 pointer-events-none group-hover:opacity-100 group-hover:scale-y-100 group-hover:pointer-events-auto";
+  const subDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/item:opacity-100 md:group-hover/item:scale-x-100 md:group-hover/item:pointer-events-auto";
+  const thirdDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/subitem:opacity-100 md:group-hover/subitem:scale-x-100 md:group-hover/subitem:pointer-events-auto";
 
   /** Render a Level-3 leaf node (items = products) */
   const renderLeafItems = (items: NavMenuNode['items']) => {
@@ -110,7 +110,7 @@ const Navbar = () => {
         className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
       >
         <div className="flex flex-col gap-1">
-          <span className="block font-medium">{item.name}</span>
+          <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
           {((item as any).code || (item as any).model || (item as any).specifications?.model) && (
             <span className="text-[10px] text-cyan-400/80 italic font-normal">
               {(item as any).code || (item as any).model || (item as any).specifications?.model}
