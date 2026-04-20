@@ -107,9 +107,9 @@ const Navbar = () => {
       <Link
         key={item._id || item.slug}
         href={`/clientSide/item/${item.slug}`}
-        className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+        className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
       >
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.5">
           <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
           {((item as any).code || (item as any).model || (item as any).specifications?.model) && (
             <span className="text-[10px] text-cyan-400/80 italic font-normal">
@@ -172,7 +172,7 @@ const Navbar = () => {
                         <Link
                           key={child._id || child.slug}
                           href={`/clientSide/category/${child.slug}`}
-                          className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                          className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
                         >
                           {child.name}
                         </Link>
@@ -184,7 +184,7 @@ const Navbar = () => {
                       <div key={child._id || child.slug} className="relative group/item">
                         <Link
                           href={`/clientSide/category/${child.slug}`}
-                          className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 text-xs md:text-sm"
+                          className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 text-xs md:text-sm"
                         >
                           <div className="flex items-center justify-between">
                             <span>{child.name}</span>
@@ -202,7 +202,7 @@ const Navbar = () => {
                                 <Link
                                   key={sub._id || sub.slug}
                                   href={`/clientSide/category/${sub.slug}`}
-                                  className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                                  className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
                                 >
                                   {sub.name}
                                 </Link>
@@ -214,7 +214,7 @@ const Navbar = () => {
                               <div key={sub._id || sub.slug} className="relative group/subitem">
                                 <Link
                                   href={`/clientSide/category/${sub.slug}`}
-                                  className="block px-4 py-3 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                                  className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
                                 >
                                   <div className="flex items-center justify-between">
                                     <span>{sub.name}</span>
