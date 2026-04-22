@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Plus,
@@ -13,88 +13,43 @@ import {
   FolderTree,
 } from 'lucide-react';
 import { API_URL } from '@/lib/apiConfig';
-
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-type AdminCategory = {
-  _id: string;
-  name: string;
-  slug: string;
-  parent?: string | null;
-  level?: number;
-  order?: number;
-  status?: 'active' | 'inactive';
-  showInNavbar?: boolean;
-};
-
-type TreeNode = AdminCategory & { children: TreeNode[] };
-
-type CategoryFormData = {
-  name: string;
-  slug: string;
-  parent: string; // '' means root
-  level: number;
-  order: number;
-  status: 'active' | 'inactive';
-  showInNavbar: boolean;
-};
-
-const EMPTY_FORM: CategoryFormData = {
-  name: '',
-  slug: '',
-  parent: '',
-  level: 1,
-  order: 0,
-  status: 'active',
-  showInNavbar: true,
-};
+import CategoryFormModal from '@/components/admin/CategoryFormModal';
+import type { AdminCategory, CategoryFormMode, CategoryTreeNode } from '@/types/adminCategory';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const toSlug = (value: string): string =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-');
-
 /** Build a tree from a flat list of categories */
-const buildTree = (flat: AdminCategory[]): TreeNode[] => {
-  const map = new Map<string, TreeNode>();
-  const roots: TreeNode[] = [];
+const buildTree = (flat: AdminCategory[]): CategoryTreeNode[] => {
+  const map = new Map<string, CategoryTreeNode>();
+  const roots: CategoryTreeNode[] = [];
 
-  // Create nodes
-  for (const cat of flat) {
-    map.set(cat._id, { ...cat, children: [] });
+  for (const category of flat) {
+    map.set(category._id, { ...category, children: [] });
   }
 
-  // Link children to parents
-  for (const cat of flat) {
-    const node = map.get(cat._id)!;
-    const parentId = cat.parent;
+  for (const category of flat) {
+    const node = map.get(category._id);
+    if (!node) continue;
+
+    const parentId = category.parent;
     if (parentId && map.has(parentId)) {
-      map.get(parentId)!.children.push(node);
+      map.get(parentId)?.children.push(node);
     } else {
       roots.push(node);
     }
   }
 
-  // Sort each level by order then name
-  const sortNodes = (nodes: TreeNode[]) => {
+  const sortNodes = (nodes: CategoryTreeNode[]) => {
     nodes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
-    nodes.forEach((n) => sortNodes(n.children));
+    nodes.forEach((node) => sortNodes(node.children));
   };
-  sortNodes(roots);
 
+  sortNodes(roots);
   return roots;
 };
 
-/** Level label & color */
 const LEVEL_STYLES: Record<number, { label: string; bg: string; text: string }> = {
   1: { label: 'Menu', bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
   2: { label: 'Category', bg: 'bg-purple-500/20', text: 'text-purple-400' },
@@ -102,10 +57,10 @@ const LEVEL_STYLES: Record<number, { label: string; bg: string; text: string }> 
 };
 
 const levelBadge = (level: number) => {
-  const s = LEVEL_STYLES[level] || LEVEL_STYLES[3];
+  const style = LEVEL_STYLES[level] || LEVEL_STYLES[3];
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-bold ${s.bg} ${s.text}`}>
-      L{level} {s.label}
+    <span className={`px-2 py-0.5 rounded text-xs font-bold ${style.bg} ${style.text}`}>
+      L{level} {style.label}
     </span>
   );
 };
@@ -118,148 +73,99 @@ const CategoriesAdmin = () => {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<CategoryFormData>(EMPTY_FORM);
+  const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null);
+  const [modalMode, setModalMode] = useState<CategoryFormMode>('root');
+  const [modalParentId, setModalParentId] = useState('');
+  const [modalLevel, setModalLevel] = useState(1);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  /* ---------- data fetch ---------- */
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
-      if (!token) { setCategories([]); return; }
+      if (!token) {
+        setCategories([]);
+        return;
+      }
 
-      const res = await axios.get(`${API_URL}/categories/admin`, {
+      const response = await axios.get(`${API_URL}/categories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = Array.isArray(res.data) ? (res.data as AdminCategory[]) : [];
-      setCategories(data);
 
-      // Auto-expand all on first load
-      setExpanded(new Set(data.map((c) => c._id)));
+      const data = Array.isArray(response.data) ? (response.data as AdminCategory[]) : [];
+      setCategories(data);
+      setExpanded(new Set(data.map((category) => category._id)));
     } catch (error) {
       console.error('Failed to load categories', error);
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  /* ---------- tree ---------- */
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const tree = buildTree(categories);
 
-  const toggleExpand = (id: string) =>
+  const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
+  };
 
-  /* ---------- modal helpers ---------- */
-
-  const closeModal = () => { setShowModal(false); setEditingId(null); setFormData(EMPTY_FORM); };
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingCategory(null);
+    setModalMode('root');
+    setModalParentId('');
+    setModalLevel(1);
+  };
 
   const openAddRoot = () => {
-    setEditingId(null);
-    setFormData({ ...EMPTY_FORM, level: 1, parent: '' });
+    setEditingCategory(null);
+    setModalMode('root');
+    setModalParentId('');
+    setModalLevel(1);
     setShowModal(true);
   };
 
-  const openAddChild = (parentCat: AdminCategory) => {
-    const parentLevel = parentCat.level ?? 1;
-    setEditingId(null);
-    setFormData({
-      ...EMPTY_FORM,
-      parent: parentCat._id,
-      level: parentLevel + 1,
-    });
+  const openAddChild = (parentCategory: AdminCategory) => {
+    const parentLevel = parentCategory.level ?? 1;
+    setEditingCategory(null);
+    setModalMode('child');
+    setModalParentId(parentCategory._id);
+    setModalLevel(Math.min(parentLevel + 1, 3));
     setShowModal(true);
   };
 
-  const openEdit = (cat: AdminCategory) => {
-    setEditingId(cat._id);
-    setFormData({
-      name: cat.name || '',
-      slug: cat.slug || '',
-      parent: cat.parent || '',
-      level: cat.level ?? 1,
-      order: cat.order ?? 0,
-      status: cat.status === 'inactive' ? 'inactive' : 'active',
-      showInNavbar: cat.showInNavbar ?? true,
-    });
+  const openEdit = (category: AdminCategory) => {
+    setEditingCategory(category);
+    setModalMode('edit');
+    setModalParentId(category.parent || '');
+    setModalLevel(category.level ?? 1);
     setShowModal(true);
   };
-
-  /* ---------- name -> slug sync ---------- */
-
-  const handleNameChange = (value: string) => {
-    setFormData((prev) => {
-      const oldAutoSlug = toSlug(prev.name);
-      const shouldSync = !prev.slug || prev.slug === oldAutoSlug;
-      return { ...prev, name: value, slug: shouldSync ? toSlug(value) : prev.slug };
-    });
-  };
-
-  /* ---------- parent change -> recalc level ---------- */
-
-  const handleParentChange = (parentId: string) => {
-    if (!parentId) {
-      setFormData((prev) => ({ ...prev, parent: '', level: 1 }));
-      return;
-    }
-    const parentCat = categories.find((c) => c._id === parentId);
-    const parentLevel = parentCat?.level ?? 1;
-    setFormData((prev) => ({ ...prev, parent: parentId, level: parentLevel + 1 }));
-  };
-
-  /* ---------- submit ---------- */
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem('adminToken');
-    if (!token) { alert('Please login as admin first'); return; }
-    if (!formData.slug.trim()) { alert('Slug is required'); return; }
-
-    const payload: Record<string, unknown> = {
-      name: formData.name,
-      slug: formData.slug,
-      level: formData.level,
-      order: formData.order,
-      status: formData.status,
-      showInNavbar: formData.showInNavbar,
-    };
-    if (formData.parent) payload.parent = formData.parent;
-
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      if (editingId) {
-        await axios.put(`${API_URL}/categories/${editingId}`, payload, { headers });
-      } else {
-        await axios.post(`${API_URL}/categories`, payload, { headers });
-      }
-      closeModal();
-      await fetchData();
-    } catch (error) {
-      console.error('Failed to save category', error);
-      alert('Error saving category');
-    }
-  };
-
-  /* ---------- delete ---------- */
 
   const handleDelete = async (id: string, name: string) => {
-    // Check for children
-    const hasChildren = categories.some((c) => c.parent === id);
-    const msg = hasChildren
+    const hasChildren = categories.some((category) => category.parent === id);
+    const message = hasChildren
       ? `"${name}" has child categories. Deleting it may orphan them. Continue?`
       : `Delete "${name}"?`;
-    if (!confirm(msg)) return;
+
+    if (!confirm(message)) return;
 
     const token = localStorage.getItem('adminToken');
-    if (!token) { alert('Please login as admin first'); return; }
+    if (!token) {
+      alert('Please login as admin first');
+      return;
+    }
 
     try {
       await axios.delete(`${API_URL}/categories/${id}`, {
@@ -271,33 +177,7 @@ const CategoriesAdmin = () => {
     }
   };
 
-  /* ---------- available parents for modal dropdown ---------- */
-
-  const availableParents = (): AdminCategory[] => {
-    if (editingId) {
-      // Can't be parent of self or own descendants
-      const descendantIds = new Set<string>();
-      const collectDescendants = (parentId: string) => {
-        for (const c of categories) {
-          if (c.parent === parentId && !descendantIds.has(c._id)) {
-            descendantIds.add(c._id);
-            collectDescendants(c._id);
-          }
-        }
-      };
-      descendantIds.add(editingId);
-      collectDescendants(editingId);
-      return categories.filter((c) => !descendantIds.has(c._id) && (c.level ?? 1) <= 2);
-    }
-    // For new categories, any L1 or L2 can be parent
-    return categories.filter((c) => (c.level ?? 1) <= 2);
-  };
-
-  /* ---------------------------------------------------------------- */
-  /*  Tree row renderer                                                */
-  /* ---------------------------------------------------------------- */
-
-  const renderNode = (node: TreeNode, depth: number): React.ReactNode => {
+  const renderNode = (node: CategoryTreeNode, depth: number): React.ReactNode => {
     const hasChildren = node.children.length > 0;
     const isExpanded = expanded.has(node._id);
     const level = node.level ?? 1;
@@ -305,12 +185,10 @@ const CategoriesAdmin = () => {
 
     return (
       <React.Fragment key={node._id}>
-        {/* Row */}
         <div
           className="flex items-center gap-2 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-800/50"
           style={{ paddingLeft: `${depth * 28 + 16}px` }}
         >
-          {/* Expand/collapse or spacer */}
           {hasChildren ? (
             <button
               onClick={() => toggleExpand(node._id)}
@@ -322,15 +200,9 @@ const CategoriesAdmin = () => {
             <span className="w-5" />
           )}
 
-          {/* Name */}
-          <span className="font-medium text-white flex-1 min-w-0 truncate">
-            {node.name}
-          </span>
-
-          {/* Level badge */}
+          <span className="font-medium text-white flex-1 min-w-0 truncate">{node.name}</span>
           {levelBadge(level)}
 
-          {/* Navbar visibility */}
           <span title={node.showInNavbar ? 'Visible in navbar' : 'Hidden from navbar'}>
             {node.showInNavbar ? (
               <Eye size={14} className="text-green-400" />
@@ -339,7 +211,6 @@ const CategoriesAdmin = () => {
             )}
           </span>
 
-          {/* Status badge */}
           <span
             className={`px-2 py-0.5 rounded text-xs font-bold ${
               node.status === 'inactive'
@@ -350,12 +221,10 @@ const CategoriesAdmin = () => {
             {node.status === 'inactive' ? 'Inactive' : 'Active'}
           </span>
 
-          {/* Order */}
           <span className="text-xs text-gray-500 w-8 text-right" title="Sort order">
             #{node.order ?? 0}
           </span>
 
-          {/* Actions */}
           <div className="flex items-center gap-1 ml-2">
             {canAddChild && (
               <button
@@ -383,19 +252,13 @@ const CategoriesAdmin = () => {
           </div>
         </div>
 
-        {/* Children */}
         {isExpanded && node.children.map((child) => renderNode(child, depth + 1))}
       </React.Fragment>
     );
   };
 
-  /* ---------------------------------------------------------------- */
-  /*  Render                                                           */
-  /* ---------------------------------------------------------------- */
-
   return (
     <div>
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
           <FolderTree size={28} className="text-cyan-400" />
@@ -409,16 +272,18 @@ const CategoriesAdmin = () => {
         </button>
       </div>
 
-      {/* Legend */}
       <div className="flex gap-4 mb-4 text-xs text-gray-400">
         <span className="flex items-center gap-1">{levelBadge(1)} Root menu</span>
         <span className="flex items-center gap-1">{levelBadge(2)} Category</span>
         <span className="flex items-center gap-1">{levelBadge(3)} Sub-category</span>
-        <span className="flex items-center gap-1"><Eye size={12} className="text-green-400" /> In navbar</span>
-        <span className="flex items-center gap-1"><EyeOff size={12} className="text-gray-600" /> Hidden</span>
+        <span className="flex items-center gap-1">
+          <Eye size={12} className="text-green-400" /> In navbar
+        </span>
+        <span className="flex items-center gap-1">
+          <EyeOff size={12} className="text-gray-600" /> Hidden
+        </span>
       </div>
 
-      {/* Tree */}
       <div className="bg-[#1e293b] rounded-xl border border-gray-800 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-400">Loading...</div>
@@ -431,121 +296,19 @@ const CategoriesAdmin = () => {
         )}
       </div>
 
-      {/* ---- Modal ---- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#1e293b] p-8 rounded-xl max-w-md w-full border border-gray-700">
-            <h2 className="text-xl font-bold mb-6">
-              {editingId ? 'Edit Category' : formData.parent ? `Add Child (Level ${formData.level})` : 'Add Root Menu'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Name</label>
-                <input
-                  placeholder="Category Name"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Slug */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Slug</label>
-                <input
-                  placeholder="slug"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: toSlug(e.target.value) })}
-                  required
-                />
-              </div>
-
-              {/* Parent */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Parent</label>
-                <select
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.parent}
-                  onChange={(e) => handleParentChange(e.target.value)}
-                >
-                  <option value="">— None (Root / Level 1) —</option>
-                  {availableParents().map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {'  '.repeat((p.level ?? 1) - 1)}{p.name} (L{p.level ?? 1})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Level (read-only, auto-calculated) */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Level (auto)</label>
-                <div className="flex items-center gap-2 p-3 bg-[#0b1120] border border-gray-600 rounded text-gray-300">
-                  {levelBadge(formData.level)}
-                </div>
-              </div>
-
-              {/* Order */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Sort Order</label>
-                <input
-                  type="number"
-                  min={0}
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Status</label>
-                <select
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value === 'inactive' ? 'inactive' : 'active' })
-                  }
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-
-              {/* Show in Navbar */}
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.showInNavbar}
-                  onChange={(e) => setFormData({ ...formData, showInNavbar: e.target.checked })}
-                  className="w-4 h-4 accent-cyan-500"
-                />
-                <span className="text-sm text-gray-300">Show in Navbar</span>
-              </label>
-
-              {/* Buttons */}
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-cyan-600 text-white py-2 rounded font-bold hover:bg-cyan-500"
-                >
-                  {editingId ? 'Update' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 bg-transparent border border-gray-600 text-white py-2 rounded font-bold hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CategoryFormModal
+          category={editingCategory}
+          categories={categories}
+          initialParentId={modalParentId}
+          initialLevel={modalLevel}
+          mode={modalMode}
+          onClose={closeModal}
+          onSuccess={async () => {
+            closeModal();
+            await fetchData();
+          }}
+        />
       )}
     </div>
   );

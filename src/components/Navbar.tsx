@@ -11,16 +11,23 @@ import { valveCategories, controllerCategories, electronicsCategories } from '@/
 /*  Fallback: convert old dummyData into NavMenuNode[] format          */
 /* ------------------------------------------------------------------ */
 
-const dummyToMenus = (): NavMenuNode[] => {
+interface NavNode extends NavMenuNode {
+  order?: number;
+  children?: NavNode[];
+}
+
+const dummyToMenus = (): NavNode[] => {
   // Purging Valves root with children
-  const valvesMenu: NavMenuNode = {
+  const valvesMenu: NavNode = {
     _id: 'fallback-valves',
     name: 'Purging Valves',
     slug: 'purging-valves',
-    children: valveCategories.map((vc) => ({
+    order: 1,
+    children: valveCategories.map((vc, idx) => ({
       _id: vc._id,
       name: vc.name,
       slug: vc.slug,
+      order: idx + 1,
       children: (vc.children ?? []).map((child: { _id: string; name: string; slug: string; items?: { _id: string; name: string; slug: string; model?: string; code?: string }[] }) => ({
         _id: child._id,
         name: child.name,
@@ -36,26 +43,30 @@ const dummyToMenus = (): NavMenuNode[] => {
   };
 
   // Controllers root
-  const controllersMenu: NavMenuNode = {
+  const controllersMenu: NavNode = {
     _id: 'fallback-controllers',
     name: 'Controllers',
     slug: 'bag-filter-controllers',
-    children: controllerCategories.map((c) => ({
+    order: 2,
+    children: controllerCategories.map((c, idx) => ({
       _id: c._id,
       name: c.name,
       slug: c.slug,
+      order: idx + 1,
     })),
   };
 
   // Electronics root
-  const electronicsMenu: NavMenuNode = {
+  const electronicsMenu: NavNode = {
     _id: 'fallback-electronics',
     name: 'Electronics',
     slug: 'electronics',
-    children: electronicsCategories.map((c) => ({
+    order: 3,
+    children: electronicsCategories.map((c, idx) => ({
       _id: c._id,
       name: c.name,
       slug: c.slug,
+      order: idx + 1,
     })),
   };
 
@@ -70,12 +81,23 @@ const dummyToMenus = (): NavMenuNode[] => {
 const hasDropdown = (node: NavMenuNode): boolean =>
   (node.children && node.children.length > 0) || (node.items && node.items.length > 0) || false;
 
+/** Recursively sort nodes and their items by 'order' property */
+const sortMenuNodes = (nodes: NavNode[]): NavNode[] => {
+  return [...nodes]
+    .sort((a, b) => ((a as any).order ?? 0) - ((b as any).order ?? 0))
+    .map(node => ({
+      ...node,
+      children: node.children ? sortMenuNodes(node.children as NavNode[]) : undefined,
+      items: node.items ? [...node.items].sort((a, b) => ((a as any).order ?? 0) - ((b as any).order ?? 0)) : undefined
+    }));
+};
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 const Navbar = () => {
-  const [menus, setMenus] = useState<NavMenuNode[]>([]);
+  const [menus, setMenus] = useState<NavNode[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +110,7 @@ const Navbar = () => {
       if (cancelled || !data) return;
       console.log("Navbar API Response:", data.menus); // Debugging ke liye log
       if (data.menus.length > 0) {
-        setMenus(data.menus);
+        setMenus(sortMenuNodes(data.menus as NavNode[]));
       }
     })();
 

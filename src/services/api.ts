@@ -601,6 +601,22 @@ export const reorderSliders = async (token: string, orderedIds: string[]) => {
   return response.data;
 };
 
+export const reorderCategories = async (token: string, orderedIds: string[]) => {
+  const response = await api.put('categories/reorder', { orderedIds }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const reorderProducts = async (token: string, orderedIds: string[]) => {
+  // Backend fix: Filter out any null/undefined IDs to avoid 400 errors
+  const cleanIds = orderedIds.filter(id => id && typeof id === 'string');
+  const response = await api.put('products/reorder', { orderedIds: cleanIds }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // ---------------------------------------------------------------------------
 // Page Content CRUD
 // ---------------------------------------------------------------------------

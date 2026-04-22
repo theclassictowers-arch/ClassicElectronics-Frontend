@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import ImageUploader from '@/components/admin/ImageUploader';
 import PdfUploader from '@/components/admin/PdfUploader';
 import { API_URL } from '@/lib/apiConfig';
+import type { AdminCategory, AdminProduct, ProductCategoryRef } from '@/types/adminProduct';
 import {
   uploadProductImages,
   uploadProductPdf,
@@ -14,47 +15,6 @@ import {
   validatePdfFile,
   deleteFileFromServer,
 } from '@/services/uploadService';
-
-type AdminCategory = {
-  _id: string;
-  name: string;
-  slug: string;
-};
-
-type ProductCategoryRef =
-  | {
-      _id?: string;
-      name?: string;
-    }
-  | string
-  | null;
-
-type AdminProduct = {
-  _id: string;
-  name: string;
-  price: number;
-  stock: number;
-  description?: string;
-  images?: string[];
-  status?: 'active' | 'inactive';
-  categoryId?: ProductCategoryRef;
-  showPrice?: boolean;
-  pdfUrl?: string;
-  specifications?: {
-    basicInformation?: Array<{ label?: string; value?: string }>;
-    operatingSpecifications?: Array<{ label?: string; value?: string }>;
-    electricalSpecifications?: string[];
-    certifications?: string[];
-    features?: string[];
-    applications?: string[];
-    model?: string;
-    series?: string;
-    type?: string;
-    portSize?: string;
-    connectionType?: string;
-    voltageOptions?: string[];
-  } | null;
-};
 
 type KeyValueSpecRow = { label: string; value: string };
 
