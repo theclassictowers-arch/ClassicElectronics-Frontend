@@ -11,10 +11,6 @@ import {
   electronicsCategories,
 } from '@/data/dummyData';
 
-/* ------------------------------------------------------------------ */
-/*  Fallback: convert old dummyData into NavMenuNode[] format          */
-/* ------------------------------------------------------------------ */
-
 interface NavNode extends NavMenuNode {
   order?: number;
   children?: NavNode[];
@@ -95,10 +91,6 @@ const dummyToMenus = (): NavNode[] => {
   return [valvesMenu, controllersMenu, electronicsMenu];
 };
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
 const hasDropdown = (node: NavMenuNode): boolean =>
   (node.children && node.children.length > 0) ||
   (node.items && node.items.length > 0) ||
@@ -119,10 +111,6 @@ const sortMenuNodes = (nodes: NavNode[]): NavNode[] => {
         : undefined,
     }));
 };
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
 
 const Navbar = () => {
   const [menus, setMenus] = useState<NavNode[]>([]);
@@ -151,40 +139,44 @@ const Navbar = () => {
   }, []);
 
   const dropdownStyle =
-    'absolute left-0 top-full min-w-[240px] w-max max-w-[320px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-b-xl z-50 origin-top opacity-0 translate-y-3 scale-95 pointer-events-none transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
+    'absolute left-0 top-full min-w-[240px] w-max max-w-[320px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-b-xl z-50 origin-top opacity-0 translate-y-3 scale-95 pointer-events-none transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto';
 
   const subDropdownStyle =
-    'md:absolute md:left-full md:top-0 min-w-[220px] w-max max-w-[300px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/item:opacity-100 md:group-hover/item:translate-x-0 md:group-hover/item:scale-100 md:group-hover/item:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
+    'md:absolute md:left-full md:top-0 min-w-[220px] w-max max-w-[300px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/item:opacity-100 md:group-hover/item:translate-x-0 md:group-hover/item:scale-100 md:group-hover/item:pointer-events-auto';
 
   const thirdDropdownStyle =
-    'md:absolute md:left-full md:top-0 min-w-[230px] w-max max-w-[310px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/subitem:opacity-100 md:group-hover/subitem:translate-x-0 md:group-hover/subitem:scale-100 md:group-hover/subitem:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
+    'md:absolute md:left-full md:top-0 min-w-[230px] w-max max-w-[310px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/subitem:opacity-100 md:group-hover/subitem:translate-x-0 md:group-hover/subitem:scale-100 md:group-hover/subitem:pointer-events-auto';
 
   const renderLeafItems = (items: NavMenuNode['items']) => {
     if (!items || items.length === 0) return null;
 
-    return items.map((item) => (
-      <Link
-        key={item._id || item.slug}
-        href={`/clientSide/item/${item.slug}`}
-        className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
-      >
-        <div className="flex flex-col gap-0.5">
-          <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">
-            {item.name}
-          </span>
+    return (
+      <div className="max-h-[calc(100vh-100px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll">
+        {items.map((item) => (
+          <Link
+            key={item._id || item.slug}
+            href={`/clientSide/item/${item.slug}`}
+            className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
+          >
+            <div className="flex flex-col gap-0.5">
+              <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                {item.name}
+              </span>
 
-          {((item as any).code ||
-            (item as any).model ||
-            (item as any).specifications?.model) && (
-            <span className="text-[10px] text-cyan-400/80 italic font-normal">
-              {(item as any).code ||
+              {((item as any).code ||
                 (item as any).model ||
-                (item as any).specifications?.model}
-            </span>
-          )}
-        </div>
-      </Link>
-    ));
+                (item as any).specifications?.model) && (
+                <span className="text-[10px] text-cyan-400/80 italic font-normal">
+                  {(item as any).code ||
+                    (item as any).model ||
+                    (item as any).specifications?.model}
+                </span>
+              )}
+            </div>
+          </Link>
+        ))}
+      </div>
+    );
   };
 
   return (
