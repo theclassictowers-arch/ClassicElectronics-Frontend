@@ -1,6 +1,6 @@
-import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import axios from 'axios';
-import { API_URL as API_BASE, resolveAssetUrl } from '@/lib/apiConfig';
+import { API_URL as API_BASE } from '@/lib/apiConfig';
 
 async function getProduct(id: string) {
   const res = await axios.get(`${API_BASE}/products/${id}`);
@@ -14,12 +14,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
     <div className="container mx-auto p-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="relative h-[400px] w-full">
-          <Image 
-            src={resolveAssetUrl(product.images?.[0]) || '/placeholder-product.png'} 
+          {/* Here our new component is being used */}
+          <ProductImage 
+            src={product.images?.[0]} 
             alt={product.name} 
             fill 
             className="object-contain rounded-xl shadow-lg"
-            unoptimized
           />
         </div>
         

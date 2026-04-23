@@ -11,7 +11,7 @@ interface ProductImageProps {
 }
 
 export default function ProductImage({ src, alt, className, fill, width, height }: ProductImageProps) {
-  // Agar image ka path khali ho toh placeholder message show karein
+  // If image path is empty, show placeholder message
   if (!src || src === '') {
     return (
       <div className={`flex flex-col items-center justify-center bg-[#0b1120] border border-gray-800 text-gray-500 rounded-lg p-6 text-center h-full min-h-[200px] ${className}`}>

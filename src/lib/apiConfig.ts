@@ -13,8 +13,8 @@ export const API_URL = normalizedApiUrl ||
                       ((normalizedBackendUrl ? `${normalizedBackendUrl}/api` : 
                       (process.env.NODE_ENV === 'production' ? DEFAULT_PROD_API : DEFAULT_DEV_API)) + '/');
 
-// Ensure SERVER_BASE hamesha domain + protocol ho (e.g., http://localhost:5001)
-// Is se browser requests seedha backend par jayengi, Next.js router par nahi.
+// Ensure SERVER_BASE always has domain + protocol (e.g., http://localhost:5001)
+// This way browser requests go directly to backend, not through Next.js router.
 const baseFromApi = (API_URL && API_URL.startsWith('http')) ? API_URL.split('/api')[0] : '';
 export const SERVER_BASE = normalizedBackendUrl || 
                           trimTrailingSlash(baseFromApi) || 

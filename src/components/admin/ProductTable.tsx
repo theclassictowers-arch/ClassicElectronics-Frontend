@@ -1,33 +1,70 @@
 'use client';
 
 import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { ArrowUpDown, ArrowDown, ArrowUp, Edit, Trash2 } from 'lucide-react';
 import type { AdminProduct, ProductCategoryRef } from '@/types/adminProduct';
+
+export type ProductSortKey = 'name' | 'model' | 'category' | 'price' | 'stock' | 'status';
+export type SortDirection = 'asc' | 'desc';
 
 interface ProductTableProps {
   products: AdminProduct[];
   loading: boolean;
   onEdit: (product: AdminProduct) => void;
   onDelete: (id: string) => void;
+  sortKey: ProductSortKey;
+  sortDirection: SortDirection;
+  onSortChange: (key: ProductSortKey) => void;
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({ products, loading, onEdit, onDelete }) => {
+const ProductTable: React.FC<ProductTableProps> = ({
+  products,
+  loading,
+  onEdit,
+  onDelete,
+  sortKey,
+  sortDirection,
+  onSortChange,
+}) => {
   const getCategoryName = (categoryId: ProductCategoryRef | undefined): string => {
     if (!categoryId || typeof categoryId === 'string') return '-';
     return categoryId.name || '-';
   };
+
+  const renderSortIcon = (key: ProductSortKey) => {
+    if (sortKey !== key) {
+      return <ArrowUpDown size={14} className="text-gray-500" />;
+    }
+
+    return sortDirection === 'asc' ? (
+      <ArrowUp size={14} className="text-cyan-400" />
+    ) : (
+      <ArrowDown size={14} className="text-cyan-400" />
+    );
+  };
+
+  const renderHeaderButton = (label: string, key: ProductSortKey) => (
+    <button
+      type="button"
+      onClick={() => onSortChange(key)}
+      className="inline-flex items-center gap-2 hover:text-white transition-colors"
+    >
+      <span>{label}</span>
+      {renderSortIcon(key)}
+    </button>
+  );
 
   return (
     <div className="bg-[#1e293b] rounded-xl border border-gray-800 overflow-hidden">
       <table className="w-full text-left">
         <thead className="bg-[#0b1120] text-gray-400 font-medium text-sm uppercase">
           <tr>
-            <th className="p-4">Product Name</th>
-            <th className="p-4">Code</th>
-            <th className="p-4">Category</th>
-            <th className="p-4">Price</th>
-            <th className="p-4">Stock</th>
-            <th className="p-4">Status</th>
+            <th className="p-4">{renderHeaderButton('Product Name', 'name')}</th>
+            <th className="p-4">{renderHeaderButton('Code', 'model')}</th>
+            <th className="p-4">{renderHeaderButton('Category', 'category')}</th>
+            <th className="p-4">{renderHeaderButton('Price', 'price')}</th>
+            <th className="p-4">{renderHeaderButton('Stock', 'stock')}</th>
+            <th className="p-4">{renderHeaderButton('Status', 'status')}</th>
             <th className="p-4 text-right">Actions</th>
           </tr>
         </thead>

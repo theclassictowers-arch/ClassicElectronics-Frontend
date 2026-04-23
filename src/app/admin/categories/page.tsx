@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
   Plus,
@@ -11,6 +11,10 @@ import {
   Eye,
   EyeOff,
   FolderTree,
+  Search,
+  SlidersHorizontal,
+  ArrowDownAZ,
+  ArrowUpAZ,
 } from 'lucide-react';
 import { API_URL } from '@/lib/apiConfig';
 import CategoryFormModal from '@/components/admin/CategoryFormModal';
@@ -21,7 +25,14 @@ import type { AdminCategory, CategoryFormMode, CategoryTreeNode } from '@/types/
 /* ------------------------------------------------------------------ */
 
 /** Build a tree from a flat list of categories */
-const buildTree = (flat: AdminCategory[]): CategoryTreeNode[] => {
+type CategorySortKey = 'name' | 'slug' | 'level' | 'order' | 'status' | 'visibility';
+type SortDirection = 'asc' | 'desc';
+
+const buildTree = (
+  flat: AdminCategory[],
+  sortKey: CategorySortKey,
+  sortDirection: SortDirection
+): CategoryTreeNode[] => {
   const map = new Map<string, CategoryTreeNode>();
   const roots: CategoryTreeNode[] = [];
 
@@ -42,7 +53,42 @@ const buildTree = (flat: AdminCategory[]): CategoryTreeNode[] => {
   }
 
   const sortNodes = (nodes: CategoryTreeNode[]) => {
-    nodes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+    nodes.sort((firstNode, secondNode) => {
+      const compareValue = (() => {
+        switch (sortKey) {
+          case 'slug':
+            return firstNode.slug.localeCompare(secondNode.slug, undefined, {
+              sensitivity: 'base',
+            });
+          case 'level':
+            return (firstNode.level ?? 1) - (secondNode.level ?? 1);
+          case 'order':
+            return (firstNode.order ?? 0) - (secondNode.order ?? 0);
+          case 'status':
+            return (firstNode.status === 'inactive' ? 'inactive' : 'active').localeCompare(
+              secondNode.status === 'inactive' ? 'inactive' : 'active',
+              undefined,
+              { sensitivity: 'base' }
+            );
+          case 'visibility':
+            return Number(firstNode.showInNavbar) - Number(secondNode.showInNavbar);
+          case 'name':
+          default:
+            return firstNode.name.localeCompare(secondNode.name, undefined, {
+              sensitivity: 'base',
+            });
+        }
+      })();
+
+      if (compareValue !== 0) {
+        return sortDirection === 'asc' ? compareValue : -compareValue;
+      }
+
+      return firstNode.name.localeCompare(secondNode.name, undefined, {
+        sensitivity: 'base',
+      });
+    });
+
     nodes.forEach((node) => sortNodes(node.children));
   };
 
@@ -78,6 +124,12 @@ const CategoriesAdmin = () => {
   const [modalParentId, setModalParentId] = useState('');
   const [modalLevel, setModalLevel] = useState(1);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [navbarFilter, setNavbarFilter] = useState('all');
+  const [sortKey, setSortKey] = useState<CategorySortKey>('order');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -106,7 +158,49 @@ const CategoriesAdmin = () => {
     fetchData();
   }, [fetchData]);
 
-  const tree = buildTree(categories);
+  const filteredCategories = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const categoryById = new Map(categories.map((category) => [category._id, category]));
+    const visibleIds = new Set<string>();
+
+    categories.forEach((category) => {
+      const categoryStatus = category.status === 'inactive' ? 'inactive' : 'active';
+      const categoryLevel = String(category.level ?? 1);
+      const categoryVisibility = category.showInNavbar ? 'visible' : 'hidden';
+
+      const matchesSearch =
+        !normalizedSearch ||
+        category.name.toLowerCase().includes(normalizedSearch) ||
+        category.slug.toLowerCase().includes(normalizedSearch) ||
+        categoryStatus.includes(normalizedSearch);
+
+      const matchesStatus = statusFilter === 'all' || categoryStatus === statusFilter;
+      const matchesLevel = levelFilter === 'all' || categoryLevel === levelFilter;
+      const matchesNavbar = navbarFilter === 'all' || categoryVisibility === navbarFilter;
+
+      if (matchesSearch && matchesStatus && matchesLevel && matchesNavbar) {
+        let currentCategory: AdminCategory | undefined = category;
+
+        while (currentCategory) {
+          visibleIds.add(currentCategory._id);
+          currentCategory = currentCategory.parent
+            ? categoryById.get(currentCategory.parent)
+            : undefined;
+        }
+      }
+    });
+
+    return categories.filter((category) => visibleIds.has(category._id));
+  }, [categories, levelFilter, navbarFilter, searchTerm, statusFilter]);
+
+  const tree = useMemo(
+    () => buildTree(filteredCategories, sortKey, sortDirection),
+    [filteredCategories, sortDirection, sortKey]
+  );
+
+  const handleSortToggle = () => {
+    setSortDirection((currentDirection) => (currentDirection === 'asc' ? 'desc' : 'asc'));
+  };
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
@@ -272,6 +366,108 @@ const CategoriesAdmin = () => {
         </button>
       </div>
 
+      <div className="bg-[#1e293b] border border-gray-800 rounded-xl p-4 mb-6">
+        <div className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-4">
+          <SlidersHorizontal size={16} className="text-cyan-400" />
+          Category Filters
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <label className="md:col-span-2">
+            <span className="block text-xs uppercase tracking-wide text-gray-400 mb-2">
+              Search
+            </span>
+            <div className="flex items-center gap-2 bg-[#0b1120] border border-gray-700 rounded-lg px-3">
+              <Search size={16} className="text-gray-500" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by name, slug, status"
+                className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-gray-500"
+              />
+            </div>
+          </label>
+
+          <label>
+            <span className="block text-xs uppercase tracking-wide text-gray-400 mb-2">
+              Level
+            </span>
+            <select
+              value={levelFilter}
+              onChange={(event) => setLevelFilter(event.target.value)}
+              className="w-full bg-[#0b1120] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white outline-none"
+            >
+              <option value="all">All Levels</option>
+              <option value="1">Level 1</option>
+              <option value="2">Level 2</option>
+              <option value="3">Level 3</option>
+            </select>
+          </label>
+
+          <label>
+            <span className="block text-xs uppercase tracking-wide text-gray-400 mb-2">
+              Status
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              className="w-full bg-[#0b1120] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white outline-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+
+          <label>
+            <span className="block text-xs uppercase tracking-wide text-gray-400 mb-2">
+              Navbar
+            </span>
+            <select
+              value={navbarFilter}
+              onChange={(event) => setNavbarFilter(event.target.value)}
+              className="w-full bg-[#0b1120] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white outline-none"
+            >
+              <option value="all">All Items</option>
+              <option value="visible">Visible</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 mt-4">
+          <label className="md:w-64">
+            <span className="block text-xs uppercase tracking-wide text-gray-400 mb-2">
+              Sort By
+            </span>
+            <select
+              value={sortKey}
+              onChange={(event) => setSortKey(event.target.value as CategorySortKey)}
+              className="w-full bg-[#0b1120] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white outline-none"
+            >
+              <option value="order">Order</option>
+              <option value="name">Name</option>
+              <option value="slug">Slug</option>
+              <option value="level">Level</option>
+              <option value="status">Status</option>
+              <option value="visibility">Navbar Visibility</option>
+            </select>
+          </label>
+
+          <div className="md:self-end">
+            <button
+              type="button"
+              onClick={handleSortToggle}
+              className="w-full md:w-auto bg-[#0b1120] border border-gray-700 hover:border-cyan-500 rounded-lg px-4 py-2.5 text-sm text-white flex items-center justify-center gap-2 transition-colors"
+            >
+              {sortDirection === 'asc' ? <ArrowUpAZ size={16} /> : <ArrowDownAZ size={16} />}
+              {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex gap-4 mb-4 text-xs text-gray-400">
         <span className="flex items-center gap-1">{levelBadge(1)} Root menu</span>
         <span className="flex items-center gap-1">{levelBadge(2)} Category</span>
@@ -289,7 +485,7 @@ const CategoriesAdmin = () => {
           <div className="p-8 text-center text-gray-400">Loading...</div>
         ) : tree.length === 0 ? (
           <div className="p-8 text-center text-gray-400">
-            No categories found. Click &quot;Add Root Menu&quot; to create your first menu item.
+            No categories matched the selected filters.
           </div>
         ) : (
           tree.map((node) => renderNode(node, 0))

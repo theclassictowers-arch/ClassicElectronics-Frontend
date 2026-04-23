@@ -108,7 +108,7 @@ const Navbar = () => {
     (async () => {
       const data = await getNavbarData();
       if (cancelled || !data) return;
-      console.log("Navbar API Response:", data.menus); // Debugging ke liye log
+      console.log("Navbar API Response:", data.menus); // For debugging purposes
       if (data.menus.length > 0) {
         setMenus(sortMenuNodes(data.menus as NavNode[]));
       }

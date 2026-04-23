@@ -10,7 +10,8 @@ const config = {
     extend: {},
   },
   plugins: [
-    animate, 
+    animate,
+    require('tailwind-scrollbar'),
   ],
 };
 

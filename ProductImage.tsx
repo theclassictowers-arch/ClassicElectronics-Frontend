@@ -21,7 +21,7 @@ export default function ProductImage({ src, alt, className, fill, width, height 
       fill={fill}
       width={!fill ? width : undefined}
       height={!fill ? height : undefined}
-      unoptimized={true} // Taake local server se image fetch hone mein issue na ho
+      unoptimized={true} // So that there's no issue fetching images from local server
     />
   );
 }

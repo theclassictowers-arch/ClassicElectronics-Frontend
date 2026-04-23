@@ -147,7 +147,7 @@ const ProductSorterPage = () => {
       const allProducts: Product[] = Array.isArray(prodRes.data) ? prodRes.data : [];
       const allCategories: Category[] = Array.isArray(catRes.data) ? catRes.data : [];
 
-      // Sirf woh categories show karo jin me products hain
+      // Only show categories that have products
       const usedCategoryIds = new Set<string>();
 
       allProducts.forEach((product) => {
@@ -172,7 +172,7 @@ const ProductSorterPage = () => {
     setLoading(true);
 
     try {
-      // API ko categoryId bhi bhej rahe hain
+      
       const res = await api.get('products', {
         params: {
           categoryId: category._id,
@@ -182,7 +182,7 @@ const ProductSorterPage = () => {
 
       const rawProducts: Product[] = Array.isArray(res.data) ? res.data : [];
 
-      // Strict frontend filter: sirf selected category ke products
+      // Strict frontend filter: only selected category's products
       let filteredProducts = rawProducts.filter((product) => {
         const ids = getCategoryIdsFromProduct(product);
         return ids.includes(category._id);
@@ -341,17 +341,17 @@ const ProductSorterPage = () => {
             <div className="bg-[#0b1120] border-2 border-dashed border-gray-800 rounded-2xl p-12 text-center">
               <Package className="mx-auto text-gray-600 mb-4" size={48} />
               <p className="text-gray-500">
-                Pehle ek category select karein unke products ko reorder karne ke liye.
+               First, select a category to reorder their products.
               </p>
             </div>
           ) : loading ? (
             <div className="text-center py-20 text-cyan-400 flex flex-col items-center gap-3">
               <Loader2 className="animate-spin" size={32} />
-              <p>Products load ho rahe hain...</p>
+              <p>Products are loading...</p>
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-20 text-gray-500 bg-[#1e293b] rounded-2xl border border-gray-800">
-              Is category mein koi products nahi hain.
+              There are no products in this category.
             </div>
           ) : (
             <DndContext
