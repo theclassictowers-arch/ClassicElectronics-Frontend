@@ -312,8 +312,8 @@ const ProductSorterPage = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-2">
-          <h3 className="text-gray-400 font-bold uppercase text-xs tracking-wider mb-4 ml-1">
+        <div className="md:col-span-1 space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800">
+          <h3 className="text-gray-400 font-bold uppercase text-xs tracking-wider mb-4 ml-1 sticky top-0 bg-[#0f172a] pt-2 pb-2">
             Select Category
           </h3>
 

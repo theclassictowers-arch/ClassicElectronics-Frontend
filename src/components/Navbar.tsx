@@ -118,9 +118,9 @@ const Navbar = () => {
   }, []);
 
   // Dropdown styles
-  const dropdownStyle = "absolute left-0 top-full min-w-[300px] w-max max-w-[400px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-b-md z-50 transition-all duration-200 origin-top opacity-0 scale-y-0 pointer-events-none group-hover:opacity-100 group-hover:scale-y-100 group-hover:pointer-events-auto";
-  const subDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/item:opacity-100 md:group-hover/item:scale-x-100 md:group-hover/item:pointer-events-auto";
-  const thirdDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/subitem:opacity-100 md:group-hover/subitem:scale-x-100 md:group-hover/subitem:pointer-events-auto";
+  const dropdownStyle = "absolute left-0 top-full min-w-[300px] w-max max-w-[400px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-b-md z-50 transition-all duration-200 origin-top opacity-0 scale-y-0 pointer-events-none group-hover:opacity-100 group-hover:scale-y-100 group-hover:pointer-events-auto max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800";
+  const subDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/item:opacity-100 md:group-hover/item:scale-x-100 md:group-hover/item:pointer-events-auto max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800";
+  const thirdDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/subitem:opacity-100 md:group-hover/subitem:scale-x-100 md:group-hover/subitem:pointer-events-auto max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800";
 
   /** Render a Level-3 leaf node (items = products) */
   const renderLeafItems = (items: NavMenuNode['items']) => {

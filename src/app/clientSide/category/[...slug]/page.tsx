@@ -277,39 +277,37 @@ const CategoryListView = ({ categorySlug, categoryName, categoryDescription, val
                     ))}
                 </div>
             ) : totalItems > 0 ? (
-                <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800">
-                    <>
-                        {valves.length > 0 && (
-                            <div className="mb-12">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 sticky top-0 bg-gradient-to-b from-[#0f172a] to-transparent pt-2 pb-4 z-10">
-                                    <Package size={20} className="text-cyan-400" />
-                                    Valves ({valves.length})
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                                    {valves.map((valve) => (
-                                        <ValveCard key={valve._id} valve={valve} />
-                                    ))}
-                                </div>
+                <>
+                    {valves.length > 0 && (
+                        <div className="mb-12">
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <Package size={20} className="text-cyan-400" />
+                                Valves ({valves.length})
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {valves.map((valve) => (
+                                    <ValveCard key={valve._id} valve={valve} />
+                                ))}
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {products.length > 0 && (
-                            <div className="mb-12">
-                                {valves.length > 0 && (
-                                    <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 sticky top-0 bg-gradient-to-b from-[#0f172a] to-transparent pt-2 pb-4 z-10">
-                                        <Package size={20} className="text-cyan-400" />
-                                        Products ({products.length})
-                                    </h2>
-                                )}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                                    {products.map((product) => (
-                                        <ProductCard key={product._id} product={product} />
-                                    ))}
-                                </div>
+                    {products.length > 0 && (
+                        <div>
+                            {valves.length > 0 && (
+                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                    <Package size={20} className="text-cyan-400" />
+                                    Products ({products.length})
+                                </h2>
+                            )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {products.map((product) => (
+                                    <ProductCard key={product._id} product={product} />
+                                ))}
                             </div>
-                        )}
-                    </>
-                </div>
+                        </div>
+                    )}
+                </>
             ) : (
                 <div className="text-center py-20 bg-[#1e293b] rounded-lg border border-gray-800 border-dashed">
                     <Package size={48} className="mx-auto text-gray-600 mb-4" />
