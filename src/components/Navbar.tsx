@@ -5,91 +5,11 @@ import Link from 'next/link';
 import { ChevronDown, ChevronRight, Shield } from 'lucide-react';
 import type { NavMenuNode } from '@/services/api';
 import { getNavbarData } from '@/services/api';
-import {
-  valveCategories,
-  controllerCategories,
-  electronicsCategories,
-} from '@/data/dummyData';
 
 interface NavNode extends NavMenuNode {
   order?: number;
   children?: NavNode[];
 }
-
-const dummyToMenus = (): NavNode[] => {
-  const valvesMenu: NavNode = {
-    _id: 'fallback-valves',
-    name: 'Purging Valves',
-    slug: 'purging-valves',
-    order: 1,
-    children: valveCategories.map((vc, idx) => ({
-      _id: vc._id,
-      name: vc.name,
-      slug: vc.slug,
-      order: idx + 1,
-      children: (vc.children ?? []).map(
-        (child: {
-          _id: string;
-          name: string;
-          slug: string;
-          items?: {
-            _id: string;
-            name: string;
-            slug: string;
-            model?: string;
-            code?: string;
-          }[];
-        }) => ({
-          _id: child._id,
-          name: child.name,
-          slug: child.slug,
-          items: (child.items ?? []).map(
-            (item: {
-              _id: string;
-              name: string;
-              slug: string;
-              model?: string;
-              code?: string;
-            }) => ({
-              _id: item._id,
-              name: item.name,
-              slug: item.slug,
-              model: item.model || item.code,
-            })
-          ),
-        })
-      ),
-    })),
-  };
-
-  const controllersMenu: NavNode = {
-    _id: 'fallback-controllers',
-    name: 'Controllers',
-    slug: 'bag-filter-controllers',
-    order: 2,
-    children: controllerCategories.map((c, idx) => ({
-      _id: c._id,
-      name: c.name,
-      slug: c.slug,
-      order: idx + 1,
-    })),
-  };
-
-  const electronicsMenu: NavNode = {
-    _id: 'fallback-electronics',
-    name: 'Electronics',
-    slug: 'electronics',
-    order: 3,
-    children: electronicsCategories.map((c, idx) => ({
-      _id: c._id,
-      name: c.name,
-      slug: c.slug,
-      order: idx + 1,
-    })),
-  };
-
-  return [valvesMenu, controllersMenu, electronicsMenu];
-};
 
 const hasDropdown = (node: NavMenuNode): boolean =>
   (node.children && node.children.length > 0) ||
@@ -117,8 +37,6 @@ const Navbar = () => {
 
   useEffect(() => {
     let cancelled = false;
-
-    setMenus(dummyToMenus());
 
     (async () => {
       try {
