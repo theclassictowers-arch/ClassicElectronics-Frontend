@@ -2,10 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Shield } from 'lucide-react';
+import { ChevronDown, ChevronRight, Shield } from 'lucide-react';
 import type { NavMenuNode } from '@/services/api';
 import { getNavbarData } from '@/services/api';
-import { valveCategories, controllerCategories, electronicsCategories } from '@/data/dummyData';
+import {
+  valveCategories,
+  controllerCategories,
+  electronicsCategories,
+} from '@/data/dummyData';
 
 /* ------------------------------------------------------------------ */
 /*  Fallback: convert old dummyData into NavMenuNode[] format          */
@@ -17,7 +21,6 @@ interface NavNode extends NavMenuNode {
 }
 
 const dummyToMenus = (): NavNode[] => {
-  // Purging Valves root with children
   const valvesMenu: NavNode = {
     _id: 'fallback-valves',
     name: 'Purging Valves',
@@ -28,21 +31,41 @@ const dummyToMenus = (): NavNode[] => {
       name: vc.name,
       slug: vc.slug,
       order: idx + 1,
-      children: (vc.children ?? []).map((child: { _id: string; name: string; slug: string; items?: { _id: string; name: string; slug: string; model?: string; code?: string }[] }) => ({
-        _id: child._id,
-        name: child.name,
-        slug: child.slug,
-        items: (child.items ?? []).map((item: { _id: string; name: string; slug: string; model?: string; code?: string }) => ({
-          _id: item._id,
-          name: item.name,
-          slug: item.slug,
-          model: item.model || item.code,
-        })),
-      })),
+      children: (vc.children ?? []).map(
+        (child: {
+          _id: string;
+          name: string;
+          slug: string;
+          items?: {
+            _id: string;
+            name: string;
+            slug: string;
+            model?: string;
+            code?: string;
+          }[];
+        }) => ({
+          _id: child._id,
+          name: child.name,
+          slug: child.slug,
+          items: (child.items ?? []).map(
+            (item: {
+              _id: string;
+              name: string;
+              slug: string;
+              model?: string;
+              code?: string;
+            }) => ({
+              _id: item._id,
+              name: item.name,
+              slug: item.slug,
+              model: item.model || item.code,
+            })
+          ),
+        })
+      ),
     })),
   };
 
-  // Controllers root
   const controllersMenu: NavNode = {
     _id: 'fallback-controllers',
     name: 'Controllers',
@@ -56,7 +79,6 @@ const dummyToMenus = (): NavNode[] => {
     })),
   };
 
-  // Electronics root
   const electronicsMenu: NavNode = {
     _id: 'fallback-electronics',
     name: 'Electronics',
@@ -77,18 +99,24 @@ const dummyToMenus = (): NavNode[] => {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Does a node have visible sub-items (children or items)? */
 const hasDropdown = (node: NavMenuNode): boolean =>
-  (node.children && node.children.length > 0) || (node.items && node.items.length > 0) || false;
+  (node.children && node.children.length > 0) ||
+  (node.items && node.items.length > 0) ||
+  false;
 
-/** Recursively sort nodes and their items by 'order' property */
 const sortMenuNodes = (nodes: NavNode[]): NavNode[] => {
   return [...nodes]
     .sort((a, b) => ((a as any).order ?? 0) - ((b as any).order ?? 0))
-    .map(node => ({
+    .map((node) => ({
       ...node,
-      children: node.children ? sortMenuNodes(node.children as NavNode[]) : undefined,
-      items: node.items ? [...node.items].sort((a, b) => ((a as any).order ?? 0) - ((b as any).order ?? 0)) : undefined
+      children: node.children
+        ? sortMenuNodes(node.children as NavNode[])
+        : undefined,
+      items: node.items
+        ? [...node.items].sort(
+            (a, b) => ((a as any).order ?? 0) - ((b as any).order ?? 0)
+          )
+        : undefined,
     }));
 };
 
@@ -102,40 +130,56 @@ const Navbar = () => {
   useEffect(() => {
     let cancelled = false;
 
-    // Show fallback immediately
     setMenus(dummyToMenus());
 
     (async () => {
-      const data = await getNavbarData();
-      if (cancelled || !data) return;
-      console.log("Navbar API Response:", data.menus); // For debugging purposes
-      if (data.menus.length > 0) {
-        setMenus(sortMenuNodes(data.menus as NavNode[]));
+      try {
+        const data = await getNavbarData();
+        if (cancelled || !data) return;
+
+        if (data.menus?.length > 0) {
+          setMenus(sortMenuNodes(data.menus as NavNode[]));
+        }
+      } catch (error) {
+        console.error('Navbar fetch failed:', error);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Dropdown styles
-  const dropdownStyle = "absolute left-0 top-full min-w-[300px] w-max max-w-[400px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-b-md z-50 transition-all duration-200 origin-top opacity-0 scale-y-0 pointer-events-none group-hover:opacity-100 group-hover:scale-y-100 group-hover:pointer-events-auto";
-  const subDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/item:opacity-100 md:group-hover/item:scale-x-100 md:group-hover/item:pointer-events-auto";
-  const thirdDropdownStyle = "md:absolute md:left-full md:top-0 min-w-[280px] w-max max-w-[350px] bg-[#1e293b] border border-gray-700 shadow-xl rounded-md z-50 transition-all duration-200 origin-left md:opacity-0 md:scale-x-0 md:pointer-events-none md:group-hover/subitem:opacity-100 md:group-hover/subitem:scale-x-100 md:group-hover/subitem:pointer-events-auto max-h-[85vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-gray-800";
+  const dropdownStyle =
+    'absolute left-0 top-full min-w-[240px] w-max max-w-[320px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-b-xl z-50 origin-top opacity-0 translate-y-3 scale-95 pointer-events-none transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
 
-  /** Render a Level-3 leaf node (items = products) */
+  const subDropdownStyle =
+    'md:absolute md:left-full md:top-0 min-w-[220px] w-max max-w-[300px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/item:opacity-100 md:group-hover/item:translate-x-0 md:group-hover/item:scale-100 md:group-hover/item:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
+
+  const thirdDropdownStyle =
+    'md:absolute md:left-full md:top-0 min-w-[230px] w-max max-w-[310px] bg-[#1e293b]/95 backdrop-blur-md border border-gray-700 shadow-2xl rounded-xl z-50 origin-left md:opacity-0 md:translate-x-3 md:scale-95 md:pointer-events-none md:transition-all md:duration-300 md:ease-out md:group-hover/subitem:opacity-100 md:group-hover/subitem:translate-x-0 md:group-hover/subitem:scale-100 md:group-hover/subitem:pointer-events-auto max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll';
+
   const renderLeafItems = (items: NavMenuNode['items']) => {
     if (!items || items.length === 0) return null;
+
     return items.map((item) => (
       <Link
         key={item._id || item.slug}
         href={`/clientSide/item/${item.slug}`}
-        className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+        className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
       >
         <div className="flex flex-col gap-0.5">
-          <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-          {((item as any).code || (item as any).model || (item as any).specifications?.model) && (
+          <span className="block font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+            {item.name}
+          </span>
+
+          {((item as any).code ||
+            (item as any).model ||
+            (item as any).specifications?.model) && (
             <span className="text-[10px] text-cyan-400/80 italic font-normal">
-              {(item as any).code || (item as any).model || (item as any).specifications?.model}
+              {(item as any).code ||
+                (item as any).model ||
+                (item as any).specifications?.model}
             </span>
           )}
         </div>
@@ -147,25 +191,24 @@ const Navbar = () => {
     <nav className="bg-[#0b1120] border-t border-gray-800 md:block transition-all shadow-md w-full">
       <div className="container mx-auto px-4">
         <ul className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm font-medium tracking-wide py-1 relative">
-
-          {/* HOME */}
           <li>
-            <Link href="/" className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm">
+            <Link
+              href="/"
+              className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm transition-colors duration-200"
+            >
               Home
             </Link>
           </li>
 
-          {/* DYNAMIC MENUS — one per Level-1 root */}
           {menus.map((menu) => {
             const hasDrop = hasDropdown(menu);
 
             if (!hasDrop) {
-              // Simple link, no dropdown
               return (
                 <li key={menu._id || menu.slug}>
                   <Link
                     href={`/clientSide/category/${menu.slug}`}
-                    className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm"
+                    className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm transition-colors duration-200"
                   >
                     {menu.name}
                   </Link>
@@ -173,76 +216,96 @@ const Navbar = () => {
               );
             }
 
-            // Menu with dropdown
             return (
               <li key={menu._id || menu.slug} className="relative group">
                 <Link
                   href={`/clientSide/category/${menu.slug}`}
-                  className="flex items-center gap-1 py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm"
+                  className="flex items-center gap-1 py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm transition-colors duration-200"
                 >
-                  {menu.name} <ChevronDown size={14} />
+                  {menu.name}
+                  <ChevronDown
+                    size={14}
+                    className="transition-transform duration-300 group-hover:rotate-180"
+                  />
                 </Link>
 
                 <div className={dropdownStyle}>
-                  {/* Level 2 children */}
                   {(menu.children ?? []).map((child) => {
                     const childHasSubs = hasDropdown(child);
 
                     if (!childHasSubs) {
-                      // Simple child link
                       return (
                         <Link
                           key={child._id || child.slug}
                           href={`/clientSide/category/${child.slug}`}
-                          className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                          className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
                         >
                           {child.name}
                         </Link>
                       );
                     }
 
-                    // Child with sub-dropdown (Level 3)
                     return (
-                      <div key={child._id || child.slug} className="relative group/item">
+                      <div
+                        key={child._id || child.slug}
+                        className="relative group/item"
+                      >
                         <Link
                           href={`/clientSide/category/${child.slug}`}
-                          className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 text-xs md:text-sm"
+                          className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 text-xs md:text-sm transition-colors duration-200"
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-4">
                             <span>{child.name}</span>
-                            <ChevronDown size={12} className="transition-transform group-hover/item:rotate-180" />
+                            <ChevronRight
+                              size={14}
+                              className="hidden md:block transition-transform duration-300 group-hover/item:translate-x-1"
+                            />
+                            <ChevronDown
+                              size={12}
+                              className="md:hidden transition-transform duration-300 group-hover/item:rotate-180"
+                            />
                           </div>
                         </Link>
 
                         <div className={subDropdownStyle}>
-                          {/* Level 3: sub-children or leaf items */}
                           {(child.children ?? []).map((sub) => {
-                            const subHasItems = sub.items && sub.items.length > 0;
+                            const subHasItems =
+                              sub.items && sub.items.length > 0;
 
                             if (!subHasItems) {
                               return (
                                 <Link
                                   key={sub._id || sub.slug}
                                   href={`/clientSide/category/${sub.slug}`}
-                                  className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                                  className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
                                 >
                                   {sub.name}
                                 </Link>
                               );
                             }
 
-                            // Sub with product items (Level 3 leaf with products)
                             return (
-                              <div key={sub._id || sub.slug} className="relative group/subitem">
+                              <div
+                                key={sub._id || sub.slug}
+                                className="relative group/subitem"
+                              >
                                 <Link
                                   href={`/clientSide/category/${sub.slug}`}
-                                  className="block px-4 py-2 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800 last:border-0 text-xs md:text-sm"
+                                  className="block px-3 py-2.5 text-gray-300 hover:bg-cyan-900/30 hover:text-white border-b border-gray-800/80 last:border-0 text-xs md:text-sm transition-colors duration-200"
                                 >
-                                  <div className="flex items-center justify-between">
+                                  <div className="flex items-center justify-between gap-4">
                                     <span>{sub.name}</span>
-                                    <ChevronDown size={12} className="transition-transform group-hover/subitem:rotate-180" />
+                                    <ChevronRight
+                                      size={14}
+                                      className="hidden md:block transition-transform duration-300 group-hover/subitem:translate-x-1"
+                                    />
+                                    <ChevronDown
+                                      size={12}
+                                      className="md:hidden transition-transform duration-300 group-hover/subitem:rotate-180"
+                                    />
                                   </div>
                                 </Link>
+
                                 <div className={thirdDropdownStyle}>
                                   {renderLeafItems(sub.items)}
                                 </div>
@@ -250,38 +313,43 @@ const Navbar = () => {
                             );
                           })}
 
-                          {/* If the child itself has items (products) directly */}
                           {renderLeafItems(child.items)}
                         </div>
                       </div>
                     );
                   })}
 
-                  {/* If the menu root itself has items directly (unlikely but handled) */}
                   {renderLeafItems(menu.items)}
                 </div>
               </li>
             );
           })}
 
-          {/* ABOUT */}
           <li>
-            <Link href="/clientSide/about" className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm">
+            <Link
+              href="/clientSide/about"
+              className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm transition-colors duration-200"
+            >
               About
             </Link>
           </li>
 
-          {/* CONTACT */}
           <li>
-            <Link href="/clientSide/contact" className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm">
+            <Link
+              href="/clientSide/contact"
+              className="block py-3 md:py-4 text-gray-300 hover:text-white uppercase text-xs md:text-sm transition-colors duration-200"
+            >
               Contact
             </Link>
           </li>
 
-          {/* ADMIN LOGIN (Mobile only - desktop has it in MainHeader) */}
           <li className="md:hidden">
-            <Link href="/admin/login" className="flex items-center gap-2 py-3 text-gray-300 hover:text-white uppercase text-xs">
-              <Shield size={16} /> Admin Login
+            <Link
+              href="/admin/login"
+              className="flex items-center gap-2 py-3 text-gray-300 hover:text-white uppercase text-xs transition-colors duration-200"
+            >
+              <Shield size={16} />
+              Admin Login
             </Link>
           </li>
         </ul>
