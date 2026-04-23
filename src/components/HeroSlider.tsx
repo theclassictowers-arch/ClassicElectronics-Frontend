@@ -6,8 +6,10 @@ import { ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react';
 import { getSliders, DEFAULT_SLIDES, type Slide } from '@/services/api';
 import { resolveAssetUrl } from '@/lib/apiConfig';
 
+const fallbackSlides: Slide[] = DEFAULT_SLIDES.map((s, i) => ({ ...s, _id: String(i + 1) }));
+
 const HeroSlider = () => {
-  const [slides, setSlides] = useState<Slide[]>([]);
+  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {

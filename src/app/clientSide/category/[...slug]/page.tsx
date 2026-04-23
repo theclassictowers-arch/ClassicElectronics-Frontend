@@ -3,6 +3,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { getProducts, getProductBySlug, getNavbarData } from '@/services/api';
+import { allValves as localAscoValves } from '@/data/valvesData';
+import { allGoyenValves as localGoyenValves } from '@/data/goyenValvesData';
+import { valveCategories, controllerCategories, electronicsCategories } from '@/data/dummyData';
 import { Product, useCart } from '@/context/CartContext';
 import ProductCard from '@/components/ProductCard';
 import ValveCard from '@/components/ValveCard';
@@ -339,6 +342,11 @@ const CategoryPage = () => {
                 // First try to find as a single product by slug
                 const slugToTry = categorySlug.includes('/') ? categorySlug.split('/').pop()! : categorySlug;
                 let productResult = await getProductBySlug(slugToTry);
+                // Fallback to local data if API returns nothing
+                if (!productResult) {
+                    const allLocal = [...localAscoValves, ...localGoyenValves];
+                    productResult = allLocal.find(v => v.slug === slugToTry || v.slug === categorySlug) || null;
+                }
 
                 if (productResult && typeof productResult === 'object' && !Array.isArray(productResult)) {
                     const product = productResult as any;
@@ -383,6 +391,12 @@ const CategoryPage = () => {
                     let found = null;
                     if (navData) {
                         found = findCategoryName(navData.menus || [], categorySlug);
+                    }
+                    // Fallback to dummy data categories
+                    if (!found) {
+                        found = findCategoryName(valveCategories, categorySlug)
+                            || findCategoryName(controllerCategories, categorySlug)
+                            || findCategoryName(electronicsCategories, categorySlug);
                     }
                     if (found) {
                         setCategoryName(found.name);
