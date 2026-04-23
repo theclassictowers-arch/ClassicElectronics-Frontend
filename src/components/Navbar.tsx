@@ -151,7 +151,7 @@ const Navbar = () => {
     if (!items || items.length === 0) return null;
 
     return (
-      <div className="max-h-[calc(100vh-100px)] overflow-y-auto overflow-x-hidden scroll-smooth navbar-scroll">
+      <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-thin scrollbar-thumb-cyan-600 scrollbar-track-transparent">
         {items.map((item) => (
           <Link
             key={item._id || item.slug}

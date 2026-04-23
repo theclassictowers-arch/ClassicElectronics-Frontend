@@ -10,12 +10,13 @@ const TopHeader = () => {
     <div className="bg-slate-950 text-white text-xs py-2 px-4 border-b border-gray-800 hidden md:block">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="relative w-24 h-8">
+          <div className="relative">
             <Image
               src="/Classic_logo.png"
               alt="Classic Electronics Logo"
-              fill
-              className="object-contain"
+              width={40}
+              height={40}
+              className="object-contain h-8 w-auto"
             />
           </div>
           <span className="text-gray-400">|</span>

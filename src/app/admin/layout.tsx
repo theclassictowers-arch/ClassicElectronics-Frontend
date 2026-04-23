@@ -45,8 +45,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="min-h-screen bg-[#0f172a] text-white flex">
             {/* Sidebar */}
             <aside className="w-64 bg-[#0b1120] border-r border-gray-800 flex flex-col fixed h-full">
-                <div className="p-6 border-b border-gray-800">
-                    <Image src="/favicon.png" alt="Classic Logo" width={132} height={48} className="rounded-sm mb-2" />
+                <div className="p-6 border-b border-gray-800 text-center">
+                    <Image src="/favicon.png" alt="Classic Logo" width={60} height={60} className="rounded-sm mb-2 mx-auto" />
 
                 </div>
 

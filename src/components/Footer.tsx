@@ -33,12 +33,13 @@ const Footer = () => {
                     {/* Brand Info */}
                     <div>
                         <Link href="/" className="flex items-center gap-3 mb-6 text-white">
-                            <div className="relative w-[200px] h-[60px]">
+                            <div className="relative">
                                 <Image
                                     src="/Classic_logo.png"
                                     alt="Classic Electronics Logo"
-                                    fill
-                                    className="object-contain"
+                                    width={150}
+                                    height={50}
+                                    className="object-contain h-auto w-auto max-h-[60px]"
                                 />
                             </div>
                         </Link>
