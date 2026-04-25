@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Tag, ShoppingCart, LogOut, UserCircle, ImageIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, ShoppingCart, LogOut, UserCircle, ImageIcon, FileText } from 'lucide-react';
 import { getAdminProfile } from '@/services/api';
 
 type AdminInfo = { name: string; email: string };
@@ -56,6 +56,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                         { name: 'Categories', icon: Tag, href: '/admin/categories' },
                         { name: 'Products', icon: Package, href: '/admin/products' },
                         { name: 'Orders', icon: ShoppingCart, href: '/admin/orders' },
+                        { name: 'Invoices', icon: FileText, href: '/admin/invoices' },
                         { name: 'Sliders', icon: ImageIcon, href: '/admin/sliders' },
                         { name: 'Profile', icon: UserCircle, href: '/admin/profile' },
                     ].map((item) => (
