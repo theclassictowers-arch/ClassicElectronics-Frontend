@@ -642,7 +642,10 @@ const SalesTaxInvoicePage = () => {
         </div>
 
         <section className="rounded-[32px] border border-slate-800 bg-[#0b1120] p-3 shadow-[0_25px_60px_rgba(15,23,42,0.5)]">
-          <div className="mx-auto w-full max-w-[980px] rounded-[28px] bg-gradient-to-br from-white via-slate-50 to-slate-100 p-5 text-slate-900 sm:p-8">
+          <div
+            className="mx-auto w-full max-w-[980px] rounded-[28px] bg-gradient-to-br from-white via-slate-50 to-slate-100 p-5 text-slate-900 sm:p-8"
+            style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+          >
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-[360px]">
                 <Image
@@ -673,14 +676,35 @@ const SalesTaxInvoicePage = () => {
               </div>
             </div>
 
-            <div className="relative mt-8 overflow-hidden rounded-[38px] border-[3px] border-violet-600 bg-white px-5 pb-8 pt-10 sm:px-8">
-              <div className="pointer-events-none absolute inset-x-0 top-44 flex justify-center opacity-10">
+            <div
+              className="relative mt-8 overflow-hidden rounded-[38px] border-[3px] border-violet-600 bg-white px-5 pb-8 pt-10 sm:px-8"
+              style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+            >
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]">
+                <Image
+                  src="/Classic_logo.png"
+                  alt=""
+                  width={900}
+                  height={360}
+                  className="h-auto w-[82%] max-w-[820px]"
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 top-44 flex justify-center opacity-[0.09]">
                 <Image
                   src="/Classic_logo.png"
                   alt=""
                   width={720}
                   height={260}
                   className="h-auto w-[72%] max-w-[720px]"
+                />
+              </div>
+              <div className="pointer-events-none absolute bottom-24 right-10 opacity-[0.05]">
+                <Image
+                  src="/Classic_logo.png"
+                  alt=""
+                  width={360}
+                  height={140}
+                  className="h-auto w-[280px]"
                 />
               </div>
 
@@ -695,28 +719,28 @@ const SalesTaxInvoicePage = () => {
                 </div>
 
                 <div className="overflow-hidden rounded-[24px] border-[3px] border-slate-950 bg-white">
-                  <table className="w-full border-collapse text-slate-950">
+                  <table className="w-full table-fixed border-collapse text-slate-950">
                     <thead>
                       <tr className="border-b-[3px] border-slate-950">
                         <th className="w-16 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           Sr
                         </th>
-                        <th className="border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-[36%] border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           Description
                         </th>
-                        <th className="w-28 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-20 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           UOM
                         </th>
-                        <th className="w-28 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-20 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           QTY
                         </th>
-                        <th className="w-36 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-24 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           Unit Price
                         </th>
-                        <th className="w-56 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-[18%] border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           Remarks/Picture
                         </th>
-                        <th className="w-40 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-32 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
                           Total
                         </th>
                       </tr>
