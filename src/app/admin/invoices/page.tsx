@@ -10,11 +10,11 @@ import {
   BadgeDollarSign,
   Building2,
   CalendarDays,
+  Download,
   FileText,
   Globe,
   Loader2,
   Mail,
-  MapPin,
   Phone,
   Plus,
   Printer,
@@ -129,6 +129,62 @@ const isLikelyImagePath = (value: string): boolean => {
 const getPictureSource = (value: string): string =>
   isLikelyImagePath(value) ? resolveAssetUrl(value) : '';
 
+const getFrontendAssetUrl = (assetPath: string): string => {
+  if (typeof window === 'undefined') {
+    return assetPath;
+  }
+
+  return new URL(assetPath, window.location.origin).toString();
+};
+
+const loadImageAsPngDataUrl = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Unable to load image: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        const image = document.createElement('img');
+
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth || image.width || 1;
+          canvas.height = image.naturalHeight || image.height || 1;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            reject(new Error('Unable to prepare image canvas.'));
+            return;
+          }
+
+          context.drawImage(image, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+
+        image.onerror = () => reject(new Error('Unable to decode image.'));
+        image.src = objectUrl;
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch (error) {
+    console.warn('PDF image skipped:', error);
+    return null;
+  }
+};
+
+const buildPdfFileName = (invoiceNo: string, date: string): string => {
+  const cleanInvoiceNo = invoiceNo.trim().replace(/[^a-zA-Z0-9-_]+/g, '-') || 'invoice';
+  const cleanDate = date.trim().replace(/[^0-9-]+/g, '-') || 'date';
+
+  return `sales-tax-invoice-${cleanInvoiceNo}-${cleanDate}.pdf`;
+};
+
 const SalesTaxInvoicePage = () => {
   const [form, setForm] = useState<InvoiceForm>(createInvoiceForm);
   const [items, setItems] = useState<InvoiceItem[]>([createInvoiceItem()]);
@@ -136,6 +192,7 @@ const SalesTaxInvoicePage = () => {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -175,7 +232,7 @@ const SalesTaxInvoicePage = () => {
       } catch (error) {
         console.error('Failed to load invoice item catalog', error);
         if (!isActive) return;
-        setCatalogError('Categories aur products load nahi ho sake. Thori dair baad dobara try karein.');
+        setCatalogError('Unable to load categories and products. Please try again shortly.');
       } finally {
         if (isActive) {
           setCatalogLoading(false);
@@ -292,6 +349,351 @@ const SalesTaxInvoicePage = () => {
     setItems([createInvoiceItem()]);
   };
 
+  const handleDownloadPdf = async () => {
+    if (isDownloadingPdf) return;
+
+    setIsDownloadingPdf(true);
+
+    try {
+      const { GState, jsPDF } = await import('jspdf');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 11;
+      const innerPadding = 4;
+      const contentWidth = pageWidth - margin * 2;
+      const contentLeftX = margin + innerPadding;
+      const contentRightX = pageWidth - margin - innerPadding;
+      const tableColumnWidths = [10, 72, 9, 9, 15, 38, 29];
+      const tableHeaders = ['Sr', 'Description', 'UOM', 'QTY', 'Unit Price', 'Remarks/Picture', 'Total'];
+      const primaryTextColor: [number, number, number] = [15, 23, 42];
+      const mutedTextColor: [number, number, number] = [71, 85, 105];
+      const accentColor: [number, number, number] = [109, 40, 217];
+      const borderColor: [number, number, number] = [15, 23, 42];
+      const lightBorderColor: [number, number, number] = [203, 213, 225];
+      const outerBorderTopY = 43;
+      const outerBorderBottomY = pageHeight - 34;
+      const tabTopY = 34;
+      const tabWidth = 68;
+      const borderRadius = 8;
+      const footerBoxX = margin;
+      const footerBoxY = pageHeight - 30;
+      const footerBoxWidth = contentWidth;
+      const footerBoxHeight = 23;
+
+      const logoUrl = getFrontendAssetUrl('/Classic_logo.png');
+      const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
+      const itemImageDataUrls = await Promise.all(
+        items.map((item) => {
+          const imageUrl = getPictureSource(item.picture);
+          return imageUrl ? loadImageAsPngDataUrl(imageUrl) : Promise.resolve(null);
+        })
+      );
+
+      const drawTableHeader = (startY: number) => {
+        let startX = contentLeftX;
+
+        pdf.setDrawColor(...borderColor);
+        pdf.setLineWidth(0.5);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9.5);
+        pdf.setTextColor(...primaryTextColor);
+
+        tableHeaders.forEach((header, index) => {
+          const cellWidth = tableColumnWidths[index];
+          pdf.rect(startX, startY, cellWidth, 10);
+          pdf.text(header, startX + cellWidth / 2, startY + 6.2, {
+            align: 'center',
+            baseline: 'middle',
+          });
+          startX += cellWidth;
+        });
+
+        return startY + 10;
+      };
+
+      const drawInvoiceOutline = () => {
+        const tabEndX = margin + tabWidth;
+
+        pdf.setDrawColor(...accentColor);
+        pdf.setLineWidth(1.05);
+        pdf.setLineJoin('round');
+        pdf.setLineCap('round');
+
+        pdf.moveTo(margin + borderRadius, tabTopY);
+        pdf.lineTo(tabEndX - borderRadius, tabTopY);
+        pdf.curveTo(
+          tabEndX - 2,
+          tabTopY,
+          tabEndX + 2,
+          outerBorderTopY - 2,
+          tabEndX + borderRadius,
+          outerBorderTopY
+        );
+        pdf.lineTo(pageWidth - margin - borderRadius, outerBorderTopY);
+        pdf.curveTo(
+          pageWidth - margin + 0.5,
+          outerBorderTopY,
+          pageWidth - margin + 0.5,
+          outerBorderTopY,
+          pageWidth - margin,
+          outerBorderTopY + borderRadius
+        );
+        pdf.lineTo(pageWidth - margin, outerBorderBottomY - borderRadius);
+        pdf.curveTo(
+          pageWidth - margin,
+          outerBorderBottomY + 0.5,
+          pageWidth - margin,
+          outerBorderBottomY + 0.5,
+          pageWidth - margin - borderRadius,
+          outerBorderBottomY
+        );
+        pdf.lineTo(margin + borderRadius, outerBorderBottomY);
+        pdf.curveTo(
+          margin - 0.5,
+          outerBorderBottomY,
+          margin - 0.5,
+          outerBorderBottomY,
+          margin,
+          outerBorderBottomY - borderRadius
+        );
+        pdf.lineTo(margin, tabTopY + borderRadius);
+        pdf.curveTo(
+          margin,
+          tabTopY - 0.5,
+          margin,
+          tabTopY - 0.5,
+          margin + borderRadius,
+          tabTopY
+        );
+        pdf.stroke();
+      };
+
+      const drawFooterOutline = () => {
+        pdf.setDrawColor(...accentColor);
+        pdf.setFillColor(255, 255, 255);
+        pdf.setLineWidth(0.9);
+        pdf.roundedRect(footerBoxX, footerBoxY, footerBoxWidth, footerBoxHeight, 6, 6, 'FD');
+      };
+
+      const drawPageHeader = (withCustomerBlock: boolean) => {
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+        drawInvoiceOutline();
+        drawFooterOutline();
+
+        if (logoDataUrl) {
+          pdf.addImage(logoDataUrl, 'PNG', contentLeftX, 8, 50, 19, undefined, 'FAST');
+        }
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...primaryTextColor);
+        pdf.setFontSize(15);
+        pdf.text(`SALES TAX INVOICE: ${form.invoiceNo || '---'}`, contentRightX, 15, {
+          align: 'right',
+        });
+        pdf.setFontSize(13.2);
+        pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 22.5, {
+          align: 'right',
+        });
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFontSize(10.8);
+        pdf.text(`Purchase Order: ${form.purchaseOrder || '____________'}`, contentRightX, 29.5, {
+          align: 'right',
+        });
+        pdf.text(`Quotation No: ${form.quotationNo || '____________'}`, contentRightX, 36.5, {
+          align: 'right',
+        });
+
+        let cursorY = 50;
+
+        if (withCustomerBlock) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(11);
+          pdf.setTextColor(...primaryTextColor);
+          pdf.text(form.companyName || 'Customer Company', contentLeftX + 1, cursorY + 7);
+          pdf.text(form.location ? `${form.location}:` : 'Location:', contentLeftX + 1, cursorY + 13);
+          pdf.text(`GST: ${form.gst || '________________'}`, contentLeftX + 1, cursorY + 19);
+          pdf.text(`NTN: ${form.ntn || '________________'}`, contentLeftX + 1, cursorY + 25);
+          cursorY += 31;
+        }
+
+        if (logoDataUrl) {
+          pdf.setGState(new GState({ opacity: 0.08, 'stroke-opacity': 0.08 }));
+          pdf.addImage(logoDataUrl, 'PNG', (pageWidth - 122) / 2, 144, 122, 46, undefined, 'FAST');
+          pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
+        }
+
+        return drawTableHeader(cursorY);
+      };
+
+      let cursorY = drawPageHeader(true);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(...primaryTextColor);
+
+      for (const [index, item] of items.entries()) {
+        const descriptionLines = pdf.splitTextToSize(
+          item.description || 'Item description',
+          tableColumnWidths[1] - 4
+        ) as string[];
+        const remarksLines = pdf.splitTextToSize(
+          item.remarks || item.productName || 'Remarks',
+          tableColumnWidths[5] - 4
+        ) as string[];
+        const itemImage = itemImageDataUrls[index];
+        const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+
+        const descriptionHeight = Math.max(descriptionLines.length, 1) * 4;
+        const remarksHeight = Math.max(remarksLines.length, 1) * 4;
+        const imageHeight = itemImage ? 18 : 0;
+        const rowHeight = Math.max(16, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6);
+
+        if (cursorY + rowHeight > pageHeight - 55) {
+          pdf.addPage();
+          cursorY = drawPageHeader(false);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9.5);
+          pdf.setTextColor(...primaryTextColor);
+        }
+
+        let currentX = contentLeftX;
+        const rowValues = [
+          String(index + 1),
+          descriptionLines,
+          item.uom || '--',
+          String(item.quantity || 0),
+          formatCurrency(item.unitPrice || 0),
+          remarksLines,
+          formatCurrency(itemTotal),
+        ] as const;
+
+        rowValues.forEach((value, valueIndex) => {
+          const cellWidth = tableColumnWidths[valueIndex];
+          pdf.setDrawColor(...borderColor);
+          pdf.rect(currentX, cursorY, cellWidth, rowHeight);
+
+          if (valueIndex === 1) {
+            pdf.text(value as string[], currentX + 2, cursorY + 4.8);
+          } else if (valueIndex === 5) {
+            pdf.setTextColor(...mutedTextColor);
+            pdf.text(value as string[], currentX + 2, cursorY + 4.8);
+
+            if (itemImage) {
+              const imageY = cursorY + Math.max(remarksHeight + 4, 10);
+              const maxImageWidth = cellWidth - 4;
+              const maxImageHeight = Math.max(rowHeight - (imageY - cursorY) - 2, 8);
+              const imageSize = Math.min(maxImageWidth, maxImageHeight);
+
+              if (imageSize > 6) {
+                pdf.addImage(itemImage, 'PNG', currentX + 2, imageY, imageSize, imageSize, undefined, 'FAST');
+              }
+            }
+
+            pdf.setTextColor(...primaryTextColor);
+          } else {
+            pdf.text(String(value), currentX + cellWidth / 2, cursorY + 6, {
+              align: 'center',
+            });
+          }
+
+          currentX += cellWidth;
+        });
+
+        cursorY += rowHeight;
+      }
+
+      if (cursorY + 58 > pageHeight - 22) {
+        pdf.addPage();
+        cursorY = drawPageHeader(false);
+      }
+
+      const totalBoxWidth = 56;
+      const totalBoxX = contentRightX - totalBoxWidth;
+      const totalBoxY = cursorY + 8;
+
+      pdf.setDrawColor(...borderColor);
+      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 18, 3, 3, 'S');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...mutedTextColor);
+      pdf.text('GRAND TOTAL', totalBoxX + totalBoxWidth / 2, totalBoxY + 5.5, {
+        align: 'center',
+      });
+      pdf.setFontSize(13);
+      pdf.setTextColor(...primaryTextColor);
+      pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth / 2, totalBoxY + 12.5, {
+        align: 'center',
+      });
+
+      const signatureNameY = totalBoxY + 8;
+      const signatureLineY = totalBoxY + 10.5;
+      const signatureLabelY = totalBoxY + 17.2;
+      const thankYouY = Math.max(totalBoxY + 30, footerBoxY - 7);
+
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(15);
+      pdf.setTextColor(14, 116, 144);
+      pdf.text(form.directorName || 'Director Name', contentLeftX + 1, signatureNameY);
+
+      pdf.setDrawColor(...lightBorderColor);
+      pdf.setLineWidth(0.35);
+      pdf.line(contentLeftX + 1, signatureLineY, contentLeftX + 33, signatureLineY);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(...primaryTextColor);
+      pdf.text('Director', contentLeftX + 1, signatureLabelY);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11.5);
+      pdf.setTextColor(...accentColor);
+      pdf.text(form.thankYouNote, contentRightX, thankYouY, { align: 'right' });
+
+      const footerTitleY = footerBoxY + 4.8;
+      const footerDividerY = footerBoxY + 7.2;
+      const footerLineOneY = footerBoxY + 12.3;
+      const footerLineTwoY = footerBoxY + 16.6;
+      const footerLineThreeY = footerBoxY + 20;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(...primaryTextColor);
+      pdf.text(form.subtitle, pageWidth / 2, footerTitleY, {
+        align: 'center',
+        maxWidth: footerBoxWidth - 12,
+      });
+
+      pdf.setDrawColor(...lightBorderColor);
+      pdf.setLineWidth(0.35);
+      pdf.line(footerBoxX + 4, footerDividerY, footerBoxX + footerBoxWidth - 4, footerDividerY);
+
+      const addressLines = pdf.splitTextToSize(form.address || '', 54) as string[];
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.2);
+      pdf.setTextColor(...primaryTextColor);
+      pdf.text(form.website, footerBoxX + 5, footerLineOneY);
+      pdf.text(addressLines.slice(0, 2), footerBoxX + 5, footerLineTwoY);
+
+      pdf.text('NTN: 1700506', pageWidth / 2, footerLineOneY, { align: 'center' });
+      pdf.text('GST: 05-07-8500-014-73', pageWidth / 2, footerLineTwoY, { align: 'center' });
+      pdf.text(form.email, pageWidth / 2, footerLineThreeY, { align: 'center' });
+
+      pdf.text(form.phonePrimary, footerBoxX + footerBoxWidth - 5, footerLineOneY, { align: 'right' });
+      pdf.text(form.phoneSecondary, footerBoxX + footerBoxWidth - 5, footerLineTwoY, { align: 'right' });
+
+      pdf.save(buildPdfFileName(form.invoiceNo, form.date));
+    } catch (error) {
+      console.error('Failed to download invoice PDF', error);
+      alert('Unable to generate the PDF. Please try again.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   const getCategoryName = (categoryId: string): string =>
     categories.find((category) => category._id === categoryId)?.name || 'Uncategorized';
 
@@ -299,8 +701,8 @@ const SalesTaxInvoicePage = () => {
     products.filter((product) => getCategoryId(product.categoryId) === categoryId);
 
   return (
-    <div className="relative isolate overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10">
+    <div className="invoice-builder-page relative isolate overflow-hidden">
+      <div className="invoice-builder-bg pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute right-6 top-10 opacity-[0.05]">
           <Image
@@ -323,7 +725,7 @@ const SalesTaxInvoicePage = () => {
       </div>
 
       <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="invoice-builder-toolbar flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
             <FileText size={14} />
@@ -331,9 +733,8 @@ const SalesTaxInvoicePage = () => {
           </div>
           <h1 className="mt-4 text-3xl font-bold text-white">Sales Tax Invoice Page</h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">
-            Admin panel ke andar editable invoice experience ready hai. Left side
-            se values update karein aur right side par uploaded design jaisi live
-            preview dekhein.
+            A live invoice builder inside the admin panel. Update values on the left
+            and review the invoice preview on the right.
           </p>
         </div>
 
@@ -348,6 +749,19 @@ const SalesTaxInvoicePage = () => {
           </button>
           <button
             type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isDownloadingPdf ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+            {isDownloadingPdf ? 'Preparing PDF...' : 'Download PDF'}
+          </button>
+          <button
+            type="button"
             onClick={() => window.print()}
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
@@ -357,8 +771,8 @@ const SalesTaxInvoicePage = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]">
-        <div className="space-y-5">
+      <div className="invoice-builder-grid grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]">
+        <div className="invoice-builder-editor space-y-5">
           <section className="rounded-3xl border border-slate-800 bg-[#111827] p-5 shadow-xl">
             <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-cyan-300">
               <BadgeDollarSign size={16} />
@@ -441,14 +855,14 @@ const SalesTaxInvoicePage = () => {
               {catalogLoading ? (
                 <div className="flex items-center gap-2 text-cyan-300">
                   <Loader2 size={16} className="animate-spin" />
-                  Categories aur items load ho rahe hain...
+                  Loading categories and items...
                 </div>
               ) : catalogError ? (
                 <div className="text-rose-300">{catalogError}</div>
               ) : (
                 <div>
-                  <span className="font-semibold text-white">{categories.length}</span> categories aur{' '}
-                  <span className="font-semibold text-white">{products.length}</span> products ready hain.
+                  <span className="font-semibold text-white">{categories.length}</span> categories and{' '}
+                  <span className="font-semibold text-white">{products.length}</span> products are ready.
                 </div>
               )}
             </div>
@@ -505,7 +919,7 @@ const SalesTaxInvoicePage = () => {
 
                     {item.categoryId && getProductsForCategory(item.categoryId).length === 0 ? (
                       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                        Is category me abhi koi product available nahi mila.
+                        No products are currently available in this category.
                       </div>
                     ) : null}
 
@@ -530,7 +944,7 @@ const SalesTaxInvoicePage = () => {
                             Selected Product
                           </div>
                           <div className="mt-1 text-base font-semibold text-white">
-                            {item.productName || 'Category aur item select karein'}
+                            {item.productName || 'Select a category and item'}
                           </div>
                           <div className="mt-1 text-sm text-slate-400">
                             {item.categoryId ? getCategoryName(item.categoryId) : 'No category selected'}
@@ -641,35 +1055,41 @@ const SalesTaxInvoicePage = () => {
           </section>
         </div>
 
-        <section className="rounded-[32px] border border-slate-800 bg-[#0b1120] p-3 shadow-[0_25px_60px_rgba(15,23,42,0.5)]">
+        <section className="invoice-print-panel rounded-[32px] border border-slate-800 bg-[#0b1120] p-3 shadow-[0_25px_60px_rgba(15,23,42,0.5)]">
           <div
-            className="mx-auto w-full max-w-[980px] rounded-[28px] bg-gradient-to-br from-white via-slate-50 to-slate-100 p-5 text-slate-900 sm:p-8"
+            className="invoice-print-sheet mx-auto flex min-h-[1120px] w-full max-w-[760px] flex-col rounded-[28px] bg-white px-5 py-4 text-slate-900 sm:px-6 sm:py-5"
             style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
           >
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-[360px]">
+            <div className="flex items-start justify-between gap-6">
+              <div className="max-w-[210px] shrink-0">
                 <Image
                   src="/Classic_logo.png"
                   alt="Classic Electronics"
                   width={360}
                   height={135}
-                  className="h-auto w-auto"
+                  className="h-auto w-full"
                   priority
                 />
               </div>
 
-              <div className="text-left lg:text-right">
-                <div className="text-[25px] font-black uppercase tracking-[0.08em] leading-tight text-slate-950">
+              <div
+                className="ml-auto w-full max-w-[340px] text-right"
+                style={{
+                  fontFamily: '"Arial Narrow", Arial, Helvetica, sans-serif',
+                  fontStretch: 'condensed',
+                }}
+              >
+                <div className="text-[16px] font-black uppercase leading-[1.08] tracking-[0.04em] text-slate-950 sm:text-[18px]">
                   Sales Tax Invoice: {form.invoiceNo || '---'}
                 </div>
-                <div className="mt-2 text-[25px] font-black leading-tight text-slate-950">
+                <div className="mt-1 text-[15px] font-black leading-[1.08] text-slate-950 sm:text-[17px]">
                   Date: {form.date || '--/--/----'}
                 </div>
-                <div className="mt-4 inline-flex flex-col items-start gap-1 lg:items-end">
-                  <div className="text-[20px] font-black italic leading-tight text-slate-950">
+                <div className="mt-2 w-full space-y-1">
+                  <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
                     Purchase Order: {form.purchaseOrder || '____________'}
                   </div>
-                  <div className="text-[20px] font-black italic leading-tight text-slate-950">
+                  <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
                     Quotation No: {form.quotationNo || '____________'}
                   </div>
                 </div>
@@ -677,70 +1097,52 @@ const SalesTaxInvoicePage = () => {
             </div>
 
             <div
-              className="relative mt-8 overflow-hidden rounded-[38px] border-[3px] border-violet-600 bg-white px-5 pb-8 pt-10 sm:px-8"
+              className="relative mt-5 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
               style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
             >
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
                 <Image
                   src="/Classic_logo.png"
                   alt=""
                   width={900}
                   height={360}
-                  className="h-auto w-[82%] max-w-[820px]"
-                />
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 top-44 flex justify-center opacity-[0.09]">
-                <Image
-                  src="/Classic_logo.png"
-                  alt=""
-                  width={720}
-                  height={260}
-                  className="h-auto w-[72%] max-w-[720px]"
-                />
-              </div>
-              <div className="pointer-events-none absolute bottom-24 right-10 opacity-[0.05]">
-                <Image
-                  src="/Classic_logo.png"
-                  alt=""
-                  width={360}
-                  height={140}
-                  className="h-auto w-[280px]"
+                  className="h-auto w-[76%] max-w-[500px]"
                 />
               </div>
 
-              <div className="absolute left-8 top-0 h-10 w-[38%] -translate-y-1/2 rounded-[22px] border-[3px] border-violet-600 bg-white" />
+              <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
-              <div className="relative">
-                <div className="mb-6 max-w-md text-[20px] leading-tight text-slate-900 sm:text-[24px]">
+              <div className="relative flex h-full flex-1 flex-col">
+                <div className="mb-3 max-w-md text-[14px] leading-snug text-slate-900 sm:text-[16px]">
                   <div>{form.companyName || 'Customer Company'}</div>
                   <div>{form.location ? `${form.location}:` : 'Location:'}</div>
                   <div>GST: {form.gst || '________________'}</div>
                   <div>NTN: {form.ntn || '________________'}</div>
                 </div>
 
-                <div className="overflow-hidden rounded-[24px] border-[3px] border-slate-950 bg-white">
+                <div className="overflow-hidden rounded-[20px] border-2 border-slate-950 bg-white">
                   <table className="w-full table-fixed border-collapse text-slate-950">
                     <thead>
-                      <tr className="border-b-[3px] border-slate-950">
-                        <th className="w-16 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                      <tr className="border-b-2 border-slate-950">
+                        <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           Sr
                         </th>
-                        <th className="w-[36%] border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-[35%] border-r-2 border-slate-950 px-2 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           Description
                         </th>
-                        <th className="w-20 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           UOM
                         </th>
-                        <th className="w-20 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           QTY
                         </th>
-                        <th className="w-24 border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-14 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           Unit Price
                         </th>
-                        <th className="w-[18%] border-r-[3px] border-slate-950 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-[17%] border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           Remarks/Picture
                         </th>
-                        <th className="w-32 px-2 py-3 text-center text-[18px] font-medium sm:text-[22px]">
+                        <th className="w-16 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                           Total
                         </th>
                       </tr>
@@ -753,49 +1155,49 @@ const SalesTaxInvoicePage = () => {
                         return (
                           <tr
                             key={item.id}
-                            className="align-top [&:not(:last-child)]:border-b-[3px] [&:not(:last-child)]:border-slate-950"
+                            className="align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
                           >
-                            <td className="border-r-[3px] border-slate-950 px-2 py-4 text-center text-xl">
+                            <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-sm sm:text-base">
                               {index + 1}
                             </td>
-                            <td className="border-r-[3px] border-slate-950 px-3 py-4 text-lg sm:text-xl">
+                            <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
                               {item.description || 'Item description'}
                             </td>
-                            <td className="border-r-[3px] border-slate-950 px-2 py-4 text-center text-lg sm:text-xl">
+                            <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
                               {item.uom || '--'}
                             </td>
-                            <td className="border-r-[3px] border-slate-950 px-2 py-4 text-center text-lg sm:text-xl">
+                            <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
                               {item.quantity || 0}
                             </td>
-                            <td className="border-r-[3px] border-slate-950 px-3 py-4 text-center text-lg sm:text-xl">
+                            <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
                               {formatCurrency(item.unitPrice || 0)}
                             </td>
-                            <td className="border-r-[3px] border-slate-950 px-3 py-4 text-base leading-relaxed text-slate-700 sm:text-lg">
-                              <div className="space-y-3">
+                            <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-700 sm:text-[12px]">
+                              <div className="space-y-2">
                                 <div className="font-medium text-slate-900">
                                   {item.remarks || item.productName || 'Remarks'}
                                 </div>
                                 {getPictureSource(item.picture) ? (
-                                  <div className="overflow-hidden rounded-xl border border-slate-300 bg-slate-50">
+                                  <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                       src={getPictureSource(item.picture)}
                                       alt={item.productName || item.description || 'Invoice item'}
-                                      className="h-28 w-full object-contain bg-white p-2"
+                                      className="h-16 w-full object-contain bg-white p-1.5"
                                     />
                                   </div>
                                 ) : item.picture ? (
-                                  <div className="rounded-xl border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
+                                  <div className="rounded-lg border border-dashed border-slate-300 px-2 py-3 text-[11px] text-slate-500">
                                     {item.picture}
                                   </div>
                                 ) : (
-                                  <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-slate-300 text-sm text-slate-400">
+                                  <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
                                     No picture selected
                                   </div>
                                 )}
                               </div>
                             </td>
-                            <td className="px-3 py-4 text-center text-lg font-semibold sm:text-xl">
+                            <td className="px-1 py-3 text-center text-[12px] font-semibold sm:text-[13px]">
                               {formatCurrency(itemTotal)}
                             </td>
                           </tr>
@@ -805,85 +1207,73 @@ const SalesTaxInvoicePage = () => {
                   </table>
                 </div>
 
-                <div className="mt-5 flex justify-end">
-                  <div className="w-full max-w-xs rounded-[20px] border-[3px] border-slate-950 bg-slate-50 px-5 py-4 text-right">
-                    <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <div className="max-w-xs">
+                    <div className="text-[20px] italic text-sky-700 sm:text-[22px]">
+                      {form.directorName || 'Director Name'}
+                    </div>
+                    <div className="mt-2 w-28 border-t border-slate-400 pt-1 text-[12px] font-semibold text-slate-900">
+                      Director
+                    </div>
+                  </div>
+                  <div className="w-full max-w-[200px] rounded-[16px] border-2 border-slate-950 bg-white px-4 py-3 text-right">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
                       Grand Total
                     </div>
-                    <div className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">
+                    <div className="mt-1 text-[18px] font-black text-slate-950 sm:text-[20px]">
                       {formatCurrency(totalAmount)}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-20 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-                  <div className="max-w-xs">
-                    <div className="text-[22px] italic text-sky-700 sm:text-[34px]">
-                      {form.directorName || 'Director Name'}
-                    </div>
-                    <div className="mt-3 w-40 border-t-2 border-slate-400 pt-2 text-[18px] font-semibold text-slate-900">
-                      Director
-                    </div>
-                  </div>
+                <div className="flex-1" />
 
-                  <div className="text-right">
-                    <div className="text-lg font-semibold text-violet-600 sm:text-2xl">
-                      {form.thankYouNote}
-                    </div>
-                    <div className="mt-2 text-base font-semibold text-slate-900 sm:text-[20px]">
-                      {form.subtitle}
-                    </div>
+                <div className="pt-10 text-right">
+                  <div className="text-base font-bold text-violet-700 sm:text-[20px]">
+                    {form.thankYouNote}
                   </div>
                 </div>
 
-                <div className="mt-8 grid gap-4 rounded-[28px] border-[3px] border-violet-600 bg-white/90 p-5 md:grid-cols-3">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-cyan-100 p-3 text-cyan-700">
-                      <Globe size={22} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Website
-                      </div>
-                      <div className="mt-1 text-lg font-semibold text-slate-900">
-                        {form.website}
-                      </div>
-                      <div className="mt-1 text-sm text-slate-600">{form.address}</div>
-                    </div>
+                <div className="mt-4 rounded-[22px] border-2 border-violet-600 bg-white/85 px-4 py-3">
+                  <div className="pb-2 text-center text-[12px] font-semibold text-slate-900 sm:text-[13px]">
+                    {form.subtitle}
                   </div>
+                  <div className="grid gap-3 border-t border-violet-200 pt-3 md:grid-cols-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-cyan-100 p-2.5 text-cyan-700">
+                        <Globe size={18} />
+                      </div>
+                      <div>
+                        <div className="text-[15px] font-semibold text-slate-900">
+                          {form.website}
+                        </div>
+                        <div className="mt-1 text-xs leading-relaxed text-slate-600">
+                          {form.address}
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
-                      <Mail size={22} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Contact
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-violet-100 p-2.5 text-violet-700">
+                        <Mail size={18} />
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <MapPin size={16} className="text-slate-500" />
-                        Islamabad
-                      </div>
-                      <div className="mt-1 text-sm text-slate-600">NTN: 1700506</div>
-                      <div className="text-sm text-slate-600">GST: 05-07-8500-014-73</div>
-                      <div className="mt-1 text-sm font-medium text-slate-900">
-                        {form.email}
+                      <div className="text-xs leading-relaxed text-slate-600">
+                        <div>NTN: 1700506</div>
+                        <div>GST: 05-07-8500-014-73</div>
+                        <div className="mt-1 font-medium text-slate-900">{form.email}</div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700">
-                      <Phone size={22} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Phone
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700">
+                        <Phone size={18} />
                       </div>
-                      <div className="mt-1 text-lg font-semibold text-slate-900">
-                        {form.phonePrimary}
+                      <div>
+                        <div className="text-[15px] font-semibold text-slate-900">
+                          {form.phonePrimary}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-600">{form.phoneSecondary}</div>
                       </div>
-                      <div className="text-sm text-slate-600">{form.phoneSecondary}</div>
                     </div>
                   </div>
                 </div>

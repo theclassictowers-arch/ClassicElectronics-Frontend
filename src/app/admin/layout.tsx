@@ -42,9 +42,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-white flex">
+        <div className="admin-layout-shell min-h-screen bg-[#0f172a] text-white flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-[#0b1120] border-r border-gray-800 flex flex-col fixed h-full">
+            <aside className="admin-layout-sidebar w-64 bg-[#0b1120] border-r border-gray-800 flex flex-col fixed h-full">
                 <div className="p-6 border-b border-gray-800 text-center">
                     <Image src="/Classic_logo.png" alt="Classic Logo" width={140} height={60} className="rounded-sm mb-2 mx-auto" />
 
@@ -98,7 +98,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </aside>
 
             {/* Main Content */}
-            <main className="ml-64 flex-1 p-8">
+            <main className="admin-layout-main ml-64 flex-1 p-8">
                 {children}
             </main>
         </div>
