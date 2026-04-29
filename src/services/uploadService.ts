@@ -152,7 +152,7 @@ export const deleteFileFromServer = async (token: string, fileUrl: string): Prom
   try {
     await axios.delete(`${API_URL}/upload/delete`, {
       headers: { Authorization: `Bearer ${token}` },
-      data: { fileUrl }, // Backend ko batayen ke kaunsi file hatani hai
+      data: { fileUrl }, // Tell the backend which file to delete.
     });
     console.log(`File deleted successfully: ${fileUrl}`);
   } catch (error) {

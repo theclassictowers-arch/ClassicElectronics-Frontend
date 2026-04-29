@@ -786,7 +786,7 @@ export const valvesTechnicalSpecs = {
   ]
 };
 
-export default {
+const valvesData = {
   scg353Series,
   scr353Series,
   allValves,
@@ -796,3 +796,5 @@ export default {
   getValvesBySubcategory,
   valvesTechnicalSpecs
 };
+
+export default valvesData;

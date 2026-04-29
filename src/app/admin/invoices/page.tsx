@@ -58,10 +58,78 @@ type InvoiceForm = {
   directorName: string;
 };
 
+type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
+
+const documentTypes: Array<{
+  type: DocumentType;
+  label: string;
+  title: string;
+  pdfTitle: string;
+  numberLabel: string;
+  purchaseLabel: string;
+  referenceLabel: string;
+  fileSlug: string;
+}> = [
+  {
+    type: 'quotation',
+    label: 'Quotation',
+    title: 'Quotation Page',
+    pdfTitle: 'QUOTATION',
+    numberLabel: 'Quotation No',
+    purchaseLabel: 'Indent No',
+    referenceLabel: 'Enquiry No',
+    fileSlug: 'quotation',
+  },
+  {
+    type: 'invoice',
+    label: 'Invoice',
+    title: 'Sales Tax Invoice Page',
+    pdfTitle: 'SALES TAX INVOICE',
+    numberLabel: 'Invoice No',
+    purchaseLabel: 'Purchase Order',
+    referenceLabel: 'Quotation No',
+    fileSlug: 'sales-tax-invoice',
+  },
+  {
+    type: 'deliveryChallan',
+    label: 'Delivery Challan',
+    title: 'Delivery Challan Page',
+    pdfTitle: 'DELIVERY CHALLAN',
+    numberLabel: 'Delivery Challan No',
+    purchaseLabel: 'PO',
+    referenceLabel: 'Invoice / PO Ref',
+    fileSlug: 'delivery-challan',
+  },
+];
+
 const formatDate = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
+const toDateInputValue = (value: string): string => {
+  const trimmedValue = value.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  const match = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return '';
+
+  const [, day, month, year] = match;
+
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const fromDateInputValue = (value: string): string => {
+  if (!value) return '';
+
+  const [year, month, day] = value.split('-');
+  if (!year || !month || !day) return value;
 
   return `${day}/${month}/${year}`;
 };
@@ -178,14 +246,15 @@ const loadImageAsPngDataUrl = async (url: string): Promise<string | null> => {
   }
 };
 
-const buildPdfFileName = (invoiceNo: string, date: string): string => {
-  const cleanInvoiceNo = invoiceNo.trim().replace(/[^a-zA-Z0-9-_]+/g, '-') || 'invoice';
+const buildPdfFileName = (fileSlug: string, documentNo: string, date: string): string => {
+  const cleanDocumentNo = documentNo.trim().replace(/[^a-zA-Z0-9-_]+/g, '-') || 'document';
   const cleanDate = date.trim().replace(/[^0-9-]+/g, '-') || 'date';
 
-  return `sales-tax-invoice-${cleanInvoiceNo}-${cleanDate}.pdf`;
+  return `${fileSlug}-${cleanDocumentNo}-${cleanDate}.pdf`;
 };
 
 const SalesTaxInvoicePage = () => {
+  const [activeDocumentType, setActiveDocumentType] = useState<DocumentType>('invoice');
   const [form, setForm] = useState<InvoiceForm>(createInvoiceForm);
   const [items, setItems] = useState<InvoiceItem[]>([createInvoiceItem()]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
@@ -193,6 +262,9 @@ const SalesTaxInvoicePage = () => {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const activeDocument =
+    documentTypes.find((documentType) => documentType.type === activeDocumentType) ||
+    documentTypes[1];
 
   useEffect(() => {
     let isActive = true;
@@ -359,6 +431,260 @@ const SalesTaxInvoicePage = () => {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      const logoUrl = getFrontendAssetUrl('/Classic_logo.png');
+      const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
+
+      if (activeDocumentType === 'quotation') {
+        const purple: [number, number, number] = [109, 40, 217];
+        const blueText: [number, number, number] = [30, 81, 117];
+        const tableX = 11;
+        const tableY = 69;
+        const tableWidth = 188;
+        const taxAmount = totalAmount * 0.18;
+        const grandTotal = totalAmount + taxAmount;
+        const firstItem = items[0] || createInvoiceItem();
+        const firstItemTotal = Number(firstItem.quantity || 0) * Number(firstItem.unitPrice || 0);
+        const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
+        const stampDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-stamp.png'));
+        const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
+
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+        if (logoDataUrl) {
+          pdf.addImage(logoDataUrl, 'PNG', 6, 5, 79, 30, undefined, 'FAST');
+          pdf.setGState(new GState({ opacity: 0.16, 'stroke-opacity': 0.16 }));
+          pdf.addImage(logoDataUrl, 'PNG', 37, 128, 128, 49, undefined, 'FAST');
+          pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
+        }
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(19);
+        pdf.text(`Quotation:${form.invoiceNo || '0050'}`, 199, 15, { align: 'right' });
+        pdf.setFontSize(11);
+        pdf.text(`Date: ${form.date || '--/--/----'}`, 199, 22, { align: 'right' });
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.text(`Indent No: ${form.purchaseOrder || ''}`, 199, 30, { align: 'right' });
+        pdf.text(`Enquiry No: ${form.quotationNo || ''}`, 199, 38, { align: 'right' });
+
+        pdf.setDrawColor(...purple);
+        pdf.setLineWidth(0.7);
+        pdf.roundedRect(3, 43, 204, 216, 5, 5, 'S');
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.text('Manage Purchase;', 10, 54);
+        pdf.text(form.companyName || 'Customer Company', 10, 60);
+        pdf.text(`${form.location || 'Customer Address'}:`, 10, 66);
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFontSize(8);
+        pdf.text('Reference to your quotation the details is as below.', 10, 76);
+
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.45);
+        pdf.rect(tableX, tableY, tableWidth, 54);
+        pdf.line(tableX, tableY + 12, tableX + tableWidth, tableY + 12);
+        pdf.line(tableX, tableY + 6, tableX + tableWidth, tableY + 6);
+        pdf.line(tableX + 10, tableY, tableX + 10, tableY + 54);
+        pdf.line(tableX + 84, tableY, tableX + 84, tableY + 54);
+        pdf.line(tableX + 158, tableY, tableX + 158, tableY + 54);
+        pdf.line(tableX + 36, tableY + 6, tableX + 36, tableY + 54);
+        pdf.line(tableX + 58, tableY + 6, tableX + 58, tableY + 54);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.text('Sr', tableX + 5, tableY + 8.5, { align: 'center' });
+        pdf.text('DESCRIPTION', tableX + 47, tableY + 4.3, { align: 'center' });
+        pdf.text('UOM', tableX + 23, tableY + 10.3, { align: 'center' });
+        pdf.text('QTY', tableX + 47, tableY + 10.3, { align: 'center' });
+        pdf.text('Unit Price', tableX + 71, tableY + 10.3, { align: 'center' });
+        pdf.text('Remarks/Picture', tableX + 121, tableY + 8.5, { align: 'center' });
+        pdf.text('Total', tableX + 173, tableY + 8.5, { align: 'center' });
+        pdf.text('1', tableX + 5, tableY + 34, { align: 'center' });
+        pdf.text(pdf.splitTextToSize(firstItem.description || firstItem.productName || 'Item description', 68), tableX + 12, tableY + 24);
+        pdf.text(firstItem.uom || 'NOS', tableX + 23, tableY + 48, { align: 'center' });
+        pdf.text(String(firstItem.quantity || 0), tableX + 47, tableY + 48, { align: 'center' });
+        pdf.text(String(firstItem.unitPrice || 0), tableX + 71, tableY + 48, { align: 'center' });
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.text(`${Math.round(firstItemTotal)} Rs`, tableX + 173, tableY + 34, { align: 'center' });
+
+        pdf.setFontSize(6.3);
+        pdf.text('If you have any questions concerning this quotation please tell us.', 10, 128);
+
+        const detailsY = 134;
+        pdf.setFontSize(9);
+        pdf.text('Delivery Period:', 10, detailsY);
+        pdf.setFont('helvetica', 'normal');
+        pdf.rect(63, detailsY - 5.5, 43, 7);
+        pdf.text('4 Weeks', 84.5, detailsY - 0.5, { align: 'center' });
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.text('Validity Date:', 10, detailsY + 8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.rect(63, detailsY + 2.5, 43, 7);
+        pdf.text('1 WEEK', 84.5, detailsY + 7.5, { align: 'center' });
+
+        const totalsX = 142;
+        [
+          ['Sub Total', formatCurrency(totalAmount), detailsY - 5.5],
+          ['Tax', '18%', detailsY + 3.5],
+          ['Total', formatCurrency(taxAmount), detailsY + 12.5],
+          ['Total as', formatCurrency(grandTotal), detailsY + 21.5],
+        ].forEach(([label, value, y]) => {
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.text(String(label), totalsX - 24, Number(y) + 5);
+          pdf.setFont('helvetica', 'normal');
+          pdf.rect(totalsX, Number(y), 51, 7);
+          pdf.text(String(value), totalsX + 25.5, Number(y) + 5, { align: 'center' });
+        });
+
+        if (stampDataUrl) pdf.addImage(stampDataUrl, 'PNG', 15, 214, 25, 22, undefined, 'FAST');
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFontSize(10);
+        pdf.setTextColor(...blueText);
+        pdf.text(form.directorName || 'M Fawad Younas', 10, 238);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.text('Director', 10, 245);
+
+        pdf.setTextColor(...purple);
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFontSize(10);
+        pdf.text('THANK YOU FOR YOUR BUSINESS!', pageWidth / 2, 271, { align: 'center' });
+        if (globeDataUrl) pdf.addImage(globeDataUrl, 'PNG', 13, 266, 15, 12, undefined, 'FAST');
+        if (whatsappDataUrl) pdf.addImage(whatsappDataUrl, 'PNG', 166, 269, 9, 9, undefined, 'FAST');
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(7);
+        pdf.text('A wide range of industrial instrument & sensing solutions', pageWidth / 2, 282, {
+          align: 'center',
+        });
+        pdf.text(form.website, 38, 288);
+        pdf.text(form.address, 38, 293);
+        pdf.text('NTN: 1700506', pageWidth / 2, 288, { align: 'center' });
+        pdf.text('GST: 05-07-8500-014-73', pageWidth / 2, 293, { align: 'center' });
+        pdf.text(form.email, 133, 293);
+        pdf.text(form.phonePrimary, 180, 273);
+        pdf.text(form.phoneSecondary, 180, 278);
+
+        pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
+        return;
+      }
+
+      if (activeDocumentType === 'deliveryChallan') {
+        const drawDeliveryChallan = () => {
+          const leftX = 18.5;
+          const rightX = 153;
+          const topY = 20;
+          const tableX = 18;
+          const tableY = 98.5;
+          const tableWidth = 172;
+          const headerHeight = 5.2;
+          const rowHeight = 22.5;
+          const visibleRows = Math.max(items.length, 1);
+          const tableHeight = headerHeight + rowHeight * visibleRows;
+          const columns = [29, 80, 25, 38];
+          const lineColor: [number, number, number] = [0, 0, 0];
+
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+          if (logoDataUrl) {
+            pdf.addImage(logoDataUrl, 'PNG', 19, topY, 91, 36.5, undefined, 'FAST');
+            pdf.setGState(new GState({ opacity: 0.08, 'stroke-opacity': 0.08 }));
+            pdf.addImage(logoDataUrl, 'PNG', 45, 126, 120, 46, undefined, 'FAST');
+            pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
+          }
+
+          pdf.setTextColor(54, 96, 146);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(16);
+          pdf.text('Delivery Challan', 135, 34);
+
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(11);
+          pdf.text('DC', 147, 56);
+          pdf.text(form.invoiceNo || '---', 153, 56);
+          pdf.text('Date:', 143, 61.2);
+          pdf.text(form.date || '--/--/----', 153, 61.2);
+
+          pdf.text('Name of Buyer', leftX, 66.2);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(form.companyName || 'Customer Company', 47.5, 66.2);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('Our Sale tax Reg #:', 128, 66.2);
+          pdf.text('05-07-8500-014-73', rightX, 66.2);
+
+          pdf.text('Address', leftX, 71.4);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(form.location || 'Customer Address', 47.5, 71.4);
+          pdf.setFont('helvetica', 'normal');
+
+          pdf.text('Sales Tax Registration No', leftX, 91.8);
+          if (form.gst) {
+            pdf.text(form.gst, 73, 91.8);
+          }
+          pdf.text(`PO:${form.purchaseOrder || '________________'}`, leftX, 97.2);
+
+          pdf.setDrawColor(...lineColor);
+          pdf.setLineWidth(0.35);
+          pdf.rect(tableX, tableY, tableWidth, tableHeight);
+          let columnX = tableX;
+          columns.slice(0, -1).forEach((width) => {
+            columnX += width;
+            pdf.line(columnX, tableY, columnX, tableY + tableHeight);
+          });
+          pdf.line(tableX, tableY + headerHeight, tableX + tableWidth, tableY + headerHeight);
+          for (let rowIndex = 1; rowIndex < visibleRows; rowIndex += 1) {
+            const rowLineY = tableY + headerHeight + rowHeight * rowIndex;
+            pdf.line(tableX, rowLineY, tableX + tableWidth, rowLineY);
+          }
+
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(10.5);
+          pdf.text('S.No', tableX + 10.5, tableY + 4.2);
+          pdf.text('Particulars', tableX + 60, tableY + 4.2);
+          pdf.text('Qty', tableX + 113, tableY + 4.2);
+          pdf.text('Remarks', tableX + 137, tableY + 4.2);
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(10);
+
+          items.forEach((item, index) => {
+            const rowTop = tableY + headerHeight + index * rowHeight;
+
+            pdf.text(String(index + 1), tableX + 14, rowTop + 12.5);
+            pdf.text(String(item.quantity || ''), tableX + 118, rowTop + 12.5, {
+              align: 'center',
+            });
+            pdf.text(
+              pdf.splitTextToSize(item.remarks || '', columns[3] - 4),
+              tableX + 136,
+              rowTop + 12.5
+            );
+            pdf.text(
+              pdf.splitTextToSize(item.description || item.productName || 'Item particulars', columns[1] - 5),
+              tableX + 31,
+              rowTop + 12.2
+            );
+          });
+
+          const signatureY = 135;
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(10.5);
+          pdf.text('From Classic Electronics', leftX, signatureY);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(form.directorName || 'M Fawad  Younis', leftX, signatureY + 25.7);
+          pdf.text('Director', leftX, signatureY + 30.8);
+        };
+
+        drawDeliveryChallan();
+        pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
+        return;
+      }
+
       const margin = 11;
       const innerPadding = 4;
       const contentWidth = pageWidth - margin * 2;
@@ -381,8 +707,6 @@ const SalesTaxInvoicePage = () => {
       const footerBoxWidth = contentWidth;
       const footerBoxHeight = 23;
 
-      const logoUrl = getFrontendAssetUrl('/Classic_logo.png');
-      const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
       const itemImageDataUrls = await Promise.all(
         items.map((item) => {
           const imageUrl = getPictureSource(item.picture);
@@ -490,7 +814,7 @@ const SalesTaxInvoicePage = () => {
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...primaryTextColor);
         pdf.setFontSize(15);
-        pdf.text(`SALES TAX INVOICE: ${form.invoiceNo || '---'}`, contentRightX, 15, {
+        pdf.text(`${activeDocument.pdfTitle}: ${form.invoiceNo || '---'}`, contentRightX, 15, {
           align: 'right',
         });
         pdf.setFontSize(13.2);
@@ -499,10 +823,10 @@ const SalesTaxInvoicePage = () => {
         });
         pdf.setFont('helvetica', 'bolditalic');
         pdf.setFontSize(10.8);
-        pdf.text(`Purchase Order: ${form.purchaseOrder || '____________'}`, contentRightX, 29.5, {
+        pdf.text(`${activeDocument.purchaseLabel}: ${form.purchaseOrder || '____________'}`, contentRightX, 29.5, {
           align: 'right',
         });
-        pdf.text(`Quotation No: ${form.quotationNo || '____________'}`, contentRightX, 36.5, {
+        pdf.text(`${activeDocument.referenceLabel}: ${form.quotationNo || '____________'}`, contentRightX, 36.5, {
           align: 'right',
         });
 
@@ -685,7 +1009,7 @@ const SalesTaxInvoicePage = () => {
       pdf.text(form.phonePrimary, footerBoxX + footerBoxWidth - 5, footerLineOneY, { align: 'right' });
       pdf.text(form.phoneSecondary, footerBoxX + footerBoxWidth - 5, footerLineTwoY, { align: 'right' });
 
-      pdf.save(buildPdfFileName(form.invoiceNo, form.date));
+      pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
     } catch (error) {
       console.error('Failed to download invoice PDF', error);
       alert('Unable to generate the PDF. Please try again.');
@@ -729,12 +1053,11 @@ const SalesTaxInvoicePage = () => {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
             <FileText size={14} />
-            Invoice Builder
+            Document Builder
           </div>
-          <h1 className="mt-4 text-3xl font-bold text-white">Sales Tax Invoice Page</h1>
+          <h1 className="mt-4 text-3xl font-bold text-white">{activeDocument.title}</h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">
-            A live invoice builder inside the admin panel. Update values on the left
-            and review the invoice preview on the right.
+            Select document type, update values on the left, and review the preview on the right.
           </p>
         </div>
 
@@ -771,7 +1094,33 @@ const SalesTaxInvoicePage = () => {
         </div>
       </div>
 
-      <div className="invoice-builder-grid grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]">
+      <div className="invoice-document-tabs grid gap-3 rounded-3xl border border-slate-800 bg-[#111827] p-3 shadow-xl sm:grid-cols-3">
+        {documentTypes.map((documentType) => {
+          const isActive = activeDocumentType === documentType.type;
+
+          return (
+            <button
+              key={documentType.type}
+              type="button"
+              onClick={() => setActiveDocumentType(documentType.type)}
+              className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                isActive
+                  ? 'border-cyan-400 bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/30'
+                  : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-cyan-500/60 hover:text-cyan-200'
+              }`}
+            >
+              <FileText size={16} />
+              {documentType.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="invoice-document-stage">
+      <div
+        key={activeDocumentType}
+        className="invoice-builder-grid invoice-page-turn grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]"
+      >
         <div className="invoice-builder-editor space-y-5">
           <section className="rounded-3xl border border-slate-800 bg-[#111827] p-5 shadow-xl">
             <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-cyan-300">
@@ -781,7 +1130,7 @@ const SalesTaxInvoicePage = () => {
 
             <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-1">
               <Field
-                label="Invoice No"
+                label={activeDocument.numberLabel}
                 value={form.invoiceNo}
                 onChange={(value) => handleFormChange('invoiceNo', value)}
               />
@@ -789,17 +1138,20 @@ const SalesTaxInvoicePage = () => {
                 label="Date"
                 value={form.date}
                 onChange={(value) => handleFormChange('date', value)}
+                type="date"
               />
               <Field
-                label="Purchase Order"
+                label={activeDocument.purchaseLabel}
                 value={form.purchaseOrder}
                 onChange={(value) => handleFormChange('purchaseOrder', value)}
               />
-              <Field
-                label="Quotation No"
-                value={form.quotationNo}
-                onChange={(value) => handleFormChange('quotationNo', value)}
-              />
+              {activeDocumentType === 'deliveryChallan' ? null : (
+                <Field
+                  label={activeDocument.referenceLabel}
+                  value={form.quotationNo}
+                  onChange={(value) => handleFormChange('quotationNo', value)}
+                />
+              )}
             </div>
           </section>
 
@@ -811,26 +1163,32 @@ const SalesTaxInvoicePage = () => {
 
             <div className="space-y-4">
               <Field
-                label="Company Name"
+                label={activeDocumentType === 'deliveryChallan' ? 'Name of Buyer' : 'Company Name'}
                 value={form.companyName}
                 onChange={(value) => handleFormChange('companyName', value)}
               />
               <Field
-                label="Location"
+                label={activeDocumentType === 'deliveryChallan' ? 'Address' : 'Location'}
                 value={form.location}
                 onChange={(value) => handleFormChange('location', value)}
               />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="GST"
+                  label={
+                    activeDocumentType === 'deliveryChallan'
+                      ? 'Sales Tax Registration No'
+                      : 'GST'
+                  }
                   value={form.gst}
                   onChange={(value) => handleFormChange('gst', value)}
                 />
-                <Field
-                  label="NTN"
-                  value={form.ntn}
-                  onChange={(value) => handleFormChange('ntn', value)}
-                />
+                {activeDocumentType === 'deliveryChallan' ? null : (
+                  <Field
+                    label="NTN"
+                    value={form.ntn}
+                    onChange={(value) => handleFormChange('ntn', value)}
+                  />
+                )}
               </div>
             </div>
           </section>
@@ -839,7 +1197,7 @@ const SalesTaxInvoicePage = () => {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
                 <CalendarDays size={16} />
-                Invoice Items
+                {activeDocument.label} Items
               </div>
               <button
                 type="button"
@@ -949,26 +1307,36 @@ const SalesTaxInvoicePage = () => {
                           <div className="mt-1 text-sm text-slate-400">
                             {item.categoryId ? getCategoryName(item.categoryId) : 'No category selected'}
                           </div>
-                          <div className="mt-3 text-sm font-semibold text-cyan-300">
-                            Unit Price: {formatCurrency(item.unitPrice || 0)}
-                          </div>
+                          {activeDocumentType === 'deliveryChallan' ? null : (
+                            <div className="mt-3 text-sm font-semibold text-cyan-300">
+                              Unit Price: {formatCurrency(item.unitPrice || 0)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     <Field
-                      label="Description"
+                      label={activeDocumentType === 'deliveryChallan' ? 'Particulars' : 'Description'}
                       value={item.description}
                       onChange={(value) =>
                         handleItemChange(item.id, 'description', value)
                       }
                     />
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <Field
-                        label="UOM"
-                        value={item.uom}
-                        onChange={(value) => handleItemChange(item.id, 'uom', value)}
-                      />
+                    <div
+                      className={`grid gap-3 ${
+                        activeDocumentType === 'deliveryChallan'
+                          ? 'sm:grid-cols-1'
+                          : 'sm:grid-cols-3'
+                      }`}
+                    >
+                      {activeDocumentType === 'deliveryChallan' ? null : (
+                        <Field
+                          label="UOM"
+                          value={item.uom}
+                          onChange={(value) => handleItemChange(item.id, 'uom', value)}
+                        />
+                      )}
                       <Field
                         label="Quantity"
                         type="number"
@@ -977,25 +1345,29 @@ const SalesTaxInvoicePage = () => {
                           handleItemChange(item.id, 'quantity', value)
                         }
                       />
-                      <Field
-                        label="Unit Price"
-                        type="number"
-                        value={String(item.unitPrice)}
-                        onChange={(value) =>
-                          handleItemChange(item.id, 'unitPrice', value)
-                        }
-                      />
+                      {activeDocumentType === 'deliveryChallan' ? null : (
+                        <Field
+                          label="Unit Price"
+                          type="number"
+                          value={String(item.unitPrice)}
+                          onChange={(value) =>
+                            handleItemChange(item.id, 'unitPrice', value)
+                          }
+                        />
+                      )}
                     </div>
                     <Field
                       label="Remarks"
                       value={item.remarks}
                       onChange={(value) => handleItemChange(item.id, 'remarks', value)}
                     />
-                    <Field
-                      label="Picture URL / Reference"
-                      value={item.picture}
-                      onChange={(value) => handleItemChange(item.id, 'picture', value)}
-                    />
+                    {activeDocumentType === 'deliveryChallan' ? null : (
+                      <Field
+                        label="Picture URL / Reference"
+                        value={item.picture}
+                        onChange={(value) => handleItemChange(item.id, 'picture', value)}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -1060,6 +1432,12 @@ const SalesTaxInvoicePage = () => {
             className="invoice-print-sheet mx-auto flex min-h-[1120px] w-full max-w-[760px] flex-col rounded-[28px] bg-white px-5 py-4 text-slate-900 sm:px-6 sm:py-5"
             style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
           >
+            {activeDocumentType === 'quotation' ? (
+              <QuotationPreview form={form} items={items} totalAmount={totalAmount} />
+            ) : activeDocumentType === 'deliveryChallan' ? (
+              <DeliveryChallanPreview form={form} items={items} />
+            ) : (
+              <>
             <div className="flex items-start justify-between gap-6">
               <div className="max-w-[210px] shrink-0">
                 <Image
@@ -1080,17 +1458,17 @@ const SalesTaxInvoicePage = () => {
                 }}
               >
                 <div className="text-[16px] font-black uppercase leading-[1.08] tracking-[0.04em] text-slate-950 sm:text-[18px]">
-                  Sales Tax Invoice: {form.invoiceNo || '---'}
+                  {activeDocument.pdfTitle}: {form.invoiceNo || '---'}
                 </div>
                 <div className="mt-1 text-[15px] font-black leading-[1.08] text-slate-950 sm:text-[17px]">
                   Date: {form.date || '--/--/----'}
                 </div>
                 <div className="mt-2 w-full space-y-1">
                   <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
-                    Purchase Order: {form.purchaseOrder || '____________'}
+                    {activeDocument.purchaseLabel}: {form.purchaseOrder || '____________'}
                   </div>
                   <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
-                    Quotation No: {form.quotationNo || '____________'}
+                    {activeDocument.referenceLabel}: {form.quotationNo || '____________'}
                   </div>
                 </div>
               </div>
@@ -1279,34 +1657,303 @@ const SalesTaxInvoicePage = () => {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </div>
         </section>
     </div>
+      </div>
       </div>
     </div>
   );
 };
 
+type DeliveryChallanPreviewProps = {
+  form: InvoiceForm;
+  items: InvoiceItem[];
+};
+
+type QuotationPreviewProps = {
+  form: InvoiceForm;
+  items: InvoiceItem[];
+  totalAmount: number;
+};
+
+const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) => {
+  const taxAmount = totalAmount * 0.18;
+  const grandTotal = totalAmount + taxAmount;
+  const firstItem = items[0] || createInvoiceItem();
+  const firstItemTotal = Number(firstItem.quantity || 0) * Number(firstItem.unitPrice || 0);
+
+  return (
+    <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-3 py-3 text-black">
+      <div className="flex items-start justify-between">
+        <Image
+          src="/Classic_logo.png"
+          alt="Classic Electronics"
+          width={430}
+          height={162}
+          className="h-auto w-[245px]"
+          priority
+        />
+        <div className="pt-3 text-right font-black text-black">
+          <div className="text-[26px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
+          <div className="mt-1 text-[16px] leading-none">Date: {form.date || '--/--/----'}</div>
+          <div className="mt-2 text-[16px] italic leading-none">Indent No:</div>
+          <div className="mt-1 text-[16px] italic leading-none">Enquiry No:</div>
+        </div>
+      </div>
+
+      <div className="relative mt-2 min-h-[860px] rounded-[18px] border-[3px] border-violet-600 px-6 pb-10 pt-5">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.16]">
+          <Image
+            src="/Classic_logo.png"
+            alt=""
+            width={900}
+            height={360}
+            className="h-auto w-[72%] max-w-[520px]"
+          />
+        </div>
+
+        <div className="relative z-10 text-[14px] leading-tight">
+          <div>Manage Purchase;</div>
+          <div>{form.companyName || 'Customer Company'}</div>
+          <div>{form.location || 'Customer Address'}:</div>
+        </div>
+        <div className="relative z-10 mt-3 text-[13px] font-bold italic">
+          Reference to your quotation the details is as below.
+        </div>
+
+        <div className="relative z-10 mt-2 overflow-hidden border-2 border-black text-[13px]">
+          <div className="grid grid-cols-[28px_1fr_170px_78px] border-b border-black text-center">
+            <div className="row-span-2 flex items-center justify-center border-r border-black">Sr</div>
+            <div className="border-r border-black">DESCRIPTION</div>
+            <div className="row-span-2 flex items-center justify-center border-r border-black">
+              Remarks/Picture
+            </div>
+            <div className="row-span-2 flex items-center justify-center">Total</div>
+            <div className="grid grid-cols-3 border-r border-t border-black">
+              <div className="border-r border-black">UOM</div>
+              <div className="border-r border-black">QTY</div>
+              <div>Unit Price</div>
+            </div>
+          </div>
+          <div className="grid min-h-[125px] grid-cols-[28px_1fr_170px_78px]">
+            <div className="flex items-center justify-center border-r border-black">1</div>
+            <div className="grid grid-rows-[1fr_28px] border-r border-black">
+              <div className="px-3 py-5">
+                {firstItem.description || firstItem.productName || 'Item description'}
+              </div>
+              <div className="grid grid-cols-3 border-t border-black text-center italic">
+                <div className="border-r border-black">NOS</div>
+                <div className="border-r border-black">{firstItem.quantity || 0}</div>
+                <div>{firstItem.unitPrice || 0}</div>
+              </div>
+            </div>
+            <div className="border-r border-black px-3 py-5">{firstItem.remarks}</div>
+            <div className="flex items-center justify-center font-bold italic">
+              {Math.round(firstItemTotal)} Rs
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-1 text-[10px] italic">
+          If you have any questions concerning this quotation please tell us.
+        </div>
+
+        <div className="relative z-10 mt-1 grid grid-cols-[1fr_170px] gap-6">
+          <div className="grid grid-cols-[120px_150px] items-center text-[14px] font-bold italic">
+            <div>Delivery Period:</div>
+            <div className="border-2 border-black py-1 text-center font-normal">4 Weeks</div>
+            <div>Validity Date:</div>
+            <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">
+              1 WEEK
+            </div>
+          </div>
+          <div className="grid grid-cols-[75px_1fr] items-center text-[14px] font-bold italic">
+            <div>Sub Total</div>
+            <div className="border-2 border-black py-1 text-center font-normal">
+              {formatCurrency(totalAmount)}
+            </div>
+            <div>Tax</div>
+            <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">18%</div>
+            <div>Total</div>
+            <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">
+              {formatCurrency(taxAmount)}
+            </div>
+            <div>Total as</div>
+            <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">
+              {formatCurrency(grandTotal)}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-48 flex items-end gap-2">
+          <div className="w-28">
+            <Image
+              src="/quotation-stamp.png"
+              alt=""
+              width={105}
+              height={94}
+              className="mx-auto h-auto w-16"
+            />
+            <div className="text-center text-[14px] font-bold italic text-sky-800">
+              {form.directorName || 'M Fawad Younas'}
+            </div>
+            <div className="text-[13px]">Director</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative mt-2 grid grid-cols-[58px_1fr_84px] items-center gap-2 px-5 pt-2">
+        <div className="flex justify-start pl-3">
+          <Image src="/quotation-globe.png" alt="" width={345} height={271} className="h-auto w-9" />
+        </div>
+        <div className="text-center leading-tight">
+          <div className="text-sm font-bold italic text-violet-700">
+            THANK YOU FOR YOUR BUSINESS!
+          </div>
+          <div className="mt-1 text-[10px] font-bold">
+            A wide range of industrial instrument & sensing solutions
+          </div>
+        </div>
+        <div className="flex justify-end pr-3">
+          <Image src="/quotation-whatsapp.png" alt="" width={148} height={148} className="h-auto w-8" />
+        </div>
+      </div>
+
+      <div className="mt-2 grid grid-cols-[1.15fr_1fr_1.15fr] items-start gap-4 px-9 pt-1 text-[10px] leading-tight">
+        <div className="text-left">
+          <div>{form.website}</div>
+          <div>{form.address}</div>
+        </div>
+        <div className="text-center">
+          <div>NTN: 1700506</div>
+          <div>GST: 05-07-8500-014-73</div>
+          <div>{form.email}</div>
+        </div>
+        <div className="text-right">
+          <div>{form.phonePrimary}</div>
+          <div>{form.phoneSecondary}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) => (
+  <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-8 py-10 text-black">
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
+      <Image
+        src="/Classic_logo.png"
+        alt=""
+        width={900}
+        height={360}
+        className="h-auto w-[78%] max-w-[520px]"
+      />
+    </div>
+    <div className="relative z-10 flex flex-1 flex-col">
+    <div className="flex items-start justify-between">
+      <Image
+        src="/Classic_logo.png"
+        alt="Classic Electronics"
+        width={690}
+        height={276}
+        className="h-auto w-[345px]"
+        priority
+      />
+      <div className="pt-14 text-[21px] font-bold text-[#366092]">
+        Delivery Challan
+      </div>
+    </div>
+
+    <div className="mt-[-6px] grid grid-cols-[1fr_220px] gap-8 text-[14px] leading-[1.55]">
+      <div />
+      <div className="grid grid-cols-[38px_1fr]">
+        <div>DC</div>
+        <div>{form.invoiceNo || '---'}</div>
+        <div>Date:</div>
+        <div>{form.date || '--/--/----'}</div>
+      </div>
+    </div>
+
+    <div className="mt-1 grid grid-cols-[110px_1fr_125px_155px] gap-x-2 text-[14px] leading-[1.55]">
+      <div>Name of Buyer</div>
+      <div className="font-semibold">{form.companyName || 'Customer Company'}</div>
+      <div>Our Sale tax Reg #:</div>
+      <div>05-07-8500-014-73</div>
+      <div>Address</div>
+      <div className="font-semibold">{form.location || 'Customer Address'}</div>
+    </div>
+
+    <div className="mt-16 text-[14px] leading-[1.55]">
+      <div>Sales Tax Registration No {form.gst}</div>
+      <div>PO:{form.purchaseOrder || '________________'}</div>
+    </div>
+
+    <table className="mt-1 w-full table-fixed border-collapse border border-black text-[14px]">
+      <thead>
+        <tr className="h-6 border-b border-black">
+          <th className="w-[17%] border-r border-black text-center font-semibold">S.No</th>
+          <th className="w-[47%] border-r border-black text-center font-semibold">Particulars</th>
+          <th className="w-[14%] border-r border-black text-center font-semibold">Qty</th>
+          <th className="w-[22%] text-center font-semibold">Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item, index) => (
+          <tr key={item.id} className="h-24 align-top">
+            <td className="border-r border-black px-3 py-8 text-center">{index + 1}</td>
+            <td className="border-r border-black px-3 py-8">
+              {item.description || item.productName || 'Item particulars'}
+            </td>
+            <td className="border-r border-black px-3 py-8 text-center">
+              {item.quantity || ''}
+            </td>
+            <td className="px-3 py-8">{item.remarks}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div className="mt-8 flex items-start gap-6">
+      <div className="pt-4 text-[14px]">From Classic Electronics</div>
+    </div>
+
+    <div className="mt-20 text-[14px] font-semibold leading-[1.55]">
+      <div>{form.directorName || 'M Fawad  Younis'}</div>
+      <div>Director</div>
+    </div>
+    </div>
+  </div>
+);
+
 type FieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  type?: 'text' | 'number';
+  type?: 'text' | 'number' | 'date';
 };
 
-const Field = ({ label, value, onChange, type = 'text' }: FieldProps) => (
-  <label className="block">
-    <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-      {label}
-    </span>
-    <input
-      type={type}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
-    />
-  </label>
-);
+const Field = ({ label, value, onChange, type = 'text' }: FieldProps) => {
+  const inputValue = type === 'date' ? toDateInputValue(value) : value;
+
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={inputValue}
+        onChange={(event) =>
+          onChange(type === 'date' ? fromDateInputValue(event.target.value) : event.target.value)
+        }
+        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
+      />
+    </label>
+  );
+};
 
 type SelectFieldProps = {
   label: string;

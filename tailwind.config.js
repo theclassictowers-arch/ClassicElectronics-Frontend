@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import animate from "tailwindcss-animate";
+import scrollbar from "tailwind-scrollbar";
 
 const config = {
   content: [
@@ -11,7 +12,7 @@ const config = {
   },
   plugins: [
     animate,
-    require('tailwind-scrollbar'),
+    scrollbar,
   ],
 };
 

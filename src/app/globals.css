@@ -65,6 +65,77 @@ body {
   );
 }
 
+.invoice-document-stage {
+  position: relative;
+}
+
+.invoice-page-turn {
+  position: relative;
+  animation: invoiceDocumentReveal 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+.invoice-page-turn::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: 28px;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.12) 24%,
+    rgba(255, 255, 255, 0.18) 42%,
+    transparent 68%
+  );
+  opacity: 0;
+  transform: translateX(-35%);
+  animation: invoiceDocumentSweep 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes invoiceDocumentReveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(18px) scale(0.985);
+  }
+
+  62% {
+    opacity: 1;
+    filter: blur(1px);
+  }
+
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes invoiceDocumentSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-35%);
+  }
+
+  28% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(55%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invoice-page-turn,
+  .invoice-page-turn::before {
+    animation: none;
+  }
+}
+
 @media print {
   @page {
     size: auto;
@@ -84,7 +155,8 @@ body {
   .admin-layout-sidebar,
   .invoice-builder-bg,
   .invoice-builder-toolbar,
-  .invoice-builder-editor {
+  .invoice-builder-editor,
+  .invoice-document-tabs {
     display: none !important;
   }
 
@@ -99,6 +171,16 @@ body {
   .invoice-builder-grid {
     display: block !important;
     overflow: visible !important;
+  }
+
+  .invoice-page-turn {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .invoice-page-turn::before {
+    display: none !important;
   }
 
   .invoice-print-panel {
