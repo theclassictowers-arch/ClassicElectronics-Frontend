@@ -289,10 +289,10 @@ const SlidersAdmin = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-[#1e293b] rounded-2xl max-w-2xl w-full border border-gray-700 my-8 shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-4 z-50">
+          <div className="bg-[#1e293b] rounded-2xl max-w-2xl w-full max-h-[100vh] md:max-h-[calc(100vh-32px)] border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-gray-700">
+            <div className="px-6 md:px-8 py-5 md:py-6 border-b border-gray-700 flex-shrink-0">
               <h2 className="text-2xl font-bold text-white">
                 {editingId ? 'Edit Slide' : 'Add New Slide'}
               </h2>
@@ -302,7 +302,7 @@ const SlidersAdmin = () => {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
+            <form onSubmit={handleSubmit} className="px-6 md:px-8 py-6 space-y-6 overflow-y-auto flex-1 min-h-0">
               {/* Badge Text */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
@@ -566,7 +566,7 @@ const SlidersAdmin = () => {
             </form>
 
             {/* Modal Footer */}
-            <div className="px-8 py-5 border-t border-gray-700 flex gap-4">
+            <div className="px-6 md:px-8 py-4 md:py-5 border-t border-gray-700 flex gap-4 flex-shrink-0 bg-[#1e293b]">
               <button
                 type="submit"
                 onClick={handleSubmit}
