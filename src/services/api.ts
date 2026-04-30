@@ -496,11 +496,15 @@ export const uploadAdminProfileImage = async (token: string, file: File) => {
 
 export type Slide = {
   _id: string;
+  badge?: string;
   title: string;
   subtitle: string;
   highlight: string;
   bgImage: string;
+  primaryButtonText?: string;
   link: string;
+  secondaryButtonText?: string;
+  secondaryLink?: string;
   order: number;
   isActive: boolean;
 };
@@ -537,38 +541,54 @@ export const deleteSlider = async (token: string, id: string) => {
 
 export const DEFAULT_SLIDES: Omit<Slide, '_id'>[] = [
   {
+    badge: "Premium Industrial Components",
     title: "Pneumatic Purging Valves",
     subtitle: "Engineered for long life in tough industrial conditions.",
     highlight: "Purging Valves",
     bgImage: "/images/products/valvesSliderimg.jpeg",
+    primaryButtonText: "Explore Products",
     link: "/clientSide/category/purging-valves",
+    secondaryButtonText: "Contact Sales",
+    secondaryLink: "/clientSide/contact",
     order: 0,
     isActive: true,
   },
   {
+    badge: "Premium Industrial Components",
     title: "Bag Filter Controllers",
     subtitle: "Advanced sequential timers for efficient dust collection systems.",
     highlight: "Filter Controllers",
     bgImage: "/images/products/filtersliderimg.jpeg",
+    primaryButtonText: "Explore Products",
     link: "/clientSide/category/bag-filter-controllers",
+    secondaryButtonText: "Contact Sales",
+    secondaryLink: "/clientSide/contact",
     order: 1,
     isActive: true,
   },
   {
+    badge: "Premium Industrial Components",
     title: "Diaphragm Valve Repair Kits",
     subtitle: "Reliable diaphragm and spring kits for pulse valve maintenance.",
     highlight: "Diaphragm Valves",
     bgImage: "/images/products/K4502&K4503.png",
+    primaryButtonText: "Explore Products",
     link: "/clientSide/category/diaphragm-valves",
+    secondaryButtonText: "Contact Sales",
+    secondaryLink: "/clientSide/contact",
     order: 2,
     isActive: true,
   },
   {
+    badge: "Premium Industrial Components",
     title: "Industrial Sensors",
     subtitle: "Precision sensors for accurate monitoring and control.",
     highlight: "Smart Sensors",
     bgImage: "https://images.unsplash.com/photo-1531297461136-82lw8z0e0w0g?auto=format&fit=crop&q=80",
+    primaryButtonText: "Explore Products",
     link: "/clientSide/category/sensors",
+    secondaryButtonText: "Contact Sales",
+    secondaryLink: "/clientSide/contact",
     order: 3,
     isActive: true,
   },

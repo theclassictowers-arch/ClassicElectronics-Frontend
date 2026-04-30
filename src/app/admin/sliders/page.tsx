@@ -2,25 +2,33 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, Upload, X, Loader2, ImagePlus, ChevronUp, ChevronDown, Link as LinkIcon, Type, AlignLeft, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Upload, X, Loader2, ImagePlus, ChevronUp, ChevronDown, Link as LinkIcon, Type, AlignLeft, Sparkles } from 'lucide-react';
 import { API_URL as API_BASE, resolveAssetUrl } from '@/lib/apiConfig';
 import { getSliders, createSlider, updateSlider, deleteSlider, reorderSliders, type Slide } from '@/services/api';
 
 type SlideFormData = {
+  badge: string;
   title: string;
   subtitle: string;
   highlight: string;
   bgImage: string;
+  primaryButtonText: string;
   link: string;
+  secondaryButtonText: string;
+  secondaryLink: string;
   isActive: boolean;
 };
 
 const EMPTY_FORM: SlideFormData = {
+  badge: 'Premium Industrial Components',
   title: '',
   subtitle: '',
   highlight: '',
   bgImage: '',
+  primaryButtonText: 'Explore Products',
   link: '',
+  secondaryButtonText: 'Contact Sales',
+  secondaryLink: '/clientSide/contact',
   isActive: true,
 };
 
@@ -169,11 +177,15 @@ const SlidersAdmin = () => {
   const openEdit = (slide: Slide) => {
     setEditingId(slide._id);
     setFormData({
+      badge: slide.badge || 'Premium Industrial Components',
       title: slide.title,
       subtitle: slide.subtitle,
       highlight: slide.highlight,
       bgImage: slide.bgImage,
+      primaryButtonText: slide.primaryButtonText || 'Explore Products',
       link: slide.link,
+      secondaryButtonText: slide.secondaryButtonText || 'Contact Sales',
+      secondaryLink: slide.secondaryLink || '/clientSide/contact',
       isActive: slide.isActive,
     });
     setShowModal(true);
@@ -245,7 +257,9 @@ const SlidersAdmin = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-white font-medium truncate">{slide.title}</h3>
                   <p className="text-gray-400 text-sm truncate">{slide.subtitle}</p>
-                  <p className="text-gray-500 text-xs truncate mt-0.5">{slide.link}</p>
+                  <p className="text-gray-500 text-xs truncate mt-0.5">
+                    {slide.badge || 'No badge'} | {slide.primaryButtonText || 'Explore Products'}: {slide.link}
+                  </p>
                 </div>
 
                 {/* Status Badge */}
@@ -289,6 +303,20 @@ const SlidersAdmin = () => {
 
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
+              {/* Badge Text */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                  <Sparkles size={14} className="text-cyan-400" />
+                  Badge Text
+                </label>
+                <input
+                  placeholder="e.g. Premium Industrial Components"
+                  className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
+                  value={formData.badge}
+                  onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                />
+                <p className="text-gray-500 text-xs mt-1">Small uppercase text shown above the main heading</p>
+              </div>
 
               {/* Slide Title */}
               <div>
@@ -405,7 +433,7 @@ const SlidersAdmin = () => {
                       <span className="text-sm">
                         Drag & drop an image here, or <span className="text-cyan-400 underline">browse files</span>
                       </span>
-                      <span className="text-xs text-gray-500">JPEG, PNG, WebP, SVG, GIF — Max 5MB</span>
+                      <span className="text-xs text-gray-500">JPEG, PNG, WebP, SVG, GIF - Max 5MB</span>
                     </div>
                   )}
                 </div>
@@ -424,20 +452,61 @@ const SlidersAdmin = () => {
                 />
               </div>
 
-              {/* Link */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                  <LinkIcon size={14} className="text-cyan-400" />
-                  Button Link <span className="text-red-400">*</span>
-                </label>
-                <input
-                  placeholder="e.g. /category/purging-valves"
-                  className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  required
-                />
-                <p className="text-gray-500 text-xs mt-1">Where the &quot;Explore Products&quot; button will navigate to</p>
+              {/* Primary Button */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                    <Type size={14} className="text-cyan-400" />
+                    Primary Button Text
+                  </label>
+                  <input
+                    placeholder="e.g. Explore Products"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
+                    value={formData.primaryButtonText}
+                    onChange={(e) => setFormData({ ...formData, primaryButtonText: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                    <LinkIcon size={14} className="text-cyan-400" />
+                    Primary Button Link <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    placeholder="e.g. /clientSide/category/purging-valves"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
+                    value={formData.link}
+                    onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Secondary Button */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                    <Type size={14} className="text-cyan-400" />
+                    Secondary Button Text
+                  </label>
+                  <input
+                    placeholder="e.g. Contact Sales"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
+                    value={formData.secondaryButtonText}
+                    onChange={(e) => setFormData({ ...formData, secondaryButtonText: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                    <LinkIcon size={14} className="text-cyan-400" />
+                    Secondary Button Link
+                  </label>
+                  <input
+                    placeholder="e.g. /clientSide/contact"
+                    className="w-full bg-[#0b1120] border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors"
+                    value={formData.secondaryLink}
+                    onChange={(e) => setFormData({ ...formData, secondaryLink: e.target.value })}
+                  />
+                </div>
               </div>
 
               {/* Active Toggle */}
@@ -471,7 +540,9 @@ const SlidersAdmin = () => {
                     </div>
                     <div className="relative z-10 h-full flex items-center px-6">
                       <div>
-                        <p className="text-xs text-cyan-400 font-bold tracking-widest uppercase mb-1">Preview</p>
+                        <p className="text-xs text-cyan-400 font-bold tracking-widest uppercase mb-1">
+                          {formData.badge || 'Preview Badge'}
+                        </p>
                         <h3 className="text-xl font-black text-white leading-tight">
                           {formData.title ? formData.title.replace(formData.highlight, '') : 'Slide Title'}
                           {formData.highlight && (
@@ -479,6 +550,14 @@ const SlidersAdmin = () => {
                           )}
                         </h3>
                         <p className="text-gray-300 text-sm mt-1 max-w-md">{formData.subtitle || 'Subtitle goes here'}</p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          <span className="bg-cyan-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded">
+                            {formData.primaryButtonText || 'Primary Button'}
+                          </span>
+                          <span className="border border-gray-500 text-gray-200 text-[10px] font-bold uppercase px-3 py-1 rounded">
+                            {formData.secondaryButtonText || 'Secondary Button'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -8,6 +8,17 @@ import { resolveAssetUrl } from '@/lib/apiConfig';
 
 const fallbackSlides: Slide[] = DEFAULT_SLIDES.map((s, i) => ({ ...s, _id: String(i + 1) }));
 
+const getTitleParts = (title: string, highlight: string) => {
+  if (!highlight || !title.includes(highlight)) {
+    return { baseTitle: title, highlightText: highlight };
+  }
+
+  return {
+    baseTitle: title.replace(highlight, '').trim(),
+    highlightText: highlight,
+  };
+};
+
 const HeroSlider = () => {
   const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -34,7 +45,9 @@ const HeroSlider = () => {
 
   return (
     <div className="relative h-[430px] md:h-[540px] w-full overflow-hidden rounded-xl group">
-      {slides.map((slide, index) => (
+      {slides.map((slide, index) => {
+        const titleParts = getTitleParts(slide.title, slide.highlight);
+        return (
         <div
           key={slide._id}
           className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -64,15 +77,19 @@ const HeroSlider = () => {
               }`}
             >
               <span className="inline-block py-1 px-3 rounded bg-cyan-900/30 text-cyan-400 border border-cyan-800 text-xs font-bold tracking-widest uppercase mb-4">
-                Premium Industrial Components
+                {slide.badge || 'Premium Industrial Components'}
               </span>
 
               <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-6">
-                {slide.title.replace(slide.highlight, '')}
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                  {slide.highlight}
-                </span>
+                {titleParts.baseTitle}
+                {titleParts.highlightText && (
+                  <>
+                    <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                      {titleParts.highlightText}
+                    </span>
+                  </>
+                )}
               </h1>
 
               <p className="text-gray-300 text-lg md:text-xl mb-8 max-w-lg">
@@ -81,17 +98,17 @@ const HeroSlider = () => {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href={slide.link}
+                  href={slide.link || '/clientSide/products'}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-3 rounded font-bold uppercase tracking-wide transition-all flex items-center gap-2 justify-center"
                 >
-                  Explore Products <ArrowRight size={18} />
+                  {slide.primaryButtonText || 'Explore Products'} <ArrowRight size={18} />
                 </Link>
 
                 <Link
-                  href="/contact"
+                  href={slide.secondaryLink || '/clientSide/contact'}
                   className="border border-gray-600 hover:border-white text-gray-300 hover:text-white px-8 py-3 rounded font-bold uppercase tracking-wide transition-all flex items-center justify-center"
                 >
-                  Contact Sales
+                  {slide.secondaryButtonText || 'Contact Sales'}
                 </Link>
               </div>
             </div>
@@ -113,7 +130,8 @@ const HeroSlider = () => {
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
 
       {/* Controls */}
       <button
