@@ -539,6 +539,61 @@ export const deleteSlider = async (token: string, id: string) => {
   return response.data;
 };
 
+// ---------------------------------------------------------------------------
+// Sales Document CRUD
+// ---------------------------------------------------------------------------
+
+export type SalesDocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
+
+export type SalesDocumentPayload<TForm, TItem> = {
+  documentType: SalesDocumentType;
+  form: TForm;
+  items: TItem[];
+  totalAmount: number;
+};
+
+export type SalesDocumentRecord<TForm = Record<string, unknown>, TItem = Record<string, unknown>> =
+  SalesDocumentPayload<TForm, TItem> & {
+    _id: string;
+    documentNo: string;
+    date: string;
+    customerName: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+
+export const getSalesDocuments = async <TForm, TItem>(
+  token: string,
+  type?: SalesDocumentType
+): Promise<Array<SalesDocumentRecord<TForm, TItem>>> => {
+  const response = await api.get('/sales-documents', {
+    params: type ? { type } : undefined,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+export const createSalesDocument = async <TForm, TItem>(
+  token: string,
+  data: SalesDocumentPayload<TForm, TItem>
+): Promise<SalesDocumentRecord<TForm, TItem>> => {
+  const response = await api.post('/sales-documents', data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateSalesDocument = async <TForm, TItem>(
+  token: string,
+  id: string,
+  data: SalesDocumentPayload<TForm, TItem>
+): Promise<SalesDocumentRecord<TForm, TItem>> => {
+  const response = await api.put(`/sales-documents/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const DEFAULT_SLIDES: Omit<Slide, '_id'>[] = [
   {
     badge: "Premium Industrial Components",

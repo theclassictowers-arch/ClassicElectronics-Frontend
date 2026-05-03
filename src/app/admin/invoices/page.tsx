@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import api from '@/services/api';
+import api, { createSalesDocument, updateSalesDocument } from '@/services/api';
 import { resolveAssetUrl } from '@/lib/apiConfig';
 import type { AdminCategory } from '@/types/adminCategory';
 import type { AdminProduct, ProductCategoryRef } from '@/types/adminProduct';
@@ -19,6 +19,7 @@ import {
   Plus,
   Printer,
   RotateCcw,
+  Save,
   Trash2,
 } from 'lucide-react';
 
@@ -59,6 +60,9 @@ type InvoiceForm = {
 };
 
 type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
+
+const CLASSIC_LOGO_SRC = '/Classic_logo.png';
+const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
 
 const documentTypes: Array<{
   type: DocumentType;
@@ -132,6 +136,19 @@ const fromDateInputValue = (value: string): string => {
   if (!year || !month || !day) return value;
 
   return `${day}/${month}/${year}`;
+};
+
+const formatGstRegistration = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  const groups = [
+    digits.slice(0, 2),
+    digits.slice(2, 4),
+    digits.slice(4, 8),
+    digits.slice(8, 11),
+    digits.slice(11, 13),
+  ].filter(Boolean);
+
+  return groups.join('-');
 };
 
 const createInvoiceForm = (): InvoiceForm => ({
@@ -262,6 +279,9 @@ const SalesTaxInvoicePage = () => {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isSavingDocument, setIsSavingDocument] = useState(false);
+  const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState('');
   const activeDocument =
     documentTypes.find((documentType) => documentType.type === activeDocumentType) ||
     documentTypes[1];
@@ -325,6 +345,7 @@ const SalesTaxInvoicePage = () => {
   );
 
   const handleFormChange = (field: keyof InvoiceForm, value: string) => {
+    setSaveStatus('');
     setForm((currentForm) => ({
       ...currentForm,
       [field]: value,
@@ -336,6 +357,7 @@ const SalesTaxInvoicePage = () => {
     field: keyof Omit<InvoiceItem, 'id'>,
     value: string
   ) => {
+    setSaveStatus('');
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.id === id
@@ -352,6 +374,7 @@ const SalesTaxInvoicePage = () => {
   };
 
   const handleCategorySelect = (id: string, categoryId: string) => {
+    setSaveStatus('');
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.id === id
@@ -371,6 +394,7 @@ const SalesTaxInvoicePage = () => {
   };
 
   const handleProductSelect = (id: string, productId: string) => {
+    setSaveStatus('');
     const selectedProduct = products.find((product) => product._id === productId);
 
     setItems((currentItems) =>
@@ -405,10 +429,12 @@ const SalesTaxInvoicePage = () => {
   };
 
   const handleAddItem = () => {
+    setSaveStatus('');
     setItems((currentItems) => [...currentItems, createInvoiceItem()]);
   };
 
   const handleRemoveItem = (id: string) => {
+    setSaveStatus('');
     setItems((currentItems) =>
       currentItems.length === 1
         ? currentItems
@@ -419,6 +445,46 @@ const SalesTaxInvoicePage = () => {
   const handleReset = () => {
     setForm(createInvoiceForm());
     setItems([createInvoiceItem()]);
+    setSavedDocumentId(null);
+    setSaveStatus('');
+  };
+
+  const handleDocumentTypeChange = (documentType: DocumentType) => {
+    setActiveDocumentType(documentType);
+    setSavedDocumentId(null);
+    setSaveStatus('');
+  };
+
+  const handleSaveDocument = async () => {
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) {
+      alert('Please login as admin first');
+      return;
+    }
+
+    setIsSavingDocument(true);
+    setSaveStatus('');
+
+    try {
+      const payload = {
+        documentType: activeDocumentType,
+        form,
+        items,
+        totalAmount,
+      };
+      const savedDocument = savedDocumentId
+        ? await updateSalesDocument(token, savedDocumentId, payload)
+        : await createSalesDocument(token, payload);
+
+      setSavedDocumentId(savedDocument._id);
+      setSaveStatus(`${activeDocument.label} saved to backend.`);
+    } catch (error) {
+      console.error('Failed to save document', error);
+      alert('Unable to save this document. Please try again.');
+    } finally {
+      setIsSavingDocument(false);
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -431,7 +497,7 @@ const SalesTaxInvoicePage = () => {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const logoUrl = getFrontendAssetUrl('/Classic_logo.png');
+      const logoUrl = getFrontendAssetUrl(CLASSIC_LOGO_SRC);
       const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
 
       if (activeDocumentType === 'quotation') {
@@ -623,9 +689,7 @@ const SalesTaxInvoicePage = () => {
           pdf.setFont('helvetica', 'normal');
 
           pdf.text('Sales Tax Registration No', leftX, 91.8);
-          if (form.gst) {
-            pdf.text(form.gst, 73, 91.8);
-          }
+          pdf.text(form.gst || GST_REGISTRATION_PLACEHOLDER, 73, 91.8);
           pdf.text(`PO:${form.purchaseOrder || '________________'}`, leftX, 97.2);
 
           pdf.setDrawColor(...lineColor);
@@ -678,6 +742,24 @@ const SalesTaxInvoicePage = () => {
           pdf.setFont('helvetica', 'bold');
           pdf.text(form.directorName || 'M Fawad  Younis', leftX, signatureY + 25.7);
           pdf.text('Director', leftX, signatureY + 30.8);
+
+          const footerY = 265;
+          pdf.setDrawColor(180, 180, 180);
+          pdf.setLineWidth(0.25);
+          pdf.line(18, footerY - 5, 190, footerY - 5);
+
+          if (logoDataUrl) {
+            pdf.addImage(logoDataUrl, 'PNG', 18, footerY - 1, 39, 15.5, undefined, 'FAST');
+          }
+
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8.5);
+          pdf.text(form.website, 64, footerY + 2);
+          pdf.text(form.address, 64, footerY + 7);
+          pdf.text(form.email, 64, footerY + 12);
+          pdf.text(form.phonePrimary, 151, footerY + 4);
+          pdf.text(form.phoneSecondary, 151, footerY + 9);
         };
 
         drawDeliveryChallan();
@@ -994,20 +1076,24 @@ const SalesTaxInvoicePage = () => {
       pdf.setLineWidth(0.35);
       pdf.line(footerBoxX + 4, footerDividerY, footerBoxX + footerBoxWidth - 4, footerDividerY);
 
-      const addressLines = pdf.splitTextToSize(form.address || '', 54) as string[];
+      const addressLines = pdf.splitTextToSize(form.address || '', 58) as string[];
+      const footerLeftX = footerBoxX + 7;
+      const footerCenterX = footerBoxX + footerBoxWidth / 2;
+      const footerRightX = footerBoxX + footerBoxWidth - 7;
 
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(8.2);
       pdf.setTextColor(...primaryTextColor);
-      pdf.text(form.website, footerBoxX + 5, footerLineOneY);
-      pdf.text(addressLines.slice(0, 2), footerBoxX + 5, footerLineTwoY);
+      pdf.text(form.website, footerLeftX, footerLineOneY);
+      pdf.text(addressLines[0] || '', footerLeftX, footerLineTwoY);
+      pdf.text(addressLines[1] || '', footerLeftX, footerLineThreeY);
 
-      pdf.text('NTN: 1700506', pageWidth / 2, footerLineOneY, { align: 'center' });
-      pdf.text('GST: 05-07-8500-014-73', pageWidth / 2, footerLineTwoY, { align: 'center' });
-      pdf.text(form.email, pageWidth / 2, footerLineThreeY, { align: 'center' });
+      pdf.text('NTN: 1700506', footerCenterX, footerLineOneY, { align: 'center' });
+      pdf.text('GST: 05-07-8500-014-73', footerCenterX, footerLineTwoY, { align: 'center' });
+      pdf.text(form.email, footerCenterX, footerLineThreeY, { align: 'center' });
 
-      pdf.text(form.phonePrimary, footerBoxX + footerBoxWidth - 5, footerLineOneY, { align: 'right' });
-      pdf.text(form.phoneSecondary, footerBoxX + footerBoxWidth - 5, footerLineTwoY, { align: 'right' });
+      pdf.text(form.phonePrimary, footerRightX, footerLineOneY, { align: 'right' });
+      pdf.text(form.phoneSecondary, footerRightX, footerLineTwoY, { align: 'right' });
 
       pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
     } catch (error) {
@@ -1072,6 +1158,19 @@ const SalesTaxInvoicePage = () => {
           </button>
           <button
             type="button"
+            onClick={handleSaveDocument}
+            disabled={isSavingDocument}
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSavingDocument ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            {isSavingDocument ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            type="button"
             onClick={handleDownloadPdf}
             disabled={isDownloadingPdf}
             className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
@@ -1091,6 +1190,11 @@ const SalesTaxInvoicePage = () => {
             <Printer size={16} />
             Print Preview
           </button>
+          {saveStatus ? (
+            <div className="flex basis-full items-center text-xs font-semibold text-emerald-300 xl:basis-auto">
+              {saveStatus}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -1102,7 +1206,7 @@ const SalesTaxInvoicePage = () => {
             <button
               key={documentType.type}
               type="button"
-              onClick={() => setActiveDocumentType(documentType.type)}
+              onClick={() => handleDocumentTypeChange(documentType.type)}
               className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
                 isActive
                   ? 'border-cyan-400 bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/30'
@@ -1180,7 +1284,21 @@ const SalesTaxInvoicePage = () => {
                       : 'GST'
                   }
                   value={form.gst}
-                  onChange={(value) => handleFormChange('gst', value)}
+                  onChange={(value) =>
+                    handleFormChange(
+                      'gst',
+                      activeDocumentType === 'deliveryChallan'
+                        ? formatGstRegistration(value)
+                        : value
+                    )
+                  }
+                  placeholder={
+                    activeDocumentType === 'deliveryChallan'
+                      ? GST_REGISTRATION_PLACEHOLDER
+                      : undefined
+                  }
+                  inputMode={activeDocumentType === 'deliveryChallan' ? 'numeric' : undefined}
+                  maxLength={activeDocumentType === 'deliveryChallan' ? 16 : undefined}
                 />
                 {activeDocumentType === 'deliveryChallan' ? null : (
                   <Field
@@ -1616,41 +1734,41 @@ const SalesTaxInvoicePage = () => {
                   <div className="pb-2 text-center text-[12px] font-semibold text-slate-900 sm:text-[13px]">
                     {form.subtitle}
                   </div>
-                  <div className="grid gap-3 border-t border-violet-200 pt-3 md:grid-cols-3">
-                    <div className="flex items-start gap-3">
-                      <div className="rounded-xl bg-cyan-100 p-2.5 text-cyan-700">
-                        <Globe size={18} />
+                  <div className="grid min-w-0 gap-4 border-t border-violet-200 pt-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] md:items-start">
+                    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+                      <div className="rounded-lg bg-cyan-100 p-2 text-cyan-700">
+                        <Globe size={15} />
                       </div>
-                      <div>
-                        <div className="text-[15px] font-semibold text-slate-900">
+                      <div className="min-w-0">
+                        <div className="whitespace-nowrap text-[12px] font-semibold text-slate-900">
                           {form.website}
                         </div>
-                        <div className="mt-1 text-xs leading-relaxed text-slate-600">
+                        <div className="mt-1 break-words text-[11px] leading-relaxed text-slate-600">
                           {form.address}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="rounded-xl bg-violet-100 p-2.5 text-violet-700">
-                        <Mail size={18} />
+                    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+                      <div className="rounded-lg bg-violet-100 p-2 text-violet-700">
+                        <Mail size={15} />
                       </div>
-                      <div className="text-xs leading-relaxed text-slate-600">
+                      <div className="min-w-0 text-[11px] leading-relaxed text-slate-600">
                         <div>NTN: 1700506</div>
                         <div>GST: 05-07-8500-014-73</div>
-                        <div className="mt-1 font-medium text-slate-900">{form.email}</div>
+                        <div className="mt-1 break-all font-medium text-slate-900">{form.email}</div>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700">
-                        <Phone size={18} />
+                    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+                      <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700">
+                        <Phone size={15} />
                       </div>
-                      <div>
-                        <div className="text-[15px] font-semibold text-slate-900">
+                      <div className="min-w-0">
+                        <div className="break-words text-[13px] font-semibold text-slate-900">
                           {form.phonePrimary}
                         </div>
-                        <div className="mt-1 text-xs text-slate-600">{form.phoneSecondary}</div>
+                        <div className="mt-1 break-words text-[11px] text-slate-600">{form.phoneSecondary}</div>
                       </div>
                     </div>
                   </div>
@@ -1845,7 +1963,7 @@ const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) =>
   <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-8 py-10 text-black">
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
       <Image
-        src="/Classic_logo.png"
+        src={CLASSIC_LOGO_SRC}
         alt=""
         width={900}
         height={360}
@@ -1855,7 +1973,7 @@ const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) =>
     <div className="relative z-10 flex flex-1 flex-col">
     <div className="flex items-start justify-between">
       <Image
-        src="/Classic_logo.png"
+        src={CLASSIC_LOGO_SRC}
         alt="Classic Electronics"
         width={690}
         height={276}
@@ -1887,7 +2005,7 @@ const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) =>
     </div>
 
     <div className="mt-16 text-[14px] leading-[1.55]">
-      <div>Sales Tax Registration No {form.gst}</div>
+      <div>Sales Tax Registration No {form.gst || GST_REGISTRATION_PLACEHOLDER}</div>
       <div>PO:{form.purchaseOrder || '________________'}</div>
     </div>
 
@@ -1924,6 +2042,25 @@ const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) =>
       <div>{form.directorName || 'M Fawad  Younis'}</div>
       <div>Director</div>
     </div>
+
+    <div className="mt-auto grid grid-cols-[150px_1fr_150px] items-center gap-5 border-t border-slate-300 pt-4 text-[11px] leading-tight">
+      <Image
+        src={CLASSIC_LOGO_SRC}
+        alt="Classic Electronics"
+        width={300}
+        height={120}
+        className="h-auto w-[135px]"
+      />
+      <div className="text-center">
+        <div>{form.website}</div>
+        <div>{form.address}</div>
+        <div>{form.email}</div>
+      </div>
+      <div className="text-right">
+        <div>{form.phonePrimary}</div>
+        <div>{form.phoneSecondary}</div>
+      </div>
+    </div>
     </div>
   </div>
 );
@@ -1933,9 +2070,20 @@ type FieldProps = {
   value: string;
   onChange: (value: string) => void;
   type?: 'text' | 'number' | 'date';
+  placeholder?: string;
+  inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
+  maxLength?: number;
 };
 
-const Field = ({ label, value, onChange, type = 'text' }: FieldProps) => {
+const Field = ({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  placeholder,
+  inputMode,
+  maxLength,
+}: FieldProps) => {
   const inputValue = type === 'date' ? toDateInputValue(value) : value;
 
   return (
@@ -1946,6 +2094,9 @@ const Field = ({ label, value, onChange, type = 'text' }: FieldProps) => {
       <input
         type={type}
         value={inputValue}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onChange={(event) =>
           onChange(type === 'date' ? fromDateInputValue(event.target.value) : event.target.value)
         }
