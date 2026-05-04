@@ -51,6 +51,7 @@ type InvoiceForm = {
   ntn: string;
   subtitle: string;
   thankYouNote: string;
+  deliveryPeriod: string;
   website: string;
   address: string;
   email: string;
@@ -63,6 +64,7 @@ type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
 
 const CLASSIC_LOGO_SRC = '/Classic_logo.png';
 const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
+const SALES_TAX_RATE = 0.18;
 
 const documentTypes: Array<{
   type: DocumentType;
@@ -151,6 +153,11 @@ const formatGstRegistration = (value: string): string => {
   return groups.join('-');
 };
 
+const formatDigitsOnly = (value: string, maxLength?: number): string => {
+  const digits = value.replace(/\D/g, '');
+  return typeof maxLength === 'number' ? digits.slice(0, maxLength) : digits;
+};
+
 const createInvoiceForm = (): InvoiceForm => ({
   invoiceNo: '250',
   date: formatDate(new Date()),
@@ -162,6 +169,7 @@ const createInvoiceForm = (): InvoiceForm => ({
   ntn: '',
   subtitle: 'A wide range of industrial instrument & sensing solutions',
   thankYouNote: 'THANK YOU FOR YOUR BUSINESS!',
+  deliveryPeriod: '4 Weeks',
   website: 'www.classicelectronics.com.pk',
   address: '133G St # 109 Sector G 11/3, Islamabad',
   email: 'sales@classicelectronics.com.pk',
@@ -343,6 +351,8 @@ const SalesTaxInvoicePage = () => {
     (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
     0
   );
+  const salesTaxAmount = totalAmount * SALES_TAX_RATE;
+  const grandTotalWithTax = totalAmount + salesTaxAmount;
 
   const handleFormChange = (field: keyof InvoiceForm, value: string) => {
     setSaveStatus('');
@@ -478,6 +488,7 @@ const SalesTaxInvoicePage = () => {
         : await createSalesDocument(token, payload);
 
       setSavedDocumentId(savedDocument._id);
+      setForm({ ...createInvoiceForm(), ...(savedDocument.form as InvoiceForm) });
       setSaveStatus(`${activeDocument.label} saved to backend.`);
     } catch (error) {
       console.error('Failed to save document', error);
@@ -506,10 +517,12 @@ const SalesTaxInvoicePage = () => {
         const tableX = 11;
         const tableY = 69;
         const tableWidth = 188;
-        const taxAmount = totalAmount * 0.18;
+        const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
-        const firstItem = items[0] || createInvoiceItem();
-        const firstItemTotal = Number(firstItem.quantity || 0) * Number(firstItem.unitPrice || 0);
+        const quotationItems = items.length > 0 ? items : [createInvoiceItem()];
+        const tableHeaderHeight = 12;
+        const tableRowHeight = 24;
+        const tableHeight = tableHeaderHeight + quotationItems.length * tableRowHeight;
         const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
         const stampDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-stamp.png'));
         const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
@@ -549,14 +562,14 @@ const SalesTaxInvoicePage = () => {
 
         pdf.setDrawColor(0, 0, 0);
         pdf.setLineWidth(0.45);
-        pdf.rect(tableX, tableY, tableWidth, 54);
+        pdf.rect(tableX, tableY, tableWidth, tableHeight);
         pdf.line(tableX, tableY + 12, tableX + tableWidth, tableY + 12);
         pdf.line(tableX, tableY + 6, tableX + tableWidth, tableY + 6);
-        pdf.line(tableX + 10, tableY, tableX + 10, tableY + 54);
-        pdf.line(tableX + 84, tableY, tableX + 84, tableY + 54);
-        pdf.line(tableX + 158, tableY, tableX + 158, tableY + 54);
-        pdf.line(tableX + 36, tableY + 6, tableX + 36, tableY + 54);
-        pdf.line(tableX + 58, tableY + 6, tableX + 58, tableY + 54);
+        pdf.line(tableX + 10, tableY, tableX + 10, tableY + tableHeight);
+        pdf.line(tableX + 84, tableY, tableX + 84, tableY + tableHeight);
+        pdf.line(tableX + 158, tableY, tableX + 158, tableY + tableHeight);
+        pdf.line(tableX + 36, tableY + 6, tableX + 36, tableY + tableHeight);
+        pdf.line(tableX + 58, tableY + 6, tableX + 58, tableY + tableHeight);
 
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(8);
@@ -567,23 +580,40 @@ const SalesTaxInvoicePage = () => {
         pdf.text('Unit Price', tableX + 71, tableY + 10.3, { align: 'center' });
         pdf.text('Remarks/Picture', tableX + 121, tableY + 8.5, { align: 'center' });
         pdf.text('Total', tableX + 173, tableY + 8.5, { align: 'center' });
-        pdf.text('1', tableX + 5, tableY + 34, { align: 'center' });
-        pdf.text(pdf.splitTextToSize(firstItem.description || firstItem.productName || 'Item description', 68), tableX + 12, tableY + 24);
-        pdf.text(firstItem.uom || 'NOS', tableX + 23, tableY + 48, { align: 'center' });
-        pdf.text(String(firstItem.quantity || 0), tableX + 47, tableY + 48, { align: 'center' });
-        pdf.text(String(firstItem.unitPrice || 0), tableX + 71, tableY + 48, { align: 'center' });
-        pdf.setFont('helvetica', 'bolditalic');
-        pdf.text(`${Math.round(firstItemTotal)} Rs`, tableX + 173, tableY + 34, { align: 'center' });
+        quotationItems.forEach((item, index) => {
+          const rowY = tableY + tableHeaderHeight + index * tableRowHeight;
+          const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+
+          if (index > 0) {
+            pdf.line(tableX, rowY, tableX + tableWidth, rowY);
+          }
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(String(index + 1), tableX + 5, rowY + 13.5, { align: 'center' });
+          pdf.text(
+            pdf.splitTextToSize(item.description || item.productName || 'Item description', 68),
+            tableX + 12,
+            rowY + 8
+          );
+          pdf.line(tableX + 10, rowY + tableRowHeight - 8, tableX + 84, rowY + tableRowHeight - 8);
+          pdf.text(item.uom || 'NOS', tableX + 23, rowY + tableRowHeight - 2.7, { align: 'center' });
+          pdf.text(String(item.quantity || 0), tableX + 47, rowY + tableRowHeight - 2.7, { align: 'center' });
+          pdf.text(String(item.unitPrice || 0), tableX + 71, rowY + tableRowHeight - 2.7, { align: 'center' });
+          pdf.text(pdf.splitTextToSize(item.remarks || item.productName || '', 68), tableX + 87, rowY + 8);
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.text(`${Math.round(itemTotal)} Rs`, tableX + 173, rowY + 13.5, { align: 'center' });
+        });
 
         pdf.setFontSize(6.3);
-        pdf.text('If you have any questions concerning this quotation please tell us.', 10, 128);
+        const afterTableY = tableY + tableHeight + 5;
+        pdf.text('If you have any questions concerning this quotation please tell us.', 10, afterTableY);
 
-        const detailsY = 134;
+        const detailsY = afterTableY + 6;
         pdf.setFontSize(9);
         pdf.text('Delivery Period:', 10, detailsY);
         pdf.setFont('helvetica', 'normal');
         pdf.rect(63, detailsY - 5.5, 43, 7);
-        pdf.text('4 Weeks', 84.5, detailsY - 0.5, { align: 'center' });
+        pdf.text(form.deliveryPeriod || '4 Weeks', 84.5, detailsY - 0.5, { align: 'center' });
         pdf.setFont('helvetica', 'bolditalic');
         pdf.text('Validity Date:', 10, detailsY + 8);
         pdf.setFont('helvetica', 'normal');
@@ -1011,7 +1041,7 @@ const SalesTaxInvoicePage = () => {
         cursorY += rowHeight;
       }
 
-      if (cursorY + 58 > pageHeight - 22) {
+      if (cursorY + 74 > pageHeight - 22) {
         pdf.addPage();
         cursorY = drawPageHeader(false);
       }
@@ -1021,23 +1051,23 @@ const SalesTaxInvoicePage = () => {
       const totalBoxY = cursorY + 8;
 
       pdf.setDrawColor(...borderColor);
-      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 18, 3, 3, 'S');
+      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 34, 3, 3, 'S');
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
       pdf.setTextColor(...mutedTextColor);
-      pdf.text('GRAND TOTAL', totalBoxX + totalBoxWidth / 2, totalBoxY + 5.5, {
-        align: 'center',
-      });
-      pdf.setFontSize(13);
+      pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
+      pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
+      pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
+      pdf.text(formatCurrency(salesTaxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
+      pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
       pdf.setTextColor(...primaryTextColor);
-      pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth / 2, totalBoxY + 12.5, {
-        align: 'center',
-      });
+      pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
+      pdf.text(formatCurrency(grandTotalWithTax), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
 
       const signatureNameY = totalBoxY + 8;
       const signatureLineY = totalBoxY + 10.5;
       const signatureLabelY = totalBoxY + 17.2;
-      const thankYouY = Math.max(totalBoxY + 30, footerBoxY - 7);
+      const thankYouY = Math.max(totalBoxY + 46, footerBoxY - 7);
 
       pdf.setFont('helvetica', 'italic');
       pdf.setFontSize(15);
@@ -1256,6 +1286,13 @@ const SalesTaxInvoicePage = () => {
                   onChange={(value) => handleFormChange('quotationNo', value)}
                 />
               )}
+              {activeDocumentType === 'quotation' ? (
+                <Field
+                  label="Delivery Period"
+                  value={form.deliveryPeriod}
+                  onChange={(value) => handleFormChange('deliveryPeriod', value)}
+                />
+              ) : null}
             </div>
           </section>
 
@@ -1289,7 +1326,7 @@ const SalesTaxInvoicePage = () => {
                       'gst',
                       activeDocumentType === 'deliveryChallan'
                         ? formatGstRegistration(value)
-                        : value
+                        : formatDigitsOnly(value, 13)
                     )
                   }
                   placeholder={
@@ -1297,14 +1334,16 @@ const SalesTaxInvoicePage = () => {
                       ? GST_REGISTRATION_PLACEHOLDER
                       : undefined
                   }
-                  inputMode={activeDocumentType === 'deliveryChallan' ? 'numeric' : undefined}
-                  maxLength={activeDocumentType === 'deliveryChallan' ? 16 : undefined}
+                  inputMode="numeric"
+                  maxLength={activeDocumentType === 'deliveryChallan' ? 16 : 13}
                 />
                 {activeDocumentType === 'deliveryChallan' ? null : (
                   <Field
                     label="NTN"
                     value={form.ntn}
-                    onChange={(value) => handleFormChange('ntn', value)}
+                    onChange={(value) => handleFormChange('ntn', formatDigitsOnly(value, 7))}
+                    inputMode="numeric"
+                    maxLength={7}
                   />
                 )}
               </div>
@@ -1712,12 +1751,24 @@ const SalesTaxInvoicePage = () => {
                       Director
                     </div>
                   </div>
-                  <div className="w-full max-w-[200px] rounded-[16px] border-2 border-slate-950 bg-white px-4 py-3 text-right">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
-                      Grand Total
+                  <div className="w-full max-w-[240px] rounded-[16px] border-2 border-slate-950 bg-white px-4 py-3 text-right">
+                    <div className="space-y-1 text-[12px] font-semibold text-slate-700">
+                      <div className="flex justify-between gap-4">
+                        <span>Sub Total</span>
+                        <span>{formatCurrency(totalAmount)}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span>GST 18%</span>
+                        <span>{formatCurrency(salesTaxAmount)}</span>
+                      </div>
                     </div>
-                    <div className="mt-1 text-[18px] font-black text-slate-950 sm:text-[20px]">
-                      {formatCurrency(totalAmount)}
+                    <div className="mt-2 border-t border-slate-300 pt-2">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+                        Grand Total
+                      </div>
+                      <div className="mt-1 text-[18px] font-black text-slate-950 sm:text-[20px]">
+                        {formatCurrency(grandTotalWithTax)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1800,8 +1851,7 @@ type QuotationPreviewProps = {
 const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) => {
   const taxAmount = totalAmount * 0.18;
   const grandTotal = totalAmount + taxAmount;
-  const firstItem = items[0] || createInvoiceItem();
-  const firstItemTotal = Number(firstItem.quantity || 0) * Number(firstItem.unitPrice || 0);
+  const quotationItems = items.length > 0 ? items : [createInvoiceItem()];
 
   return (
     <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-3 py-3 text-black">
@@ -1817,8 +1867,12 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
         <div className="pt-3 text-right font-black text-black">
           <div className="text-[26px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
           <div className="mt-1 text-[16px] leading-none">Date: {form.date || '--/--/----'}</div>
-          <div className="mt-2 text-[16px] italic leading-none">Indent No:</div>
-          <div className="mt-1 text-[16px] italic leading-none">Enquiry No:</div>
+          <div className="mt-2 text-[16px] italic leading-none">
+            Indent No: {form.purchaseOrder || '---'}
+          </div>
+          <div className="mt-1 text-[16px] italic leading-none">
+            Enquiry No: {form.quotationNo || '---'}
+          </div>
         </div>
       </div>
 
@@ -1856,23 +1910,32 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
               <div>Unit Price</div>
             </div>
           </div>
-          <div className="grid min-h-[125px] grid-cols-[28px_1fr_170px_78px]">
-            <div className="flex items-center justify-center border-r border-black">1</div>
-            <div className="grid grid-rows-[1fr_28px] border-r border-black">
-              <div className="px-3 py-5">
-                {firstItem.description || firstItem.productName || 'Item description'}
+          {quotationItems.map((item, index) => {
+            const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+
+            return (
+              <div
+                key={item.id}
+                className="grid min-h-[92px] grid-cols-[28px_1fr_170px_78px] border-t border-black first:border-t-0"
+              >
+                <div className="flex items-center justify-center border-r border-black">{index + 1}</div>
+                <div className="grid grid-rows-[1fr_28px] border-r border-black">
+                  <div className="px-3 py-4">
+                    {item.description || item.productName || 'Item description'}
+                  </div>
+                  <div className="grid grid-cols-3 border-t border-black text-center italic">
+                    <div className="border-r border-black">{item.uom || 'NOS'}</div>
+                    <div className="border-r border-black">{item.quantity || 0}</div>
+                    <div>{item.unitPrice || 0}</div>
+                  </div>
+                </div>
+                <div className="border-r border-black px-3 py-4">{item.remarks || item.productName}</div>
+                <div className="flex items-center justify-center font-bold italic">
+                  {Math.round(itemTotal)} Rs
+                </div>
               </div>
-              <div className="grid grid-cols-3 border-t border-black text-center italic">
-                <div className="border-r border-black">NOS</div>
-                <div className="border-r border-black">{firstItem.quantity || 0}</div>
-                <div>{firstItem.unitPrice || 0}</div>
-              </div>
-            </div>
-            <div className="border-r border-black px-3 py-5">{firstItem.remarks}</div>
-            <div className="flex items-center justify-center font-bold italic">
-              {Math.round(firstItemTotal)} Rs
-            </div>
-          </div>
+            );
+          })}
         </div>
 
         <div className="relative z-10 mt-1 text-[10px] italic">
@@ -1882,7 +1945,9 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
         <div className="relative z-10 mt-1 grid grid-cols-[1fr_170px] gap-6">
           <div className="grid grid-cols-[120px_150px] items-center text-[14px] font-bold italic">
             <div>Delivery Period:</div>
-            <div className="border-2 border-black py-1 text-center font-normal">4 Weeks</div>
+            <div className="border-2 border-black py-1 text-center font-normal">
+              {form.deliveryPeriod || '4 Weeks'}
+            </div>
             <div>Validity Date:</div>
             <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">
               1 WEEK
@@ -2067,7 +2132,7 @@ const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) =>
 
 type FieldProps = {
   label: string;
-  value: string;
+  value?: string | null;
   onChange: (value: string) => void;
   type?: 'text' | 'number' | 'date';
   placeholder?: string;
@@ -2084,7 +2149,8 @@ const Field = ({
   inputMode,
   maxLength,
 }: FieldProps) => {
-  const inputValue = type === 'date' ? toDateInputValue(value) : value;
+  const safeValue = value ?? '';
+  const inputValue = type === 'date' ? toDateInputValue(safeValue) : safeValue;
 
   return (
     <label className="block">
@@ -2108,7 +2174,7 @@ const Field = ({
 
 type SelectFieldProps = {
   label: string;
-  value: string;
+  value?: string | null;
   onChange: (value: string) => void;
   options: Array<{ label: string; value: string }>;
   placeholder: string;
@@ -2128,7 +2194,7 @@ const SelectField = ({
       {label}
     </span>
     <select
-      value={value}
+      value={value ?? ''}
       onChange={(event) => onChange(event.target.value)}
       disabled={disabled}
       className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:text-slate-500"
