@@ -2,7 +2,12 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import api, { createSalesDocument, updateSalesDocument } from '@/services/api';
+import api, {
+  createSalesDocument,
+  getSalesDocuments,
+  updateSalesDocument,
+} from '@/services/api';
+import type { SalesDocumentRecord } from '@/services/api';
 import { resolveAssetUrl } from '@/lib/apiConfig';
 import type { AdminCategory } from '@/types/adminCategory';
 import type { AdminProduct, ProductCategoryRef } from '@/types/adminProduct';
@@ -11,8 +16,10 @@ import {
   Building2,
   CalendarDays,
   Download,
+  Eye,
   FileText,
   Globe,
+  History,
   Loader2,
   Mail,
   Phone,
@@ -20,7 +27,9 @@ import {
   Printer,
   RotateCcw,
   Save,
+  Search,
   Trash2,
+  X,
 } from 'lucide-react';
 
 type CatalogProduct = AdminProduct & {
@@ -60,7 +69,10 @@ type InvoiceForm = {
   directorName: string;
 };
 
-type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
+type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan' | 'bill';
+type InvoiceHistoryRecord = SalesDocumentRecord<InvoiceForm, Omit<InvoiceItem, 'id'> & { id?: string }>;
+type HistorySortBy = 'createdAt' | 'date' | 'documentNo' | 'customerName' | 'totalAmount';
+type HistorySortOrder = 'asc' | 'desc';
 
 const CLASSIC_LOGO_SRC = '/Classic_logo.png';
 const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
@@ -95,6 +107,16 @@ const documentTypes: Array<{
     purchaseLabel: 'Purchase Order',
     referenceLabel: 'Quotation No',
     fileSlug: 'sales-tax-invoice',
+  },
+  {
+    type: 'bill',
+    label: 'Bill',
+    title: 'Bill Page',
+    pdfTitle: 'BILL',
+    numberLabel: 'Bill No',
+    purchaseLabel: 'Purchase Order',
+    referenceLabel: 'Reference No',
+    fileSlug: 'bill',
   },
   {
     type: 'deliveryChallan',
@@ -278,6 +300,27 @@ const buildPdfFileName = (fileSlug: string, documentNo: string, date: string): s
   return `${fileSlug}-${cleanDocumentNo}-${cleanDate}.pdf`;
 };
 
+const normalizeHistoryItems = (
+  documentItems: InvoiceHistoryRecord['items']
+): InvoiceItem[] => {
+  if (!Array.isArray(documentItems) || documentItems.length === 0) {
+    return [createInvoiceItem()];
+  }
+
+  return documentItems.map((item, index) => ({
+    id: item.id || `history-${Date.now()}-${index}`,
+    categoryId: item.categoryId || '',
+    productId: item.productId || '',
+    productName: item.productName || '',
+    description: item.description || '',
+    uom: item.uom || 'PCS',
+    quantity: Number(item.quantity || 0),
+    unitPrice: Number(item.unitPrice || 0),
+    remarks: item.remarks || '',
+    picture: item.picture || '',
+  }));
+};
+
 const SalesTaxInvoicePage = () => {
   const [activeDocumentType, setActiveDocumentType] = useState<DocumentType>('invoice');
   const [form, setForm] = useState<InvoiceForm>(createInvoiceForm);
@@ -290,8 +333,19 @@ const SalesTaxInvoicePage = () => {
   const [isSavingDocument, setIsSavingDocument] = useState(false);
   const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState('');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyDocumentType, setHistoryDocumentType] = useState<DocumentType>('invoice');
+  const [historySearch, setHistorySearch] = useState('');
+  const [historySortBy, setHistorySortBy] = useState<HistorySortBy>('createdAt');
+  const [historySortOrder, setHistorySortOrder] = useState<HistorySortOrder>('desc');
+  const [historyRecords, setHistoryRecords] = useState<InvoiceHistoryRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const activeDocument =
     documentTypes.find((documentType) => documentType.type === activeDocumentType) ||
+    documentTypes[1];
+  const historyDocument =
+    documentTypes.find((documentType) => documentType.type === historyDocumentType) ||
     documentTypes[1];
 
   useEffect(() => {
@@ -351,8 +405,9 @@ const SalesTaxInvoicePage = () => {
     (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
     0
   );
+  const isTaxDocument = activeDocumentType === 'invoice';
   const salesTaxAmount = totalAmount * SALES_TAX_RATE;
-  const grandTotalWithTax = totalAmount + salesTaxAmount;
+  const grandTotalWithTax = isTaxDocument ? totalAmount + salesTaxAmount : totalAmount;
 
   const handleFormChange = (field: keyof InvoiceForm, value: string) => {
     setSaveStatus('');
@@ -465,6 +520,73 @@ const SalesTaxInvoicePage = () => {
     setSaveStatus('');
   };
 
+  const loadHistory = async (
+    documentType = historyDocumentType,
+    search = historySearch,
+    sortBy = historySortBy,
+    sortOrder = historySortOrder
+  ) => {
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) {
+      alert('Please login as admin first');
+      return;
+    }
+
+    setHistoryLoading(true);
+    setHistoryError('');
+
+    try {
+      const documents = await getSalesDocuments<InvoiceForm, InvoiceHistoryRecord['items'][number]>(
+        token,
+        documentType,
+        {
+          q: search.trim(),
+          limit: 150,
+          sortBy,
+          order: sortOrder,
+        }
+      );
+      setHistoryRecords(documents as InvoiceHistoryRecord[]);
+    } catch (error) {
+      console.error('Failed to load document history', error);
+      setHistoryError('Unable to load history. Please try again.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleOpenHistory = () => {
+    setHistoryDocumentType(activeDocumentType);
+    setIsHistoryOpen(true);
+    void loadHistory(activeDocumentType);
+  };
+
+  const handleHistoryDocumentTypeChange = (documentType: DocumentType) => {
+    setHistoryDocumentType(documentType);
+    void loadHistory(documentType, historySearch, historySortBy, historySortOrder);
+  };
+
+  const handleHistorySortChange = (sortBy: HistorySortBy, sortOrder = historySortOrder) => {
+    setHistorySortBy(sortBy);
+    setHistorySortOrder(sortOrder);
+    void loadHistory(historyDocumentType, historySearch, sortBy, sortOrder);
+  };
+
+  const handleHistorySortOrderChange = (sortOrder: HistorySortOrder) => {
+    setHistorySortOrder(sortOrder);
+    void loadHistory(historyDocumentType, historySearch, historySortBy, sortOrder);
+  };
+
+  const handleLoadHistoryRecord = (record: InvoiceHistoryRecord) => {
+    setActiveDocumentType(record.documentType);
+    setForm({ ...createInvoiceForm(), ...(record.form as InvoiceForm) });
+    setItems(normalizeHistoryItems(record.items));
+    setSavedDocumentId(record._id);
+    setSaveStatus(`${documentTypes.find((item) => item.type === record.documentType)?.label || 'Document'} loaded from history.`);
+    setIsHistoryOpen(false);
+  };
+
   const handleSaveDocument = async () => {
     const token = localStorage.getItem('adminToken');
 
@@ -507,9 +629,10 @@ const SalesTaxInvoicePage = () => {
       const { GState, jsPDF } = await import('jspdf');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const logoUrl = getFrontendAssetUrl(CLASSIC_LOGO_SRC);
-      const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const logoUrl = getFrontendAssetUrl(CLASSIC_LOGO_SRC);
+        const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
+        const includeTax = activeDocumentType === 'invoice';
 
       if (activeDocumentType === 'quotation') {
         const purple: [number, number, number] = [109, 40, 217];
@@ -950,9 +1073,13 @@ const SalesTaxInvoicePage = () => {
           pdf.setTextColor(...primaryTextColor);
           pdf.text(form.companyName || 'Customer Company', contentLeftX + 1, cursorY + 7);
           pdf.text(form.location ? `${form.location}:` : 'Location:', contentLeftX + 1, cursorY + 13);
-          pdf.text(`GST: ${form.gst || '________________'}`, contentLeftX + 1, cursorY + 19);
-          pdf.text(`NTN: ${form.ntn || '________________'}`, contentLeftX + 1, cursorY + 25);
-          cursorY += 31;
+          if (includeTax) {
+            pdf.text(`GST: ${form.gst || '________________'}`, contentLeftX + 1, cursorY + 19);
+            pdf.text(`NTN: ${form.ntn || '________________'}`, contentLeftX + 1, cursorY + 25);
+            cursorY += 31;
+          } else {
+            cursorY += 21;
+          }
         }
 
         if (logoDataUrl) {
@@ -1051,18 +1178,24 @@ const SalesTaxInvoicePage = () => {
       const totalBoxY = cursorY + 8;
 
       pdf.setDrawColor(...borderColor);
-      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 34, 3, 3, 'S');
+      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, includeTax ? 34 : 22, 3, 3, 'S');
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
       pdf.setTextColor(...mutedTextColor);
-      pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
-      pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
-      pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
-      pdf.text(formatCurrency(salesTaxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
-      pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
-      pdf.setTextColor(...primaryTextColor);
-      pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
-      pdf.text(formatCurrency(grandTotalWithTax), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
+      if (includeTax) {
+        pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
+        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
+        pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
+        pdf.text(formatCurrency(salesTaxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
+        pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
+        pdf.setTextColor(...primaryTextColor);
+        pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
+        pdf.text(formatCurrency(grandTotalWithTax), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
+      } else {
+        pdf.setTextColor(...primaryTextColor);
+        pdf.text('TOTAL', totalBoxX + 4, totalBoxY + 13);
+        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 13, { align: 'right' });
+      }
 
       const signatureNameY = totalBoxY + 8;
       const signatureLineY = totalBoxY + 10.5;
@@ -1118,9 +1251,13 @@ const SalesTaxInvoicePage = () => {
       pdf.text(addressLines[0] || '', footerLeftX, footerLineTwoY);
       pdf.text(addressLines[1] || '', footerLeftX, footerLineThreeY);
 
-      pdf.text('NTN: 1700506', footerCenterX, footerLineOneY, { align: 'center' });
-      pdf.text('GST: 05-07-8500-014-73', footerCenterX, footerLineTwoY, { align: 'center' });
-      pdf.text(form.email, footerCenterX, footerLineThreeY, { align: 'center' });
+      if (includeTax) {
+        pdf.text('NTN: 1700506', footerCenterX, footerLineOneY, { align: 'center' });
+        pdf.text('GST: 05-07-8500-014-73', footerCenterX, footerLineTwoY, { align: 'center' });
+        pdf.text(form.email, footerCenterX, footerLineThreeY, { align: 'center' });
+      } else {
+        pdf.text(form.email, footerCenterX, footerLineTwoY, { align: 'center' });
+      }
 
       pdf.text(form.phonePrimary, footerRightX, footerLineOneY, { align: 'right' });
       pdf.text(form.phoneSecondary, footerRightX, footerLineTwoY, { align: 'right' });
@@ -1180,6 +1317,14 @@ const SalesTaxInvoicePage = () => {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
+            onClick={handleOpenHistory}
+            className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2.5 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+          >
+            <History size={16} />
+            History
+          </button>
+          <button
+            type="button"
             onClick={handleReset}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
           >
@@ -1228,7 +1373,7 @@ const SalesTaxInvoicePage = () => {
         </div>
       </div>
 
-      <div className="invoice-document-tabs grid gap-3 rounded-3xl border border-slate-800 bg-[#111827] p-3 shadow-xl sm:grid-cols-3">
+      <div className="invoice-document-tabs grid gap-3 rounded-3xl border border-slate-800 bg-[#111827] p-3 shadow-xl sm:grid-cols-2 lg:grid-cols-4">
         {documentTypes.map((documentType) => {
           const isActive = activeDocumentType === documentType.type;
 
@@ -1249,6 +1394,164 @@ const SalesTaxInvoicePage = () => {
           );
         })}
       </div>
+
+      {isHistoryOpen ? (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-4 py-8 backdrop-blur-sm">
+          <section className="w-full max-w-5xl rounded-3xl border border-slate-700 bg-[#0b1120] shadow-2xl">
+            <div className="flex flex-col gap-4 border-b border-slate-800 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-purple-200">
+                  <History size={16} />
+                  {historyDocument.label} History
+                </div>
+                <div className="mt-1 text-sm text-slate-400">
+                  Open any saved {historyDocument.label.toLowerCase()} to view, edit, print, or download it again.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition hover:border-slate-500 hover:text-white"
+                aria-label="Close history"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5">
+              <div className="mb-5 grid gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-3 sm:grid-cols-2 lg:grid-cols-4">
+                {documentTypes.map((documentType) => {
+                  const isActive = historyDocumentType === documentType.type;
+
+                  return (
+                    <button
+                      key={documentType.type}
+                      type="button"
+                      onClick={() => handleHistoryDocumentTypeChange(documentType.type)}
+                      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                        isActive
+                          ? 'border-purple-400 bg-purple-400 text-slate-950 shadow-lg shadow-purple-950/30'
+                          : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-purple-500/60 hover:text-purple-200'
+                      }`}
+                    >
+                      <FileText size={16} />
+                      {documentType.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <form
+                className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_190px_160px_auto]"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void loadHistory(historyDocumentType, historySearch, historySortBy, historySortOrder);
+                }}
+              >
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input
+                    value={historySearch}
+                    onChange={(event) => setHistorySearch(event.target.value)}
+                    placeholder="Search number, customer, date, PO, quotation..."
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 py-2.5 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-purple-400"
+                  />
+                </div>
+                <select
+                  value={historySortBy}
+                  onChange={(event) => handleHistorySortChange(event.target.value as HistorySortBy)}
+                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-semibold text-slate-200 outline-none transition focus:border-purple-400"
+                  aria-label="Sort history by"
+                >
+                  <option value="createdAt">Saved Date</option>
+                  <option value="date">Document Date</option>
+                  <option value="documentNo">Document No</option>
+                  <option value="customerName">Customer</option>
+                  <option value="totalAmount">Amount</option>
+                </select>
+                <select
+                  value={historySortOrder}
+                  onChange={(event) => handleHistorySortOrderChange(event.target.value as HistorySortOrder)}
+                  className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-semibold text-slate-200 outline-none transition focus:border-purple-400"
+                  aria-label="Sort history order"
+                >
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-400"
+                >
+                  <Search size={16} />
+                  Search
+                </button>
+              </form>
+
+              {historyLoading ? (
+                <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/70 py-10 text-sm font-semibold text-purple-200">
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading history...
+                </div>
+              ) : historyError ? (
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  {historyError}
+                </div>
+              ) : historyRecords.length === 0 ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-10 text-center text-sm text-slate-400">
+                  No saved {historyDocument.label.toLowerCase()} history found.
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-2xl border border-slate-800">
+                  <div className="max-h-[60vh] overflow-auto">
+                    <table className="w-full min-w-[760px] table-fixed border-collapse text-left text-sm">
+                      <thead className="sticky top-0 bg-slate-900 text-xs uppercase tracking-[0.18em] text-slate-400">
+                        <tr>
+                          <th className="w-[18%] px-4 py-3">No</th>
+                          <th className="w-[26%] px-4 py-3">Customer</th>
+                          <th className="w-[14%] px-4 py-3">Date</th>
+                          <th className="w-[14%] px-4 py-3">Amount</th>
+                          <th className="w-[18%] px-4 py-3">Saved</th>
+                          <th className="w-[10%] px-4 py-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 bg-slate-950/60 text-slate-200">
+                        {historyRecords.map((record) => (
+                          <tr key={record._id} className="transition hover:bg-slate-900">
+                            <td className="px-4 py-3 font-semibold text-white">
+                              {record.documentNo || record.form?.invoiceNo || '---'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="truncate">{record.customerName || record.form?.companyName || '---'}</div>
+                              <div className="mt-1 truncate text-xs text-slate-500">
+                                {record.form?.purchaseOrder ? `PO: ${record.form.purchaseOrder}` : 'No PO'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">{record.date || record.form?.date || '---'}</td>
+                            <td className="px-4 py-3">{formatCurrency(Number(record.totalAmount || 0))}</td>
+                            <td className="px-4 py-3 text-slate-400">
+                              {record.createdAt ? new Date(record.createdAt).toLocaleString() : '---'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleLoadHistoryRecord(record)}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/20"
+                              >
+                                <Eye size={14} />
+                                Open
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       <div className="invoice-document-stage">
       <div
@@ -1313,40 +1616,42 @@ const SalesTaxInvoicePage = () => {
                 value={form.location}
                 onChange={(value) => handleFormChange('location', value)}
               />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label={
-                    activeDocumentType === 'deliveryChallan'
-                      ? 'Sales Tax Registration No'
-                      : 'GST'
-                  }
-                  value={form.gst}
-                  onChange={(value) =>
-                    handleFormChange(
-                      'gst',
-                      activeDocumentType === 'deliveryChallan'
-                        ? formatGstRegistration(value)
-                        : formatDigitsOnly(value, 13)
-                    )
-                  }
-                  placeholder={
-                    activeDocumentType === 'deliveryChallan'
-                      ? GST_REGISTRATION_PLACEHOLDER
-                      : undefined
-                  }
-                  inputMode="numeric"
-                  maxLength={activeDocumentType === 'deliveryChallan' ? 16 : 13}
-                />
-                {activeDocumentType === 'deliveryChallan' ? null : (
+              {activeDocumentType === 'bill' ? null : (
+                <div className="grid gap-4 sm:grid-cols-2">
                   <Field
-                    label="NTN"
-                    value={form.ntn}
-                    onChange={(value) => handleFormChange('ntn', formatDigitsOnly(value, 7))}
+                    label={
+                      activeDocumentType === 'deliveryChallan'
+                        ? 'Sales Tax Registration No'
+                        : 'GST'
+                    }
+                    value={form.gst}
+                    onChange={(value) =>
+                      handleFormChange(
+                        'gst',
+                        activeDocumentType === 'deliveryChallan'
+                          ? formatGstRegistration(value)
+                          : formatDigitsOnly(value, 13)
+                      )
+                    }
+                    placeholder={
+                      activeDocumentType === 'deliveryChallan'
+                        ? GST_REGISTRATION_PLACEHOLDER
+                        : undefined
+                    }
                     inputMode="numeric"
-                    maxLength={7}
+                    maxLength={activeDocumentType === 'deliveryChallan' ? 16 : 13}
                   />
-                )}
-              </div>
+                  {activeDocumentType === 'deliveryChallan' ? null : (
+                    <Field
+                      label="NTN"
+                      value={form.ntn}
+                      onChange={(value) => handleFormChange('ntn', formatDigitsOnly(value, 7))}
+                      inputMode="numeric"
+                      maxLength={7}
+                    />
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
@@ -1651,8 +1956,12 @@ const SalesTaxInvoicePage = () => {
                 <div className="mb-3 max-w-md text-[14px] leading-snug text-slate-900 sm:text-[16px]">
                   <div>{form.companyName || 'Customer Company'}</div>
                   <div>{form.location ? `${form.location}:` : 'Location:'}</div>
-                  <div>GST: {form.gst || '________________'}</div>
-                  <div>NTN: {form.ntn || '________________'}</div>
+                  {isTaxDocument ? (
+                    <>
+                      <div>GST: {form.gst || '________________'}</div>
+                      <div>NTN: {form.ntn || '________________'}</div>
+                    </>
+                  ) : null}
                 </div>
 
                 <div className="overflow-hidden rounded-[20px] border-2 border-slate-950 bg-white">
@@ -1753,18 +2062,22 @@ const SalesTaxInvoicePage = () => {
                   </div>
                   <div className="w-full max-w-[240px] rounded-[16px] border-2 border-slate-950 bg-white px-4 py-3 text-right">
                     <div className="space-y-1 text-[12px] font-semibold text-slate-700">
-                      <div className="flex justify-between gap-4">
-                        <span>Sub Total</span>
-                        <span>{formatCurrency(totalAmount)}</span>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <span>GST 18%</span>
-                        <span>{formatCurrency(salesTaxAmount)}</span>
-                      </div>
+                      {isTaxDocument ? (
+                        <>
+                          <div className="flex justify-between gap-4">
+                            <span>Sub Total</span>
+                            <span>{formatCurrency(totalAmount)}</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span>GST 18%</span>
+                            <span>{formatCurrency(salesTaxAmount)}</span>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
                     <div className="mt-2 border-t border-slate-300 pt-2">
                       <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
-                        Grand Total
+                        {isTaxDocument ? 'Grand Total' : 'Total'}
                       </div>
                       <div className="mt-1 text-[18px] font-black text-slate-950 sm:text-[20px]">
                         {formatCurrency(grandTotalWithTax)}
@@ -1805,8 +2118,12 @@ const SalesTaxInvoicePage = () => {
                         <Mail size={15} />
                       </div>
                       <div className="min-w-0 text-[11px] leading-relaxed text-slate-600">
-                        <div>NTN: 1700506</div>
-                        <div>GST: 05-07-8500-014-73</div>
+                        {isTaxDocument ? (
+                          <>
+                            <div>NTN: 1700506</div>
+                            <div>GST: 05-07-8500-014-73</div>
+                          </>
+                        ) : null}
                         <div className="mt-1 break-all font-medium text-slate-900">{form.email}</div>
                       </div>
                     </div>

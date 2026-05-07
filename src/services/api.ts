@@ -543,7 +543,7 @@ export const deleteSlider = async (token: string, id: string) => {
 // Sales Document CRUD
 // ---------------------------------------------------------------------------
 
-export type SalesDocumentType = 'quotation' | 'invoice' | 'deliveryChallan';
+export type SalesDocumentType = 'quotation' | 'invoice' | 'deliveryChallan' | 'bill';
 
 export type SalesDocumentPayload<TForm, TItem> = {
   documentType: SalesDocumentType;
@@ -564,10 +564,22 @@ export type SalesDocumentRecord<TForm = Record<string, unknown>, TItem = Record<
 
 export const getSalesDocuments = async <TForm, TItem>(
   token: string,
-  type?: SalesDocumentType
+  type?: SalesDocumentType,
+  params?: Partial<{
+    q: string;
+    limit: number;
+    sortBy: 'documentNo' | 'customerName' | 'date' | 'totalAmount' | 'createdAt';
+    order: 'asc' | 'desc';
+  }>
 ): Promise<Array<SalesDocumentRecord<TForm, TItem>>> => {
   const response = await api.get('/sales-documents', {
-    params: type ? { type } : undefined,
+    params: {
+      ...(type ? { type } : {}),
+      ...(params?.q ? { q: params.q } : {}),
+      ...(params?.limit ? { limit: params.limit } : {}),
+      ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+      ...(params?.order ? { order: params.order } : {}),
+    },
     headers: { Authorization: `Bearer ${token}` },
   });
   return Array.isArray(response.data) ? response.data : [];
