@@ -2,6 +2,7 @@ import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 
 const Footer = () => {
     const quickLinks = [
@@ -35,7 +36,7 @@ const Footer = () => {
                         <Link href="/" className="flex items-center gap-3 mb-6 text-white">
                             <div className="relative">
                                 <Image
-                                    src="/Classic_logo.png"
+                                    src={CLASSIC_LOGO_SRC}
                                     alt="Classic Electronics Logo"
                                     width={150}
                                     height={50}

@@ -8,6 +8,7 @@ import api, {
   updateSalesDocument,
 } from '@/services/api';
 import type { SalesDocumentRecord } from '@/services/api';
+import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import { resolveAssetUrl } from '@/lib/apiConfig';
 import type { AdminCategory } from '@/types/adminCategory';
 import type { AdminProduct, ProductCategoryRef } from '@/types/adminProduct';
@@ -74,7 +75,6 @@ type InvoiceHistoryRecord = SalesDocumentRecord<InvoiceForm, Omit<InvoiceItem, '
 type HistorySortBy = 'createdAt' | 'date' | 'documentNo' | 'customerName' | 'totalAmount';
 type HistorySortOrder = 'asc' | 'desc';
 
-const CLASSIC_LOGO_SRC = '/Classic_logo.png';
 const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
 const SALES_TAX_RATE = 0.18;
 
@@ -1283,7 +1283,7 @@ const SalesTaxInvoicePage = () => {
         <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute right-6 top-10 opacity-[0.05]">
           <Image
-            src="/Classic_logo.png"
+            src={CLASSIC_LOGO_SRC}
             alt=""
             width={360}
             height={140}
@@ -1292,7 +1292,7 @@ const SalesTaxInvoicePage = () => {
         </div>
         <div className="absolute bottom-16 left-[28%] opacity-[0.04]">
           <Image
-            src="/Classic_logo.png"
+            src={CLASSIC_LOGO_SRC}
             alt=""
             width={500}
             height={190}
@@ -1903,7 +1903,7 @@ const SalesTaxInvoicePage = () => {
             <div className="flex items-start justify-between gap-6">
               <div className="max-w-[210px] shrink-0">
                 <Image
-                  src="/Classic_logo.png"
+                  src={CLASSIC_LOGO_SRC}
                   alt="Classic Electronics"
                   width={360}
                   height={135}
@@ -1942,7 +1942,7 @@ const SalesTaxInvoicePage = () => {
             >
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
                 <Image
-                  src="/Classic_logo.png"
+                  src={CLASSIC_LOGO_SRC}
                   alt=""
                   width={900}
                   height={360}
@@ -2174,7 +2174,7 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
     <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-3 py-3 text-black">
       <div className="flex items-start justify-between">
         <Image
-          src="/Classic_logo.png"
+          src={CLASSIC_LOGO_SRC}
           alt="Classic Electronics"
           width={430}
           height={162}
@@ -2196,7 +2196,7 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
       <div className="relative mt-2 min-h-[860px] rounded-[18px] border-[3px] border-violet-600 px-6 pb-10 pt-5">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.16]">
           <Image
-            src="/Classic_logo.png"
+            src={CLASSIC_LOGO_SRC}
             alt=""
             width={900}
             height={360}

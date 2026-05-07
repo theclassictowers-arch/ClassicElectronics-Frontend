@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React from 'react';
 import Image from 'next/image';
 import { ModeToggle } from '@/components/ModeToggle';
+import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 
 const TopHeader = () => {
   return (
@@ -12,7 +12,7 @@ const TopHeader = () => {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Image
-              src="/Classic_logo.png"
+              src={CLASSIC_LOGO_SRC}
               alt="Classic Electronics Logo"
               width={40}
               height={40}

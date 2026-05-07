@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, ShoppingCart, User, Truck, Menu, X, Package, Shield } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Menu, X, Package, Shield } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
+import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 
 interface MainHeaderProps {
   isMobileMenuOpen: boolean;
@@ -32,7 +33,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ isMobileMenuOpen, setIsMobileMe
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
               <Image
-                src="/Classic_logo.png"
+                src={CLASSIC_LOGO_SRC}
                 alt="Classic Electronics Logo"
                 width={150}
                 height={50}

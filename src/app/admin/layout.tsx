@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { LayoutDashboard, Package, Tag, ShoppingCart, LogOut, UserCircle, ImageIcon, FileText } from 'lucide-react';
 import { getAdminProfile } from '@/services/api';
+import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 
 type AdminInfo = { name: string; email: string };
 
@@ -46,7 +47,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             {/* Sidebar */}
             <aside className="admin-layout-sidebar w-64 bg-[#0b1120] border-r border-gray-800 flex flex-col fixed h-full">
                 <div className="p-6 border-b border-gray-800 text-center">
-                    <Image src="/Classic_logo.png" alt="Classic Logo" width={140} height={60} className="rounded-sm mb-2 mx-auto" />
+                    <Image src={CLASSIC_LOGO_SRC} alt="Classic Logo" width={140} height={60} className="rounded-sm mb-2 mx-auto" />
 
                 </div>
 
