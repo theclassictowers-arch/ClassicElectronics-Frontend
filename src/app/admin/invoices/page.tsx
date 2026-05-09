@@ -3,11 +3,14 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import api, {
+  createCustomer,
   createSalesDocument,
+  getCustomers,
   getSalesDocuments,
+  updateCustomer,
   updateSalesDocument,
 } from '@/services/api';
-import type { SalesDocumentRecord } from '@/services/api';
+import type { CustomerPayload, CustomerRecord, SalesDocumentRecord } from '@/services/api';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import { resolveAssetUrl } from '@/lib/apiConfig';
 import type { AdminCategory } from '@/types/adminCategory';
@@ -187,7 +190,7 @@ const createInvoiceForm = (): InvoiceForm => ({
   quotationNo: '',
   companyName: 'Fecto Cement Ltd',
   location: 'Rawalpindi',
-  gst: '',
+  gst: '18',
   ntn: '',
   subtitle: 'A wide range of industrial instrument & sensing solutions',
   thankYouNote: 'THANK YOU FOR YOUR BUSINESS!',
@@ -215,6 +218,24 @@ const createInvoiceItem = (): InvoiceItem => ({
 
 const formatCurrency = (amount: number) =>
   `Rs. ${amount.toLocaleString('en-PK', { maximumFractionDigits: 0 })}`;
+
+const getHistorySearchPlaceholder = (documentType: DocumentType): string =>
+  documentType === 'quotation'
+    ? 'Search number, customer, date, indent, enquiry...'
+    : 'Search number, customer, date, PO, quotation...';
+
+const getHistoryReferenceText = (record: InvoiceHistoryRecord): string => {
+  if (record.documentType === 'quotation') {
+    const parts = [
+      record.form?.purchaseOrder ? `Indent: ${record.form.purchaseOrder}` : '',
+      record.form?.quotationNo ? `Enquiry: ${record.form.quotationNo}` : '',
+    ].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(' | ') : 'No indent/enquiry';
+  }
+
+  return record.form?.purchaseOrder ? `PO: ${record.form.purchaseOrder}` : 'No PO';
+};
 
 const getCategoryId = (categoryRef?: ProductCategoryRef): string => {
   if (!categoryRef) return '';
@@ -327,6 +348,10 @@ const SalesTaxInvoicePage = () => {
   const [items, setItems] = useState<InvoiceItem[]>([createInvoiceItem()]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [customerLoading, setCustomerLoading] = useState(false);
+  const [customerStatus, setCustomerStatus] = useState('');
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -411,10 +436,123 @@ const SalesTaxInvoicePage = () => {
 
   const handleFormChange = (field: keyof InvoiceForm, value: string) => {
     setSaveStatus('');
+    setCustomerStatus('');
+    if (field === 'companyName' || field === 'location') {
+      setSelectedCustomerId('');
+    }
     setForm((currentForm) => ({
       ...currentForm,
       [field]: value,
     }));
+  };
+
+  const loadCustomers = async () => {
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) return;
+
+    setCustomerLoading(true);
+    setCustomerStatus('');
+
+    try {
+      const customerList = await getCustomers(token, { status: 'active', limit: 500 });
+      setCustomers(customerList);
+    } catch (error) {
+      console.error('Failed to load customers', error);
+      setCustomerStatus('Unable to load saved customers.');
+    } finally {
+      setCustomerLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadCustomers();
+  }, []);
+
+  const buildCustomerPayload = (): CustomerPayload => ({
+    name: form.companyName.trim(),
+    location: form.location.trim(),
+    gst: form.gst.trim(),
+    ntn: form.ntn.trim(),
+    email: '',
+    phonePrimary: '',
+    phoneSecondary: '',
+    status: 'active',
+  });
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setCustomerStatus('');
+
+    const customer = customers.find((item) => item._id === customerId);
+    if (!customer) return;
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      companyName: customer.name || '',
+      location: customer.location || '',
+      gst: customer.gst || '18',
+      ntn: customer.ntn || '',
+    }));
+  };
+
+  const handleSaveCustomer = async () => {
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) {
+      alert('Please login as admin first');
+      return;
+    }
+
+    const payload = buildCustomerPayload();
+
+    if (!payload.name) {
+      alert('Please enter company name first');
+      return;
+    }
+
+    setCustomerLoading(true);
+    setCustomerStatus('');
+
+    try {
+      const normalizedName = payload.name.trim().toLowerCase();
+      const normalizedLocation = (payload.location || '').trim().toLowerCase();
+      const existingCustomer = customers.find(
+        (customer) =>
+          customer.name.trim().toLowerCase() === normalizedName &&
+          (customer.location || '').trim().toLowerCase() === normalizedLocation
+      );
+      const customerIdToUpdate = selectedCustomerId || existingCustomer?._id || '';
+      const savedCustomer = customerIdToUpdate
+        ? await updateCustomer(token, customerIdToUpdate, payload)
+        : await createCustomer(token, payload);
+
+      setSelectedCustomerId(savedCustomer._id);
+      setCustomers((currentCustomers) => {
+        const exists = currentCustomers.some((customer) => customer._id === savedCustomer._id);
+        const nextCustomers = exists
+          ? currentCustomers.map((customer) =>
+              customer._id === savedCustomer._id ? savedCustomer : customer
+            )
+          : [...currentCustomers, savedCustomer];
+
+        return nextCustomers.sort((first, second) =>
+          first.name.localeCompare(second.name, undefined, { sensitivity: 'base' })
+        );
+      });
+      setCustomerStatus('Customer saved.');
+    } catch (error) {
+      const maybeApiError = error as { response?: { status?: number; data?: { message?: string } } };
+      if (maybeApiError.response?.status === 409) {
+        setCustomerStatus(maybeApiError.response.data?.message || 'Customer already exists.');
+        await loadCustomers();
+        return;
+      }
+      console.error('Failed to save customer', error);
+      alert('Unable to save customer. Maybe this customer already exists.');
+    } finally {
+      setCustomerLoading(false);
+    }
   };
 
   const handleItemChange = (
@@ -612,6 +750,7 @@ const SalesTaxInvoicePage = () => {
       setSavedDocumentId(savedDocument._id);
       setForm({ ...createInvoiceForm(), ...(savedDocument.form as InvoiceForm) });
       setSaveStatus(`${activeDocument.label} saved to backend.`);
+      await loadCustomers();
     } catch (error) {
       console.error('Failed to save document', error);
       alert('Unable to save this document. Please try again.');
@@ -1453,7 +1592,7 @@ const SalesTaxInvoicePage = () => {
                   <input
                     value={historySearch}
                     onChange={(event) => setHistorySearch(event.target.value)}
-                    placeholder="Search number, customer, date, PO, quotation..."
+                    placeholder={getHistorySearchPlaceholder(historyDocumentType)}
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 py-2.5 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-purple-400"
                   />
                 </div>
@@ -1523,7 +1662,7 @@ const SalesTaxInvoicePage = () => {
                             <td className="px-4 py-3">
                               <div className="truncate">{record.customerName || record.form?.companyName || '---'}</div>
                               <div className="mt-1 truncate text-xs text-slate-500">
-                                {record.form?.purchaseOrder ? `PO: ${record.form.purchaseOrder}` : 'No PO'}
+                                {getHistoryReferenceText(record)}
                               </div>
                             </td>
                             <td className="px-4 py-3">{record.date || record.form?.date || '---'}</td>
@@ -1600,12 +1739,37 @@ const SalesTaxInvoicePage = () => {
           </section>
 
           <section className="rounded-3xl border border-slate-800 bg-[#111827] p-5 shadow-xl">
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-cyan-300">
-              <Building2 size={16} />
-              Customer Details
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                <Building2 size={16} />
+                Customer Details
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveCustomer}
+                disabled={customerLoading}
+                className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {customerLoading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                Save Customer
+              </button>
             </div>
 
             <div className="space-y-4">
+              <SelectField
+                label="Saved Customer"
+                value={selectedCustomerId}
+                onChange={handleCustomerSelect}
+                options={customers.map((customer) => ({
+                  label: customer.location ? `${customer.name} - ${customer.location}` : customer.name,
+                  value: customer._id,
+                }))}
+                placeholder={customerLoading ? 'Loading customers...' : 'Select customer'}
+                disabled={customerLoading || customers.length === 0}
+              />
+              {customerStatus ? (
+                <div className="text-xs font-medium text-cyan-300">{customerStatus}</div>
+              ) : null}
               <Field
                 label={activeDocumentType === 'deliveryChallan' ? 'Name of Buyer' : 'Company Name'}
                 value={form.companyName}

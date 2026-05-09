@@ -606,6 +606,62 @@ export const updateSalesDocument = async <TForm, TItem>(
   return response.data;
 };
 
+// ---------------------------------------------------------------------------
+// Customer CRUD
+// ---------------------------------------------------------------------------
+
+export type CustomerRecord = {
+  _id: string;
+  name: string;
+  location: string;
+  gst: string;
+  ntn: string;
+  email: string;
+  phonePrimary: string;
+  phoneSecondary: string;
+  contactPerson?: string;
+  notes?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CustomerPayload = Partial<Omit<CustomerRecord, '_id' | 'createdAt' | 'updatedAt'>> & {
+  name: string;
+};
+
+export const getCustomers = async (
+  token: string,
+  params?: Partial<{ q: string; status: 'active' | 'inactive'; limit: number }>
+): Promise<CustomerRecord[]> => {
+  const response = await api.get('/customers', {
+    params,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+export const createCustomer = async (
+  token: string,
+  data: CustomerPayload
+): Promise<CustomerRecord> => {
+  const response = await api.post('/customers', data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateCustomer = async (
+  token: string,
+  id: string,
+  data: CustomerPayload
+): Promise<CustomerRecord> => {
+  const response = await api.put(`/customers/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const DEFAULT_SLIDES: Omit<Slide, '_id'>[] = [
   {
     badge: "Premium Industrial Components",
