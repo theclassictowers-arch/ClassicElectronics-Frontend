@@ -662,6 +662,13 @@ export const updateCustomer = async (
   return response.data;
 };
 
+export const deleteCustomer = async (token: string, id: string) => {
+  const response = await api.delete(`/customers/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const DEFAULT_SLIDES: Omit<Slide, '_id'>[] = [
   {
     badge: "Premium Industrial Components",
