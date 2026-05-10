@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight, Shield } from 'lucide-react';
+import { ChevronDown, ChevronRight, UserCircle } from 'lucide-react';
 import type { NavMenuNode } from '@/services/api';
 import { getNavbarData } from '@/services/api';
 import {
@@ -101,6 +101,7 @@ const sortMenuNodes = (nodes: NavNode[]): NavNode[] => {
 
 const Navbar = () => {
   const [menus, setMenus] = useState<NavNode[]>([]);
+  const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,6 +123,19 @@ const Navbar = () => {
 
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      setIsCustomerLoggedIn(Boolean(localStorage.getItem('userToken')));
+    };
+
+    syncAuthState();
+    window.addEventListener('storage', syncAuthState);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState);
     };
   }, []);
 
@@ -324,11 +338,11 @@ const Navbar = () => {
 
           <li className="md:hidden">
             <Link
-              href="/admin/login"
+              href={isCustomerLoggedIn ? '/clientSide/account' : '/admin/login'}
               className="flex items-center gap-2 py-3 text-gray-300 hover:text-white uppercase text-xs transition-colors duration-200"
             >
-              <Shield size={16} />
-              Admin Login
+              <UserCircle size={16} />
+              {isCustomerLoggedIn ? 'Account' : 'Login'}
             </Link>
           </li>
         </ul>

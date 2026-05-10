@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, AlertCircle, Search, X } from 'lucide-react';
 import { API_URL } from '@/lib/apiConfig';
 
 const OrdersAdmin = () => {
@@ -10,6 +10,7 @@ const OrdersAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -192,7 +193,11 @@ const OrdersAdmin = () => {
                       <option value="delivered">Delivered</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
-                    <button className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs rounded font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrder(order)}
+                      className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs rounded font-bold"
+                    >
                       View
                     </button>
                   </div>
@@ -221,6 +226,98 @@ const OrdersAdmin = () => {
           <AlertCircle size={14} className="text-red-400" /> Cancelled
         </div>
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-xl border border-gray-700 bg-[#111827] p-5 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Order Details</div>
+                <h2 className="mt-1 text-2xl font-bold text-white">
+                  #{selectedOrder.orderId || selectedOrder._id?.slice(-8)}
+                </h2>
+                <div className="mt-2 text-sm text-gray-400">
+                  {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString() : '---'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 text-gray-300 transition hover:border-red-400 hover:text-red-300"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-lg border border-gray-800 bg-[#0b1120] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Customer</div>
+                <div className="mt-2 font-semibold text-white">{selectedOrder.customerName || 'Customer'}</div>
+                <div className="mt-1 break-all text-sm text-gray-400">{selectedOrder.customerEmail || 'No email'}</div>
+                <div className="mt-1 text-sm text-gray-400">{selectedOrder.customerPhone || 'No phone'}</div>
+              </div>
+              <div className="rounded-lg border border-gray-800 bg-[#0b1120] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Status</div>
+                <div className="mt-3 flex items-center gap-2">
+                  {getStatusIcon(selectedOrder.status)}
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(selectedOrder.status)}`}>
+                    {selectedOrder.status || 'pending'}
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-gray-800 bg-[#0b1120] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Total</div>
+                <div className="mt-2 text-2xl font-bold text-white">
+                  Rs. {Number(selectedOrder.totalAmount || 0).toLocaleString('en-PK')}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-lg border border-gray-800">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#0b1120] text-xs uppercase tracking-[0.16em] text-gray-500">
+                  <tr>
+                    <th className="p-3">Item</th>
+                    <th className="w-24 p-3 text-center">Qty</th>
+                    <th className="w-32 p-3 text-right">Price</th>
+                    <th className="w-36 p-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item: any, index: number) => {
+                      const quantity = Number(item.quantity || 0);
+                      const price = Number(item.price || 0);
+
+                      return (
+                        <tr key={`${item.productId || item.productName}-${index}`}>
+                          <td className="p-3 font-medium text-white">{item.productName || 'Item'}</td>
+                          <td className="p-3 text-center text-gray-300">{quantity}</td>
+                          <td className="p-3 text-right text-gray-300">Rs. {price.toLocaleString('en-PK')}</td>
+                          <td className="p-3 text-right font-semibold text-white">
+                            Rs. {(quantity * price).toLocaleString('en-PK')}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-gray-500">No items found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {selectedOrder.notes ? (
+              <div className="mt-5 rounded-lg border border-gray-800 bg-[#0b1120] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Notes</div>
+                <div className="mt-2 whitespace-pre-wrap text-sm text-gray-200">{selectedOrder.notes}</div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

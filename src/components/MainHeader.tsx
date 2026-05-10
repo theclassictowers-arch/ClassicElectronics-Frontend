@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, ShoppingCart, Truck, Menu, X, Package, Shield } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Menu, X, UserCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
@@ -16,7 +16,24 @@ interface MainHeaderProps {
 const MainHeader: React.FC<MainHeaderProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
   const { cartCount } = useCart();
   const [query, setQuery] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [accountHref, setAccountHref] = useState('/admin/login');
   const router = useRouter();
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      const hasUserToken = Boolean(localStorage.getItem('userToken'));
+      setIsLoggedIn(hasUserToken);
+      setAccountHref(hasUserToken ? '/clientSide/account' : '/admin/login');
+    };
+
+    syncAuthState();
+    window.addEventListener('storage', syncAuthState);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState);
+    };
+  }, []);
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -66,15 +83,17 @@ const MainHeader: React.FC<MainHeaderProps> = ({ isMobileMenuOpen, setIsMobileMe
           <div className="flex items-center gap-6">
           
             <div className="flex items-center gap-6 text-foreground dark:text-white">
-              <Link href="/admin/login" className="hidden md:flex flex-col items-center cursor-pointer hover:text-cyan-400 transition-colors group">
-                <Shield size={20} className="mb-1 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] uppercase font-bold tracking-wide">Admin</span>
-              </Link>
-
-              <Link href="/clientSide/orders" className="hidden md:flex flex-col items-center cursor-pointer hover:text-cyan-400 transition-colors group">
-                <Package size={20} className="mb-1 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] uppercase font-bold tracking-wide">Orders</span>
-              </Link>
+              {isLoggedIn ? (
+                <Link href={accountHref} className="hidden md:flex flex-col items-center cursor-pointer hover:text-cyan-400 transition-colors group">
+                  <UserCircle size={20} className="mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] uppercase font-bold tracking-wide">Account</span>
+                </Link>
+              ) : (
+                <Link href="/admin/login" className="hidden md:flex flex-col items-center cursor-pointer hover:text-cyan-400 transition-colors group">
+                  <UserCircle size={20} className="mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] uppercase font-bold tracking-wide">Login</span>
+                </Link>
+              )}
 
               <Link href="/clientSide/track-order" className="hidden md:flex flex-col items-center cursor-pointer hover:text-cyan-400 transition-colors group">
                 <Truck size={20} className="mb-1 group-hover:scale-110 transition-transform" />

@@ -464,6 +464,61 @@ export const loginAdmin = async (credentials: Record<string, unknown>) => {
     return response.data;
 };
 
+export const registerUser = async (userData: Record<string, unknown>) => {
+    const response = await api.post('/users/register', {
+      ...userData,
+      role: 'customer',
+    });
+    return response.data;
+};
+
+export const loginUser = async (credentials: Record<string, unknown>) => {
+    const response = await api.post('/users/login', credentials);
+    return response.data;
+};
+
+export type CustomerOrderItem = {
+  productId?: string | null;
+  productName: string;
+  quantity: number;
+  price: number;
+};
+
+export type CustomerOrderRecord = {
+  _id: string;
+  orderId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: CustomerOrderItem[];
+  totalAmount: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const getMyOrders = async (token: string): Promise<CustomerOrderRecord[]> => {
+    const response = await api.get('/orders/my', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+export const createMyOrder = async (
+  token: string,
+  data: {
+    customerPhone?: string;
+    notes?: string;
+    items: CustomerOrderItem[];
+  }
+): Promise<CustomerOrderRecord> => {
+    const response = await api.post('/orders/my', data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.order;
+};
+
 export const getAdminProfile = async (token: string) => {
     const response = await api.get('/admin/me', {
         headers: { Authorization: `Bearer ${token}` },
