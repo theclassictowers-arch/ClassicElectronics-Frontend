@@ -943,9 +943,9 @@ const SalesTaxInvoicePage = () => {
           pdf.text(item.uom || 'NOS', tableX + 23, rowY + tableRowHeight - 2.7, { align: 'center' });
           pdf.text(String(item.quantity || 0), tableX + 47, rowY + tableRowHeight - 2.7, { align: 'center' });
           pdf.text(String(item.unitPrice || 0), tableX + 71, rowY + tableRowHeight - 2.7, { align: 'center' });
-          pdf.text(pdf.splitTextToSize(item.remarks || item.productName || '', itemImage ? 42 : 68), tableX + 87, rowY + 8);
+          pdf.text(pdf.splitTextToSize(item.remarks || item.productName || '', 68), tableX + 87, rowY + 6);
           if (itemImage) {
-            pdf.addImage(itemImage, 'PNG', tableX + 138, rowY + 4, 17, 17, undefined, 'FAST');
+            pdf.addImage(itemImage, 'PNG', tableX + 112, rowY + 11, 17, 11, undefined, 'FAST');
           }
           pdf.setFont('helvetica', 'bolditalic');
           pdf.text(`${Math.round(itemTotal)} Rs`, tableX + 173, rowY + 13.5, { align: 'center' });
@@ -2554,10 +2554,10 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
                   </div>
                 </div>
                 <div className="border-r border-black px-3 py-3">
-                  <div className="flex h-full items-center gap-2">
-                    <div className="min-w-0 flex-1">{item.remarks || item.productName}</div>
+                  <div className="flex h-full flex-col items-center justify-center gap-2">
+                    <div className="w-full text-left">{item.remarks || item.productName}</div>
                     {item.showPicture && getPictureSource(item.picture) ? (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden border border-black bg-white">
+                      <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden border border-black bg-white">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={getPictureSource(item.picture)}
