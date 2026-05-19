@@ -33,6 +33,7 @@ import {
   Save,
   Search,
   Trash2,
+  Upload,
   X,
 } from 'lucide-react';
 
@@ -51,6 +52,7 @@ type InvoiceItem = {
   unitPrice: number;
   remarks: string;
   picture: string;
+  showPicture: boolean;
 };
 
 type InvoiceForm = {
@@ -79,7 +81,19 @@ type HistorySortBy = 'createdAt' | 'date' | 'documentNo' | 'customerName' | 'tot
 type HistorySortOrder = 'asc' | 'desc';
 
 const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
+const CUSTOMER_GST_PLACEHOLDER = '02-04-2523-002-46';
+const CUSTOMER_NTN_PLACEHOLDER = '0701669-7';
 const SALES_TAX_RATE = 0.18;
+const deliveryPeriodOptions = [
+  { label: '1 Week', value: '1 Week' },
+  { label: '2 Weeks', value: '2 Weeks' },
+  { label: '3 Weeks', value: '3 Weeks' },
+  { label: '4 Weeks', value: '4 Weeks' },
+  { label: '1 Month', value: '1 Month' },
+  { label: '2 Months', value: '2 Months' },
+  { label: '3 Months', value: '3 Months' },
+  { label: '4 Months', value: '4 Months' },
+];
 
 const documentTypes: Array<{
   type: DocumentType;
@@ -178,6 +192,16 @@ const formatGstRegistration = (value: string): string => {
   return groups.join('-');
 };
 
+const normalizeCustomerGst = (value: string): string =>
+  value.trim() === '18' ? '' : formatGstRegistration(value);
+
+const formatNtnNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  const groups = [digits.slice(0, 7), digits.slice(7, 8)].filter(Boolean);
+
+  return groups.join('-');
+};
+
 const formatDigitsOnly = (value: string, maxLength?: number): string => {
   const digits = value.replace(/\D/g, '');
   return typeof maxLength === 'number' ? digits.slice(0, maxLength) : digits;
@@ -190,7 +214,7 @@ const createInvoiceForm = (): InvoiceForm => ({
   quotationNo: '',
   companyName: '',
   location: '',
-  gst: '18',
+  gst: '',
   ntn: '',
   subtitle: 'A wide range of industrial instrument & sensing solutions',
   thankYouNote: 'THANK YOU FOR YOUR BUSINESS!',
@@ -214,6 +238,7 @@ const createInvoiceItem = (): InvoiceItem => ({
   unitPrice: 0,
   remarks: '',
   picture: '',
+  showPicture: true,
 });
 
 const formatCurrency = (amount: number) =>
@@ -257,13 +282,18 @@ const isLikelyImagePath = (value: string): boolean => {
 
   return (
     /^https?:\/\//i.test(trimmedValue) ||
+    /^data:image\//i.test(trimmedValue) ||
     trimmedValue.startsWith('/') ||
     /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(trimmedValue)
   );
 };
 
 const getPictureSource = (value: string): string =>
-  isLikelyImagePath(value) ? resolveAssetUrl(value) : '';
+  /^data:image\//i.test(value.trim())
+    ? value.trim()
+    : isLikelyImagePath(value)
+      ? resolveAssetUrl(value)
+      : '';
 
 const getFrontendAssetUrl = (assetPath: string): string => {
   if (typeof window === 'undefined') {
@@ -339,6 +369,7 @@ const normalizeHistoryItems = (
     unitPrice: Number(item.unitPrice || 0),
     remarks: item.remarks || '',
     picture: item.picture || '',
+    showPicture: item.showPicture !== false,
   }));
 };
 
@@ -472,8 +503,8 @@ const SalesTaxInvoicePage = () => {
   const buildCustomerPayload = (): CustomerPayload => ({
     name: form.companyName.trim(),
     location: form.location.trim(),
-    gst: form.gst.trim(),
-    ntn: form.ntn.trim(),
+    gst: normalizeCustomerGst(form.gst).trim(),
+    ntn: formatNtnNumber(form.ntn).trim(),
     email: '',
     phonePrimary: '',
     phoneSecondary: '',
@@ -491,8 +522,8 @@ const SalesTaxInvoicePage = () => {
       ...currentForm,
       companyName: customer.name || '',
       location: customer.location || '',
-      gst: customer.gst || '18',
-      ntn: customer.ntn || '',
+      gst: customer.gst ? normalizeCustomerGst(customer.gst) : '',
+      ntn: customer.ntn ? formatNtnNumber(customer.ntn) : '',
     }));
   };
 
@@ -558,7 +589,7 @@ const SalesTaxInvoicePage = () => {
   const handleItemChange = (
     id: string,
     field: keyof Omit<InvoiceItem, 'id'>,
-    value: string
+    value: string | boolean
   ) => {
     setSaveStatus('');
     setItems((currentItems) =>
@@ -569,11 +600,29 @@ const SalesTaxInvoicePage = () => {
               [field]:
                 field === 'quantity' || field === 'unitPrice'
                   ? Number(value)
+                  : field === 'showPicture'
+                    ? value === true || value === 'true'
                   : value,
             }
           : item
       )
     );
+  };
+
+  const handleItemPictureFile = (id: string, file?: File) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') return;
+      handleItemChange(id, 'picture', reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCategorySelect = (id: string, categoryId: string) => {
@@ -590,6 +639,7 @@ const SalesTaxInvoicePage = () => {
               unitPrice: 0,
               remarks: '',
               picture: '',
+              showPicture: true,
             }
           : item
       )
@@ -612,6 +662,7 @@ const SalesTaxInvoicePage = () => {
             unitPrice: 0,
             remarks: '',
             picture: '',
+            showPicture: true,
           };
         }
 
@@ -626,6 +677,7 @@ const SalesTaxInvoicePage = () => {
           unitPrice: Number(selectedProduct.price || 0),
           remarks: productName,
           picture: getPrimaryProductImage(selectedProduct),
+          showPicture: true,
         };
       })
     );
@@ -731,6 +783,28 @@ const SalesTaxInvoicePage = () => {
     if (!token) {
       alert('Please login as admin first');
       return;
+    }
+
+    if (activeDocumentType === 'quotation') {
+      const hasCustomer = form.companyName.trim() && form.location.trim();
+      const hasProduct = items.some(
+        (item) =>
+          item.productId.trim() &&
+          (item.productName.trim() || item.description.trim()) &&
+          Number(item.quantity || 0) > 0
+      );
+
+      if (!hasCustomer) {
+        setSaveStatus('Please add customer name and location before saving quotation.');
+        alert('Please add customer details before saving quotation.');
+        return;
+      }
+
+      if (!hasProduct) {
+        setSaveStatus('Please select at least one product before saving quotation.');
+        alert('Please select at least one product before saving quotation.');
+        return;
+      }
     }
 
     setIsSavingDocument(true);
@@ -1083,6 +1157,7 @@ const SalesTaxInvoicePage = () => {
 
       const itemImageDataUrls = await Promise.all(
         items.map((item) => {
+          if (!item.showPicture) return Promise.resolve(null);
           const imageUrl = getPictureSource(item.picture);
           return imageUrl ? loadImageAsPngDataUrl(imageUrl) : Promise.resolve(null);
         })
@@ -1729,10 +1804,12 @@ const SalesTaxInvoicePage = () => {
                 />
               )}
               {activeDocumentType === 'quotation' ? (
-                <Field
+                <SelectField
                   label="Delivery Period"
                   value={form.deliveryPeriod}
                   onChange={(value) => handleFormChange('deliveryPeriod', value)}
+                  options={deliveryPeriodOptions}
+                  placeholder="Select delivery period"
                 />
               ) : null}
             </div>
@@ -1788,30 +1865,31 @@ const SalesTaxInvoicePage = () => {
                         ? 'Sales Tax Registration No'
                         : 'GST'
                     }
-                    value={form.gst}
+                    value={activeDocumentType === 'deliveryChallan' ? form.gst : normalizeCustomerGst(form.gst)}
                     onChange={(value) =>
                       handleFormChange(
                         'gst',
                         activeDocumentType === 'deliveryChallan'
                           ? formatGstRegistration(value)
-                          : formatDigitsOnly(value, 13)
+                          : normalizeCustomerGst(value)
                       )
                     }
                     placeholder={
                       activeDocumentType === 'deliveryChallan'
                         ? GST_REGISTRATION_PLACEHOLDER
-                        : undefined
+                        : CUSTOMER_GST_PLACEHOLDER
                     }
                     inputMode="numeric"
-                    maxLength={activeDocumentType === 'deliveryChallan' ? 16 : 13}
+                    maxLength={16}
                   />
                   {activeDocumentType === 'deliveryChallan' ? null : (
                     <Field
                       label="NTN"
                       value={form.ntn}
-                      onChange={(value) => handleFormChange('ntn', formatDigitsOnly(value, 7))}
+                      onChange={(value) => handleFormChange('ntn', formatNtnNumber(value))}
+                      placeholder={CUSTOMER_NTN_PLACEHOLDER}
                       inputMode="numeric"
-                      maxLength={7}
+                      maxLength={9}
                     />
                   )}
                 </div>
@@ -1910,7 +1988,7 @@ const SalesTaxInvoicePage = () => {
                     <div className="rounded-2xl border border-slate-700/80 bg-slate-900/80 p-3">
                       <div className="flex gap-4">
                         <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
-                          {getPictureSource(item.picture) ? (
+                          {item.showPicture && getPictureSource(item.picture) ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
                               src={getPictureSource(item.picture)}
@@ -1919,7 +1997,7 @@ const SalesTaxInvoicePage = () => {
                             />
                           ) : (
                             <span className="px-3 text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                              No Image
+                              {item.showPicture ? 'No Image' : 'Photo Off'}
                             </span>
                           )}
                         </div>
@@ -1988,11 +2066,65 @@ const SalesTaxInvoicePage = () => {
                       onChange={(value) => handleItemChange(item.id, 'remarks', value)}
                     />
                     {activeDocumentType === 'deliveryChallan' ? null : (
-                      <Field
-                        label="Picture URL / Reference"
-                        value={item.picture}
-                        onChange={(value) => handleItemChange(item.id, 'picture', value)}
-                      />
+                      <div className="space-y-3">
+                        <div>
+                          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                            Product Photo
+                          </div>
+                          <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 p-1 sm:w-52">
+                            {[
+                              { label: 'Yes', value: true },
+                              { label: 'No', value: false },
+                            ].map((option) => (
+                              <button
+                                key={option.label}
+                                type="button"
+                                onClick={() =>
+                                  handleItemChange(item.id, 'showPicture', option.value)
+                                }
+                                className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                                  item.showPicture === option.value
+                                    ? 'bg-cyan-500 text-slate-950'
+                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <Field
+                          label="Picture URL / Reference"
+                          value={/^data:image\//i.test(item.picture) ? 'Uploaded image selected' : item.picture}
+                          onChange={(value) => handleItemChange(item.id, 'picture', value)}
+                        />
+                        <div className="flex gap-2">
+                          <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20">
+                            <Upload size={14} />
+                            Upload Photo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(event) => {
+                                handleItemPictureFile(item.id, event.target.files?.[0]);
+                                event.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {item.picture ? (
+                            <button
+                              type="button"
+                              onClick={() => handleItemChange(item.id, 'picture', '')}
+                              className="inline-flex h-11 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-300 transition hover:border-rose-400 hover:text-rose-300"
+                            >
+                              Clear
+                            </button>
+                          ) : null}
+                        </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -2185,7 +2317,7 @@ const SalesTaxInvoicePage = () => {
                                 <div className="font-medium text-slate-900">
                                   {item.remarks || item.productName || 'Remarks'}
                                 </div>
-                                {getPictureSource(item.picture) ? (
+                                {item.showPicture && getPictureSource(item.picture) ? (
                                   <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
@@ -2194,13 +2326,13 @@ const SalesTaxInvoicePage = () => {
                                       className="h-16 w-full object-contain bg-white p-1.5"
                                     />
                                   </div>
-                                ) : item.picture ? (
+                                ) : item.picture && item.showPicture ? (
                                   <div className="rounded-lg border border-dashed border-slate-300 px-2 py-3 text-[11px] text-slate-500">
                                     {item.picture}
                                   </div>
                                 ) : (
                                   <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
-                                    No picture selected
+                                    {item.showPicture ? 'No picture selected' : 'Photo off'}
                                   </div>
                                 )}
                               </div>
@@ -2430,7 +2562,7 @@ const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) =
               {form.deliveryPeriod || '4 Weeks'}
             </div>
             <div>Validity Date:</div>
-            <div className="border-x-2 border-b-2 border-black py-1 text-center font-normal">
+            <div className="border-2 border-black py-1 text-center font-normal">
               1 WEEK
             </div>
           </div>

@@ -40,7 +40,7 @@ type CustomerForm = {
 const emptyCustomerForm = (): CustomerForm => ({
   name: '',
   location: '',
-  gst: '18',
+  gst: '',
   ntn: '',
   email: '',
   phonePrimary: '',
@@ -53,8 +53,8 @@ const emptyCustomerForm = (): CustomerForm => ({
 const toCustomerForm = (customer: CustomerRecord): CustomerForm => ({
   name: customer.name || '',
   location: customer.location || '',
-  gst: customer.gst || '18',
-  ntn: customer.ntn || '',
+  gst: customer.gst ? normalizeCustomerGst(customer.gst) : '',
+  ntn: customer.ntn ? formatNtnNumber(customer.ntn) : '',
   email: customer.email || '',
   phonePrimary: customer.phonePrimary || '',
   phoneSecondary: customer.phoneSecondary || '',
@@ -66,8 +66,8 @@ const toCustomerForm = (customer: CustomerRecord): CustomerForm => ({
 const toPayload = (form: CustomerForm): CustomerPayload => ({
   name: form.name.trim(),
   location: form.location.trim(),
-  gst: form.gst.trim(),
-  ntn: form.ntn.trim(),
+  gst: normalizeCustomerGst(form.gst).trim(),
+  ntn: formatNtnNumber(form.ntn).trim(),
   email: form.email.trim(),
   phonePrimary: form.phonePrimary.trim(),
   phoneSecondary: form.phoneSecondary.trim(),
@@ -75,6 +75,31 @@ const toPayload = (form: CustomerForm): CustomerPayload => ({
   notes: form.notes.trim(),
   status: form.status,
 });
+
+const GST_REGISTRATION_PLACEHOLDER = '02-04-2523-002-46';
+
+const formatGstRegistration = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  const groups = [
+    digits.slice(0, 2),
+    digits.slice(2, 4),
+    digits.slice(4, 8),
+    digits.slice(8, 11),
+    digits.slice(11, 13),
+  ].filter(Boolean);
+
+  return groups.join('-');
+};
+
+const normalizeCustomerGst = (value: string): string =>
+  value.trim() === '18' ? '' : formatGstRegistration(value);
+
+const formatNtnNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  const groups = [digits.slice(0, 7), digits.slice(7, 8)].filter(Boolean);
+
+  return groups.join('-');
+};
 
 const formatDateTime = (value?: string) => {
   if (!value) return '---';
@@ -187,9 +212,12 @@ const CustomersAdminPage = () => {
   };
 
   const handleFormChange = (field: keyof CustomerForm, value: string) => {
+    const formattedValue =
+      field === 'gst' ? normalizeCustomerGst(value) : field === 'ntn' ? formatNtnNumber(value) : value;
+
     setForm((current) => ({
       ...current,
-      [field]: field === 'status' && value === 'inactive' ? 'inactive' : value,
+      [field]: field === 'status' && value === 'inactive' ? 'inactive' : formattedValue,
     }));
   };
 
@@ -441,8 +469,22 @@ const CustomersAdminPage = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <EditorField label="Customer Name" value={form.name} onChange={(value) => handleFormChange('name', value)} />
               <EditorField label="Location" value={form.location} onChange={(value) => handleFormChange('location', value)} />
-              <EditorField label="GST" value={form.gst} onChange={(value) => handleFormChange('gst', value)} />
-              <EditorField label="NTN" value={form.ntn} onChange={(value) => handleFormChange('ntn', value)} />
+              <EditorField
+                label="GST"
+                value={form.gst}
+                onChange={(value) => handleFormChange('gst', value)}
+                inputMode="numeric"
+                maxLength={16}
+                placeholder={GST_REGISTRATION_PLACEHOLDER}
+              />
+              <EditorField
+                label="NTN"
+                value={form.ntn}
+                onChange={(value) => handleFormChange('ntn', value)}
+                inputMode="numeric"
+                maxLength={9}
+                placeholder="0701669-7"
+              />
               <EditorField label="Email" value={form.email} onChange={(value) => handleFormChange('email', value)} type="email" />
               <EditorField label="Primary Phone" value={form.phonePrimary} onChange={(value) => handleFormChange('phonePrimary', value)} />
               <EditorField label="Secondary Phone" value={form.phoneSecondary} onChange={(value) => handleFormChange('phoneSecondary', value)} />
@@ -515,15 +557,29 @@ type EditorFieldProps = {
   value: string;
   onChange: (value: string) => void;
   type?: 'text' | 'email';
+  inputMode?: 'text' | 'numeric' | 'email' | 'tel' | 'url';
+  maxLength?: number;
+  placeholder?: string;
 };
 
-const EditorField = ({ label, value, onChange, type = 'text' }: EditorFieldProps) => (
+const EditorField = ({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  inputMode,
+  maxLength,
+  placeholder,
+}: EditorFieldProps) => (
   <label className="block">
     <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
     <input
       type={type}
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      inputMode={inputMode}
+      maxLength={maxLength}
+      placeholder={placeholder}
       className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
     />
   </label>
