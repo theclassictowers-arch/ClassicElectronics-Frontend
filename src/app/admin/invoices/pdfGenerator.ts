@@ -107,8 +107,8 @@ export const downloadInvoicePdf = async ({
         const remarksX = descriptionX + descriptionWidth;
         const totalX = remarksX + remarksWidth;
 
-        const contentBottomY = 248;
-        const detailsBlockHeight = 78;
+        const contentBottomY = 250;
+        const detailsBlockHeight = 60;
 
         const drawQuotationFooter = () => {
           pdf.setFont('helvetica', 'bolditalic');
