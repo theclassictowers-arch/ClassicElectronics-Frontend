@@ -107,7 +107,7 @@ export const downloadInvoicePdf = async ({
 
         pdf.setDrawColor(...purple);
         pdf.setLineWidth(0.7);
-        pdf.roundedRect(2, 45, 206, 205, 5, 5, 'S');
+        pdf.roundedRect(2, 50, 206, 200, 5, 5, 'S');
 
         pdf.setTextColor(0, 0, 0);
         pdf.setFont('helvetica', 'normal');
