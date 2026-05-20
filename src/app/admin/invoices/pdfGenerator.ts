@@ -61,6 +61,17 @@ export const downloadInvoicePdf = async ({
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
         const splitPdfCellText = (value: string, width: number) =>
           pdf.splitTextToSize(value.replace(/(\S{24})/g, '$1 '), width) as string[];
+        const fitPdfText = (value: string, width: number) => {
+          const text = value || '';
+          if (pdf.getTextWidth(text) <= width) return text;
+
+          let fittedText = text;
+          while (fittedText.length > 1 && pdf.getTextWidth(`${fittedText}...`) > width) {
+            fittedText = fittedText.slice(0, -1);
+          }
+
+          return `${fittedText}...`;
+        };
         const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
         const stampDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-stamp-signature.png'));
         const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
@@ -170,11 +181,11 @@ export const downloadInvoicePdf = async ({
           );
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
-          pdf.text(item.uom || 'NOS', descriptionX + 12.66, rowY + rowHeight - 2.5, { align: 'center' });
-          pdf.text(String(item.quantity || 0), descriptionX + 38, rowY + rowHeight - 2.5, {
+          pdf.text(fitPdfText(item.uom || 'NOS', 22), descriptionX + 12.66, rowY + rowHeight - 2.5, { align: 'center' });
+          pdf.text(fitPdfText(String(item.quantity || 0), 20), descriptionX + 38, rowY + rowHeight - 2.5, {
             align: 'center',
           });
-          pdf.text(String(item.unitPrice || 0), descriptionX + 63.33, rowY + rowHeight - 2.5, {
+          pdf.text(fitPdfText(String(item.unitPrice || 0), 22), descriptionX + 63.33, rowY + rowHeight - 2.5, {
             align: 'center',
           });
           pdf.setFont('helvetica', 'normal');

@@ -183,15 +183,15 @@ export const QuotationPreview = ({
 
                 <div className="grid grid-cols-3 border-t-[2px] border-black text-center text-[15px] italic">
 
-                  <div className="border-r-[2px] border-black">
+                  <div className="min-w-0 overflow-hidden break-words border-r-[2px] border-black px-1 [overflow-wrap:anywhere]">
                     {item.uom || 'NOS'}
                   </div>
 
-                  <div className="border-r-[2px] border-black bg-sky-100">
+                  <div className="min-w-0 overflow-hidden break-words border-r-[2px] border-black bg-sky-100 px-1 [overflow-wrap:anywhere]">
                     {item.quantity || 2}
                   </div>
 
-                  <div>
+                  <div className="min-w-0 overflow-hidden break-words px-1 [overflow-wrap:anywhere]">
                     {item.unitPrice || 100}
                   </div>
                 </div>
