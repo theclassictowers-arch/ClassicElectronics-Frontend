@@ -138,8 +138,8 @@ body {
 
 @media print {
   @page {
-    size: auto;
-    margin: 10mm;
+    size: A4;
+    margin: 0;
   }
 
   html,
@@ -195,5 +195,21 @@ body {
     margin: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+  }
+
+  .invoice-print-sheet:has(.quotation-a4) {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  .quotation-a4 {
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
   }
 }

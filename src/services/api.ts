@@ -413,19 +413,44 @@ export const getValveProducts = async (series?: string) => {
   }
 };
 
+const buildApiEndpoint = (path: string, params?: Record<string, string | number>) => {
+  const endpoint = new URL(path.replace(/^\/+/, ''), API_URL);
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      endpoint.searchParams.set(key, String(value));
+    });
+  }
+
+  return endpoint.toString();
+};
+
+const fetchApiArray = async (path: string, params?: Record<string, string | number>) => {
+  const response = await fetch(buildApiEndpoint(path, params), {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${path}: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
 export const getHomepageData = async () => {
   try {
     const [productsRes, categoriesRes] = await Promise.allSettled([
-      api.get('/products', { params: { limit: 20, includeSpecs: '1' } }),
-      api.get('/categories'),
+      fetchApiArray('/products', { limit: 20, includeSpecs: '1' }),
+      fetchApiArray('/categories'),
     ]);
     const productsData =
-      productsRes.status === 'fulfilled' && Array.isArray(productsRes.value.data)
-        ? productsRes.value.data
+      productsRes.status === 'fulfilled' && Array.isArray(productsRes.value)
+        ? productsRes.value
         : [];
     const categoriesData =
-      categoriesRes.status === 'fulfilled' && Array.isArray(categoriesRes.value.data)
-        ? categoriesRes.value.data
+      categoriesRes.status === 'fulfilled' && Array.isArray(categoriesRes.value)
+        ? categoriesRes.value
         : [];
 
     const products = Array.isArray(productsData)
