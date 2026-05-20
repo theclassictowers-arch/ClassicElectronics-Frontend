@@ -175,7 +175,7 @@ export const QuotationPreview = ({
 
               <div className="grid grid-rows-[1fr_30px] border-r-[2px] border-black">
 
-                <div className="px-3 py-4 text-[14px]">
+                <div className="min-w-0 overflow-hidden whitespace-pre-wrap break-words px-3 py-4 text-[14px] [overflow-wrap:anywhere]">
                   {item.description ||
                     item.productName ||
                     ''}
@@ -201,7 +201,7 @@ export const QuotationPreview = ({
 
               <div className="border-r-[2px] border-black px-3 py-3">
                 <div className="flex h-full flex-col items-center gap-2">
-                  <div className="w-full text-left">
+                  <div className="w-full min-w-0 overflow-hidden whitespace-pre-wrap break-words text-left [overflow-wrap:anywhere]">
                     {item.remarks || item.productName || ''}
                   </div>
                   {item.showPicture && getPictureSource(item.picture) ? (

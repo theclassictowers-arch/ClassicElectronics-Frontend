@@ -59,6 +59,8 @@ export const downloadInvoicePdf = async ({
         const descriptionWidth = 76;
         const remarksWidth = 78;
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
+        const splitPdfCellText = (value: string, width: number) =>
+          pdf.splitTextToSize(value.replace(/(\S{24})/g, '$1 '), width) as string[];
         const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
         const stampDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-stamp-signature.png'));
         const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
@@ -106,14 +108,14 @@ export const downloadInvoicePdf = async ({
         pdf.text('Reference to your quotation the details is as below.', 8, 68);
 
         const quotationRowHeights = quotationItems.map((item, index) => {
-          const descriptionLines = pdf.splitTextToSize(
+          const descriptionLines = splitPdfCellText(
             item.description || item.productName || '',
             descriptionWidth - 4
-          ) as string[];
-          const remarksLines = pdf.splitTextToSize(
+          );
+          const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
             remarksWidth - 5
-          ) as string[];
+          );
           const textHeight = Math.max(descriptionLines.length, remarksLines.length, 1) * 4.3;
           const imageHeight = quotationImageDataUrls[index] ? 25 : 0;
 
@@ -162,7 +164,7 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(8);
           pdf.text(String(index + 1), tableX + 5, rowY + rowHeight / 2 + 2, { align: 'center' });
           pdf.text(
-            pdf.splitTextToSize(item.description || item.productName || '', descriptionWidth - 4),
+            splitPdfCellText(item.description || item.productName || '', descriptionWidth - 4),
             descriptionX + 2,
             rowY + 8
           );
@@ -177,10 +179,10 @@ export const downloadInvoicePdf = async ({
           });
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(7.5);
-          const remarksLines = pdf.splitTextToSize(
+          const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
             remarksWidth - 5
-          ) as string[];
+          );
           pdf.text(remarksLines, remarksX + 2, rowY + 7);
           if (itemImage) {
             const imageWidth = Math.min(30, remarksWidth - 12);
