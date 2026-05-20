@@ -10,6 +10,23 @@ type QuotationPreviewProps = {
   totalAmount: number;
 };
 
+const estimateWrappedRows = (value: string, charactersPerLine: number) => {
+  const normalizedLines = value.trim().split(/\r?\n/);
+  const rows = normalizedLines.reduce((lineCount, line) => {
+    if (!line.trim()) return lineCount + 1;
+
+    const longWordRows = line
+      .trim()
+      .split(/\s+/)
+      .reduce((count, word) => Math.max(count, Math.ceil(word.length / charactersPerLine)), 1);
+    const sentenceRows = Math.ceil(line.length / charactersPerLine);
+
+    return lineCount + Math.max(longWordRows, sentenceRows, 1);
+  }, 0);
+
+  return Math.max(1, rows);
+};
+
 export const QuotationPreview = ({
   form,
   items,
@@ -17,19 +34,21 @@ export const QuotationPreview = ({
 }: QuotationPreviewProps) => {
   const taxAmount = totalAmount * 0.18;
   const grandTotal = totalAmount + taxAmount;
+  const wrappedCellTextStyle = {
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+  } as const;
 
   const quotationItems =
     items.length > 0 ? items : [createInvoiceItem()];
   const minimumRowHeight =
     quotationItems.length <= 2 ? 150 : quotationItems.length <= 4 ? 112 : 82;
   const quotationRowHeights = quotationItems.map((item) => {
-    const remarksLength = (item.remarks || item.productName || '').length;
-    const descriptionLength = (item.description || item.productName || '').length;
-    const remarksRows = Math.max(1, Math.ceil(remarksLength / 28));
-    const descriptionRows = Math.max(1, Math.ceil(descriptionLength / 30));
-    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 92 : 0;
-    const remarksHeight = remarksRows * 18 + imageHeight + 42;
-    const descriptionHeight = descriptionRows * 18 + 76;
+    const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 30);
+    const descriptionRows = estimateWrappedRows(item.description || item.productName || '', 28);
+    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 96 : 0;
+    const remarksHeight = remarksRows * 18 + imageHeight + 52;
+    const descriptionHeight = descriptionRows * 18 + 84;
 
     return Math.max(minimumRowHeight, remarksHeight, descriptionHeight);
   });
@@ -162,7 +181,7 @@ export const QuotationPreview = ({
             <div
               key={item.id}
               className="grid grid-cols-[38px_270px_285px_117px] border-b-[2px] border-black last:border-b-0"
-              style={{ height: rowHeight }}
+              style={{ minHeight: rowHeight }}
             >
 
               {/* SR */}
@@ -173,9 +192,12 @@ export const QuotationPreview = ({
 
               {/* DESCRIPTION */}
 
-              <div className="grid min-w-0 grid-rows-[minmax(0,1fr)_30px] overflow-hidden border-r-[2px] border-black">
+              <div className="grid min-w-0 grid-rows-[minmax(0,1fr)_30px] border-r-[2px] border-black">
 
-                <div className="min-w-0 overflow-hidden whitespace-pre-wrap break-words px-3 py-4 text-[14px] leading-[18px] [overflow-wrap:anywhere]">
+                <div
+                  className="min-w-0 max-w-full whitespace-pre-wrap break-words px-3 py-4 text-[14px] leading-[18px]"
+                  style={wrappedCellTextStyle}
+                >
                   {item.description ||
                     item.productName ||
                     ''}
@@ -183,15 +205,24 @@ export const QuotationPreview = ({
 
                 <div className="grid grid-cols-3 border-t-[2px] border-black text-center text-[15px] italic">
 
-                  <div className="min-w-0 overflow-hidden break-words border-r-[2px] border-black px-1 [overflow-wrap:anywhere]">
+                  <div
+                    className="min-w-0 max-w-full overflow-hidden break-words border-r-[2px] border-black px-1"
+                    style={wrappedCellTextStyle}
+                  >
                     {item.uom || 'NOS'}
                   </div>
 
-                  <div className="min-w-0 overflow-hidden break-words border-r-[2px] border-black bg-sky-100 px-1 [overflow-wrap:anywhere]">
+                  <div
+                    className="min-w-0 max-w-full overflow-hidden break-words border-r-[2px] border-black bg-sky-100 px-1"
+                    style={wrappedCellTextStyle}
+                  >
                     {item.quantity || 2}
                   </div>
 
-                  <div className="min-w-0 overflow-hidden break-words px-1 [overflow-wrap:anywhere]">
+                  <div
+                    className="min-w-0 max-w-full overflow-hidden break-words px-1"
+                    style={wrappedCellTextStyle}
+                  >
                     {item.unitPrice || 100}
                   </div>
                 </div>
@@ -199,13 +230,16 @@ export const QuotationPreview = ({
 
               {/* REMARKS */}
 
-              <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
-                <div className="flex h-full min-w-0 flex-col items-center gap-2 overflow-hidden">
-                  <div className="w-full min-w-0 overflow-hidden whitespace-pre-wrap break-words text-left leading-[18px] [overflow-wrap:anywhere]">
+              <div className="min-w-0 border-r-[2px] border-black px-3 py-3">
+                <div className="flex h-full min-w-0 flex-col items-center gap-2">
+                  <div
+                    className="w-full min-w-0 max-w-full whitespace-pre-wrap break-words text-left leading-[18px]"
+                    style={wrappedCellTextStyle}
+                  >
                     {item.remarks || item.productName || ''}
                   </div>
                   {item.showPicture && getPictureSource(item.picture) ? (
-                    <div className="mt-1 flex h-[84px] w-[130px] max-w-full shrink-0 items-center justify-center overflow-hidden border border-slate-300 bg-white">
+                    <div className="mt-1 flex h-[88px] w-[134px] max-w-full shrink-0 items-center justify-center overflow-hidden border border-slate-300 bg-white">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getPictureSource(item.picture)}

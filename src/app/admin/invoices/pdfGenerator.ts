@@ -60,7 +60,7 @@ export const downloadInvoicePdf = async ({
         const remarksWidth = 78;
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
         const splitPdfCellText = (value: string, width: number) =>
-          pdf.splitTextToSize(value.replace(/(\S{16})/g, '$1 '), width) as string[];
+          pdf.splitTextToSize(value.replace(/(\S{12})/g, '$1 '), width) as string[];
         const fitPdfText = (value: string, width: number) => {
           const text = value || '';
           if (pdf.getTextWidth(text) <= width) return text;
@@ -127,10 +127,10 @@ export const downloadInvoicePdf = async ({
             item.remarks || item.productName || '',
             remarksWidth - 5
           );
-          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.4 + 15;
-          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.4;
-          const imageHeight = quotationImageDataUrls[index] ? 25 : 0;
-          const remarksHeight = remarksTextHeight + imageHeight + 14;
+          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.6 + 17;
+          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.6;
+          const imageHeight = quotationImageDataUrls[index] ? 26 : 0;
+          const remarksHeight = remarksTextHeight + imageHeight + 16;
 
           return Math.max(minimumRowHeight, descriptionHeight, remarksHeight);
         });
@@ -199,10 +199,10 @@ export const downloadInvoicePdf = async ({
           pdf.text(remarksLines, remarksX + 2, rowY + 7);
           if (itemImage) {
             const imageWidth = Math.min(30, remarksWidth - 12);
-            const imageHeight = Math.min(22, Math.max(rowHeight - 18, 12));
+            const imageHeight = Math.min(24, Math.max(rowHeight - 20, 12));
             const imageX = remarksX + (remarksWidth - imageWidth) / 2;
-            const textHeight = Math.max(remarksLines.length, 1) * 4;
-            const imageY = Math.min(rowY + 8 + textHeight, rowY + rowHeight - imageHeight - 3);
+            const textHeight = Math.max(remarksLines.length, 1) * 4.4;
+            const imageY = Math.min(rowY + 9 + textHeight, rowY + rowHeight - imageHeight - 4);
             pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
           }
           pdf.setFont('helvetica', 'bolditalic');
