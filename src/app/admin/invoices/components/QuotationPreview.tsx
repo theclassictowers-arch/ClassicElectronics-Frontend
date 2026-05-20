@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Mail } from 'lucide-react';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
 import { createInvoiceItem, formatCurrency, getPictureSource } from '../utils';
@@ -83,8 +84,6 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       </div>
 
       <div className="absolute left-[4px] top-[156px] h-[790px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
-
-      <div className="absolute left-[285px] top-[156px] h-[28px] w-[485px] rounded-br-[18px] border-b-[3px] border-r-[3px] border-violet-600 bg-white" />
 
       <div className="pointer-events-none absolute left-[118px] top-[385px] opacity-[0.14]">
         <Image
@@ -274,17 +273,17 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         <div className="text-[15px]">Director</div>
       </div>
 
-      <div className="absolute bottom-[24px] left-[10px]">
+      <div className="absolute bottom-[48px] left-[150px]">
         <Image
           src="/quotation-globe.png"
           alt=""
           width={90}
           height={90}
-          className="h-auto w-[78px]"
+          className="h-auto w-[38px]"
         />
       </div>
 
-      <div className="absolute bottom-[45px] left-0 right-0 text-center">
+      <div className="absolute bottom-[82px] left-0 right-0 text-center">
         <div className="text-[17px] font-bold italic text-violet-700">
           THANK YOU FOR YOUR BUSINESS!
         </div>
@@ -293,7 +292,11 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute bottom-[8px] left-[90px] w-[190px] text-center text-[11px] leading-[14px]">
+      <div className="absolute bottom-[48px] left-[383px] flex h-[28px] w-[28px] items-center justify-center rounded-full border-[2px] border-blue-600 text-blue-600">
+        <Mail size={17} strokeWidth={2.4} />
+      </div>
+
+      <div className="absolute bottom-[8px] left-[88px] w-[190px] text-center text-[11px] leading-[14px]">
         <div>{form.website || 'www.classicelectronics.com.pk'}</div>
         <div>{form.address || '133 G St # 109 Sector G 11/3 Islamabad'}</div>
       </div>
@@ -304,17 +307,17 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         <div>{form.email || 'sales@classicelectronics.com.pk'}</div>
       </div>
 
-      <div className="absolute bottom-[18px] right-[82px]">
+      <div className="absolute bottom-[49px] right-[84px]">
         <Image
           src="/quotation-whatsapp.png"
           alt=""
           width={60}
           height={60}
-          className="h-auto w-[54px]"
+          className="h-auto w-[30px]"
         />
       </div>
 
-      <div className="absolute bottom-[12px] right-[8px] text-right text-[12px] leading-[15px]">
+      <div className="absolute bottom-[12px] right-[8px] w-[125px] text-center text-[12px] leading-[15px]">
         <div>{form.phonePrimary || '+92 3 111 777 510'}</div>
         <div>{form.phoneSecondary || '+92 321 5180308'}</div>
       </div>

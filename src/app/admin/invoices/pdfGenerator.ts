@@ -254,21 +254,21 @@ export const downloadInvoicePdf = async ({
         pdf.setFont('helvetica', 'bolditalic');
         pdf.setTextColor(...purple);
         pdf.setFontSize(7.8);
-        pdf.text('THANK YOU FOR YOUR BUSINESS!', 105, 266.5, { align: 'center' });
+        pdf.text('THANK YOU FOR YOUR BUSINESS!', 105, 261.2, { align: 'center' });
         pdf.setTextColor(0, 0, 0);
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(4.9);
-        pdf.text('A wide range of industrial instrument & sensing solutions', 105, 270.4, {
+        pdf.text('A wide range of industrial instrument & sensing solutions', 105, 265.1, {
           align: 'center',
         });
 
-        if (globeDataUrl) pdf.addImage(globeDataUrl, 'PNG', 35.5, 275, 8, 8, undefined, 'FAST');
-        if (whatsappDataUrl) pdf.addImage(whatsappDataUrl, 'PNG', 169.5, 275.2, 7.2, 7.2, undefined, 'FAST');
+        if (globeDataUrl) pdf.addImage(globeDataUrl, 'PNG', 38, 272.8, 4.8, 4.8, undefined, 'FAST');
+        if (whatsappDataUrl) pdf.addImage(whatsappDataUrl, 'PNG', 171.2, 272.9, 4.6, 4.6, undefined, 'FAST');
 
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(5.5);
-        pdf.text(form.website || 'www.classicelectronics.com.pk', 40, 286.2, { align: 'center' });
-        pdf.text(form.address || '133 G St # 109 Sector G 11/3 Islamabad', 40, 290, {
+        pdf.text(form.website || 'www.classicelectronics.com.pk', 41, 286.2, { align: 'center' });
+        pdf.text(form.address || '133 G St # 109 Sector G 11/3 Islamabad', 41, 290, {
           align: 'center',
           maxWidth: 56,
         });
@@ -279,19 +279,21 @@ export const downloadInvoicePdf = async ({
         pdf.text('GST: 05-07-8500-014-73', 105, 287.8, { align: 'center' });
 
         pdf.setDrawColor(37, 99, 235);
-        pdf.setLineWidth(0.45);
-        pdf.circle(105, 276.6, 3.6);
-        pdf.rect(102.9, 275.6, 4.2, 2.8);
-        pdf.line(102.9, 275.6, 105, 277.4);
-        pdf.line(107.1, 275.6, 105, 277.4);
+        pdf.setLineWidth(0.35);
+        pdf.circle(105, 275.2, 2.8);
+        pdf.roundedRect(103.25, 274.4, 3.5, 2.35, 0.35, 0.35);
+        pdf.line(103.25, 274.4, 105, 275.7);
+        pdf.line(106.75, 274.4, 105, 275.7);
+        pdf.line(103.25, 276.75, 104.55, 275.6);
+        pdf.line(106.75, 276.75, 105.45, 275.6);
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(5.6);
         pdf.setTextColor(0, 0, 0);
         pdf.text(form.email || 'sales@classicelectronics.com.pk', 105, 292.2, { align: 'center' });
 
         pdf.setFontSize(6.2);
-        pdf.text(form.phonePrimary || '+92 3 111 777 510', 173, 286.2, { align: 'center' });
-        pdf.text(form.phoneSecondary || '+92 321 5180308', 173, 290.2, { align: 'center' });
+        pdf.text(form.phonePrimary || '+92 3 111 777 510', 174, 286.2, { align: 'center' });
+        pdf.text(form.phoneSecondary || '+92 321 5180308', 174, 290.2, { align: 'center' });
 
         pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
         return;
