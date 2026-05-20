@@ -9,6 +9,23 @@ type QuotationPreviewProps = {
   totalAmount: number;
 };
 
+const estimateWrappedRows = (value: string, charactersPerLine: number) => {
+  const lines = value.trim().split(/\r?\n/);
+  const rowCount = lines.reduce((count, line) => {
+    if (!line.trim()) return count + 1;
+
+    const sentenceRows = Math.ceil(line.length / charactersPerLine);
+    const longWordRows = line
+      .trim()
+      .split(/\s+/)
+      .reduce((maxRows, word) => Math.max(maxRows, Math.ceil(word.length / charactersPerLine)), 1);
+
+    return count + Math.max(sentenceRows, longWordRows, 1);
+  }, 0);
+
+  return Math.max(1, rowCount);
+};
+
 export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewProps) => {
   const taxAmount = totalAmount * 0.18;
   const grandTotal = totalAmount + taxAmount;
@@ -19,12 +36,22 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return hasImage && (item as any).showPicture !== false;
   };
 
-  const rowHeight =
+  const baseRowHeight =
     quotationItems.length <= 1 ? 150 : quotationItems.length === 2 ? 210 : 165;
+  const rowHeights = quotationItems.map((item) => {
+    const descriptionRows = estimateWrappedRows(item.description || item.productName || '', 28);
+    const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 32);
+    const imageHeight = showItemImage(item) ? 92 : 0;
+    const descriptionHeight = descriptionRows * 21 + 62;
+    const remarksHeight = remarksRows * 21 + imageHeight + 34;
+
+    return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
+  });
 
   const tableTop = 260;
   const tableHeaderHeight = 48;
-  const tableHeight = tableHeaderHeight + quotationItems.length * rowHeight;
+  const tableHeight =
+    tableHeaderHeight + rowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
   const noteTop = tableTop + tableHeight + 8;
   const detailsTop = noteTop + 20;
 
@@ -106,6 +133,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         {quotationItems.map((item, index) => {
           const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
           const imageSrc = getPictureSource(item.picture);
+          const rowHeight = rowHeights[index];
 
           return (
             <div
@@ -137,18 +165,17 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                     {item.quantity || 0}
                   </div>
 
-                  <div className="overflow-hidden px-1">{item.unitPrice || 0}</div>
+                  <div className="overflow-hidden px-1">{formatCurrency(item.unitPrice || 0)}</div>
                 </div>
               </div>
 
               <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
                 <div className="flex h-full min-w-0 flex-col items-center gap-2 overflow-hidden">
                   <div
-                    className="w-full overflow-hidden text-left text-[14px] leading-[21px]"
+                    className="w-full min-w-0 whitespace-pre-wrap break-words text-left text-[14px] leading-[21px]"
                     style={{
                       overflowWrap: 'anywhere',
                       wordBreak: 'break-word',
-                      maxHeight: showItemImage(item) ? rowHeight - 95 : rowHeight - 24,
                     }}
                   >
                     {item.remarks || item.productName || ''}
@@ -168,7 +195,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               </div>
 
               <div className="flex items-center justify-center overflow-hidden px-2 text-center text-[17px] font-bold italic">
-                {Math.round(itemTotal)} Rs
+                {formatCurrency(itemTotal)}
               </div>
             </div>
           );

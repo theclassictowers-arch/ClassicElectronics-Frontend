@@ -46,7 +46,7 @@ export const downloadInvoicePdf = async ({
 
       if (activeDocumentType === 'quotation') {
         const purple: [number, number, number] = [109, 40, 217];
-        const formatPdfRs = (amount: number) => `${Math.round(amount)} Rs`;
+        const formatPdfRs = (amount: number) => formatCurrency(amount);
         const quotationItems = items.length > 0 ? items : [createInvoiceItem()];
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
@@ -187,7 +187,7 @@ export const downloadInvoicePdf = async ({
           pdf.text(fitPdfText(String(item.quantity || 0), 20), descriptionX + 38, rowY + rowHeight - 2.5, {
             align: 'center',
           });
-          pdf.text(fitPdfText(String(item.unitPrice || 0), 22), descriptionX + 63.33, rowY + rowHeight - 2.5, {
+          pdf.text(fitPdfText(formatPdfRs(item.unitPrice || 0), 24), descriptionX + 63.33, rowY + rowHeight - 2.5, {
             align: 'center',
           });
           pdf.setFont('helvetica', 'normal');
