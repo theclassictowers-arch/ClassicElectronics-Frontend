@@ -54,14 +54,20 @@ export const downloadInvoicePdf = async ({
         const tableY = 75;
         const tableWidth = 194;
         const headerHeight = 13;
-        const minimumRowHeight = quotationItems.length <= 2 ? 40 : quotationItems.length <= 4 ? 30 : 22;
+        const minimumRowHeight = 20;
         const srWidth = 10;
         const descriptionWidth = 76;
         const remarksWidth = 78;
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
         const descriptionPartWidth = descriptionWidth / 3;
-        const splitPdfCellText = (value: string, width: number) =>
-          pdf.splitTextToSize(value.replace(/(\S{12})/g, '$1 '), width) as string[];
+        const splitPdfCellText = (value: string, width: number, fontSize = 8) => {
+          const previousFontSize = pdf.getFontSize();
+          pdf.setFontSize(fontSize);
+          const lines = pdf.splitTextToSize(value.replace(/(\S{12})/g, '$1 '), width) as string[];
+          pdf.setFontSize(previousFontSize);
+
+          return lines;
+        };
         const fitPdfText = (value: string, width: number) => {
           const text = value || '';
           if (pdf.getTextWidth(text) <= width) return text;
@@ -90,16 +96,18 @@ export const downloadInvoicePdf = async ({
         const quotationRowHeights = quotationItems.map((item, index) => {
           const descriptionLines = splitPdfCellText(
             item.description || item.productName || '',
-            descriptionWidth - 4
+            descriptionWidth - 4,
+            8
           );
           const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
-            remarksWidth - 5
+            remarksWidth - 5,
+            7.5
           );
-          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.8 + 20;
-          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.8;
-          const imageHeight = quotationImageDataUrls[index] ? 28 : 0;
-          const remarksHeight = remarksTextHeight + imageHeight + 20;
+          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.3 + 10;
+          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.3;
+          const imageHeight = quotationImageDataUrls[index] ? 20 : 0;
+          const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 7 : 6);
 
           return Math.max(minimumRowHeight, descriptionHeight, remarksHeight);
         });
@@ -241,9 +249,9 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(8);
           pdf.text(String(index + 1), tableX + 5, rowY + rowHeight / 2 + 2, { align: 'center' });
           pdf.text(
-            splitPdfCellText(item.description || item.productName || '', descriptionWidth - 4),
+            splitPdfCellText(item.description || item.productName || '', descriptionWidth - 4, 8),
             descriptionX + 2,
-            rowY + 8
+            rowY + 6
           );
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
@@ -258,15 +266,16 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(7.5);
           const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
-            remarksWidth - 5
+            remarksWidth - 5,
+            7.5
           );
-          pdf.text(remarksLines, remarksX + 2, rowY + 7);
+          pdf.text(remarksLines, remarksX + 2, rowY + 5.5);
           if (itemImage) {
             const imageWidth = Math.min(30, remarksWidth - 12);
-            const imageHeight = Math.min(26, Math.max(rowHeight - 24, 12));
+            const imageHeight = Math.min(20, Math.max(rowHeight - 16, 10));
             const imageX = remarksX + (remarksWidth - imageWidth) / 2;
-            const textHeight = Math.max(remarksLines.length, 1) * 4.6;
-            const imageY = Math.min(rowY + 7 + textHeight, rowY + rowHeight - imageHeight - 5);
+            const textHeight = Math.max(remarksLines.length, 1) * 4.3;
+            const imageY = Math.min(rowY + 5 + textHeight, rowY + rowHeight - imageHeight - 1.5);
             pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
           }
           pdf.setFont('helvetica', 'bolditalic');
@@ -329,13 +338,13 @@ export const downloadInvoicePdf = async ({
           rowY += rowHeight;
         });
 
-        let afterTableY = rowY + 8;
+        let afterTableY = rowY + 5;
 
         if (afterTableY + detailsBlockHeight > contentBottomY) {
           pdf.addPage();
           drawQuotationShell();
           rowY = drawQuotationTableHeader(tableY);
-          afterTableY = rowY + 8;
+          afterTableY = rowY + 5;
         }
 
         pdf.setFont('helvetica', 'italic');
