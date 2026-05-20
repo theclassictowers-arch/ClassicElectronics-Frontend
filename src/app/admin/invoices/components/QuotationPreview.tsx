@@ -20,10 +20,22 @@ export const QuotationPreview = ({
 
   const quotationItems =
     items.length > 0 ? items : [createInvoiceItem()];
-  const quotationRowHeight =
+  const minimumRowHeight =
     quotationItems.length <= 2 ? 150 : quotationItems.length <= 4 ? 112 : 82;
+  const quotationRowHeights = quotationItems.map((item) => {
+    const remarksLength = (item.remarks || item.productName || '').length;
+    const descriptionLength = (item.description || item.productName || '').length;
+    const remarksRows = Math.max(1, Math.ceil(remarksLength / 34));
+    const descriptionRows = Math.max(1, Math.ceil(descriptionLength / 42));
+    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 84 : 0;
+    const remarksHeight = remarksRows * 17 + imageHeight + 28;
+    const descriptionHeight = descriptionRows * 17 + 58;
+
+    return Math.max(minimumRowHeight, remarksHeight, descriptionHeight);
+  });
   const tableTop = 260;
-  const tableHeight = 48 + quotationRowHeight * quotationItems.length;
+  const tableHeight =
+    48 + quotationRowHeights.reduce((height, rowHeight) => height + rowHeight, 0);
   const noteTop = tableTop + tableHeight + 10;
   const detailsTop = noteTop + 22;
   const signatureTop = Math.min(detailsTop + 170, 815);
@@ -144,12 +156,13 @@ export const QuotationPreview = ({
           const itemTotal =
             Number(item.quantity || 0) *
             Number(item.unitPrice || 0);
+          const rowHeight = quotationRowHeights[index];
 
           return (
             <div
               key={item.id}
               className="grid grid-cols-[38px_270px_285px_117px] border-b-[2px] border-black last:border-b-0"
-              style={{ height: quotationRowHeight }}
+              style={{ height: rowHeight }}
             >
 
               {/* SR */}
@@ -192,7 +205,7 @@ export const QuotationPreview = ({
                     {item.remarks || item.productName || ''}
                   </div>
                   {item.showPicture && getPictureSource(item.picture) ? (
-                    <div className="mt-1 flex h-[70px] w-[110px] items-center justify-center overflow-hidden border border-slate-300 bg-white">
+                    <div className="mt-1 flex h-[78px] w-[120px] shrink-0 items-center justify-center overflow-hidden border border-slate-300 bg-white">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getPictureSource(item.picture)}

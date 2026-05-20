@@ -54,7 +54,7 @@ export const downloadInvoicePdf = async ({
         const tableY = 69;
         const tableWidth = 194;
         const headerHeight = 13;
-        const rowHeight = quotationItems.length <= 2 ? 40 : quotationItems.length <= 4 ? 30 : 22;
+        const minimumRowHeight = quotationItems.length <= 2 ? 40 : quotationItems.length <= 4 ? 30 : 22;
         const srWidth = 10;
         const descriptionWidth = 76;
         const remarksWidth = 78;
@@ -105,7 +105,22 @@ export const downloadInvoicePdf = async ({
         pdf.setFontSize(8);
         pdf.text('Reference to your quotation the details is as below.', 8, 68);
 
-        const tableHeight = headerHeight + rowHeight * quotationItems.length;
+        const quotationRowHeights = quotationItems.map((item, index) => {
+          const descriptionLines = pdf.splitTextToSize(
+            item.description || item.productName || '',
+            descriptionWidth - 4
+          ) as string[];
+          const remarksLines = pdf.splitTextToSize(
+            item.remarks || item.productName || '',
+            remarksWidth - 5
+          ) as string[];
+          const textHeight = Math.max(descriptionLines.length, remarksLines.length, 1) * 4.3;
+          const imageHeight = quotationImageDataUrls[index] ? 25 : 0;
+
+          return Math.max(minimumRowHeight, textHeight + imageHeight + 12);
+        });
+        const tableHeight =
+          headerHeight + quotationRowHeights.reduce((height, rowHeight) => height + rowHeight, 0);
         const descriptionX = tableX + srWidth;
         const remarksX = descriptionX + descriptionWidth;
         const totalX = remarksX + remarksWidth;
@@ -131,8 +146,9 @@ export const downloadInvoicePdf = async ({
         pdf.text('Remarks/Picture', remarksX + remarksWidth / 2, tableY + 8.4, { align: 'center' });
         pdf.text('Total', totalX + totalWidth / 2, tableY + 8.4, { align: 'center' });
 
+        let rowY = tableY + headerHeight;
         quotationItems.forEach((item, index) => {
-          const rowY = tableY + headerHeight + index * rowHeight;
+          const rowHeight = quotationRowHeights[index];
           const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
           const itemImage = quotationImageDataUrls[index];
 
@@ -144,7 +160,7 @@ export const downloadInvoicePdf = async ({
 
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(8);
-          pdf.text(String(index + 1), tableX + 5, rowY + 23, { align: 'center' });
+          pdf.text(String(index + 1), tableX + 5, rowY + rowHeight / 2 + 2, { align: 'center' });
           pdf.text(
             pdf.splitTextToSize(item.description || item.productName || '', descriptionWidth - 4),
             descriptionX + 2,
@@ -176,7 +192,10 @@ export const downloadInvoicePdf = async ({
           }
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(8.2);
-          pdf.text(formatPdfRs(itemTotal), totalX + totalWidth / 2, rowY + 23, { align: 'center' });
+          pdf.text(formatPdfRs(itemTotal), totalX + totalWidth / 2, rowY + rowHeight / 2 + 2, {
+            align: 'center',
+          });
+          rowY += rowHeight;
         });
 
         const afterTableY = tableY + tableHeight + 3;
