@@ -193,7 +193,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-auto flex h-[88px] w-full shrink-0 items-center justify-center overflow-hidden">
+                    <div className="mt-1 flex h-[88px] w-full shrink-0 items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
@@ -259,18 +259,12 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
 
       <div className="absolute left-[18px] top-[760px] w-[160px]">
         <Image
-          src="/quotation-stamp.png"
+          src="/quotation-stamp-signature.png"
           alt=""
-          width={120}
-          height={100}
-          className="ml-8 h-auto w-[90px]"
+          width={250}
+          height={150}
+          className="h-auto w-[150px] mix-blend-multiply"
         />
-
-        <div className="mt-[-8px] text-center text-[16px] font-bold italic text-sky-900">
-          {form.directorName || 'M Fawad Younas'}
-        </div>
-
-        <div className="text-[15px]">Director</div>
       </div>
 
       <div className="absolute bottom-[48px] left-[150px]">

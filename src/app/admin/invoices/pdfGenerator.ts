@@ -74,7 +74,10 @@ export const downloadInvoicePdf = async ({
           return `${fittedText}...`;
         };
         const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
-        const stampDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-stamp-signature.png'));
+        const stampDataUrl = await loadImageAsPngDataUrl(
+          getFrontendAssetUrl('/quotation-stamp-signature.png'),
+          { transparentWhite: true }
+        );
         const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
         const quotationImageDataUrls = await Promise.all(
           quotationItems.map((item) => {
@@ -83,41 +86,6 @@ export const downloadInvoicePdf = async ({
             return imageUrl ? loadImageAsPngDataUrl(imageUrl) : Promise.resolve(null);
           })
         );
-
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-
-        if (logoDataUrl) {
-          pdf.addImage(logoDataUrl, 'PNG', 4, 5, 79, 30, undefined, 'FAST');
-          pdf.setGState(new GState({ opacity: 0.18, 'stroke-opacity': 0.18 }));
-          pdf.addImage(logoDataUrl, 'PNG', 47, 134, 118, 45, undefined, 'FAST');
-          pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
-        }
-
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(19);
-        pdf.text(`Quotation:${form.invoiceNo || '0050'}`, 199, 15, { align: 'right' });
-        pdf.setFontSize(11);
-        pdf.text(`Date: ${form.date || '--/--/----'}`, 199, 23, { align: 'right' });
-        pdf.setFont('helvetica', 'bolditalic');
-        pdf.setFontSize(11);
-        pdf.text('Indent No:', 199, 32, { align: 'right' });
-        pdf.text('Enquiry No:', 199, 41, { align: 'right' });
-
-        pdf.setDrawColor(...purple);
-        pdf.setLineWidth(0.7);
-        pdf.roundedRect(2, 53, 206, 197, 5, 5, 'S');
-
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
-        pdf.text('Manage Purchase;', 8, 57);
-        pdf.text(form.companyName || 'Fecto Cement Ltd', 8, 64);
-        pdf.text(`${form.location || 'Rawalpindi'}:`, 8, 71);
-        pdf.setFont('helvetica', 'bolditalic');
-        pdf.setFontSize(8);
-        pdf.text('Reference to your quotation the details is as below.', 8, 74);
 
         const quotationRowHeights = quotationItems.map((item, index) => {
           const descriptionLines = splitPdfCellText(
@@ -135,41 +103,136 @@ export const downloadInvoicePdf = async ({
 
           return Math.max(minimumRowHeight, descriptionHeight, remarksHeight);
         });
-        const tableHeight =
-          headerHeight + quotationRowHeights.reduce((height, rowHeight) => height + rowHeight, 0);
         const descriptionX = tableX + srWidth;
         const remarksX = descriptionX + descriptionWidth;
         const totalX = remarksX + remarksWidth;
 
-        pdf.setDrawColor(0, 0, 0);
-        pdf.setLineWidth(0.62);
-        pdf.rect(tableX, tableY, tableWidth, tableHeight);
-        pdf.line(tableX, tableY + headerHeight, tableX + tableWidth, tableY + headerHeight);
-        pdf.line(descriptionX, tableY, descriptionX, tableY + tableHeight);
-        pdf.line(remarksX, tableY, remarksX, tableY + tableHeight);
-        pdf.line(totalX, tableY, totalX, tableY + tableHeight);
-        pdf.line(descriptionX, tableY + 6.5, remarksX, tableY + 6.5);
-        pdf.line(descriptionX + descriptionPartWidth, tableY + 6.5, descriptionX + descriptionPartWidth, tableY + headerHeight);
-        pdf.line(descriptionX + descriptionPartWidth * 2, tableY + 6.5, descriptionX + descriptionPartWidth * 2, tableY + headerHeight);
+        const contentBottomY = 248;
+        const detailsBlockHeight = 78;
 
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(7.6);
-        pdf.text('Sr', tableX + 5, tableY + 8.4, { align: 'center' });
-        pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, tableY + 4.5, { align: 'center' });
-        pdf.text('UOM', descriptionX + descriptionPartWidth / 2, tableY + 11.4, { align: 'center' });
-        pdf.text('QTY', descriptionX + descriptionPartWidth * 1.5, tableY + 11.4, { align: 'center' });
-        pdf.text('Unit Price', descriptionX + descriptionPartWidth * 2.5, tableY + 11.4, { align: 'center' });
-        pdf.text('Remarks/Picture', remarksX + remarksWidth / 2, tableY + 8.4, { align: 'center' });
-        pdf.text('Total', totalX + totalWidth / 2, tableY + 8.4, { align: 'center' });
+        const drawQuotationFooter = () => {
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.setTextColor(...purple);
+          pdf.setFontSize(7.8);
+          pdf.text('THANK YOU FOR YOUR BUSINESS!', 105, 261.2, { align: 'center' });
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(4.9);
+          pdf.text('A wide range of industrial instrument & sensing solutions', 105, 265.1, {
+            align: 'center',
+          });
 
-        let rowY = tableY + headerHeight;
-        quotationItems.forEach((item, index) => {
-          const rowHeight = quotationRowHeights[index];
+          if (globeDataUrl) pdf.addImage(globeDataUrl, 'PNG', 38, 272.8, 4.8, 4.8, undefined, 'FAST');
+          if (whatsappDataUrl) pdf.addImage(whatsappDataUrl, 'PNG', 171.2, 272.9, 4.6, 4.6, undefined, 'FAST');
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(5.5);
+          pdf.text(form.website || 'www.classicelectronics.com.pk', 41, 286.2, { align: 'center' });
+          pdf.text(form.address || '133 G St # 109 Sector G 11/3 Islamabad', 41, 290, {
+            align: 'center',
+            maxWidth: 56,
+          });
+
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(6.3);
+          pdf.text('NTN: 1700506', 105, 283.6, { align: 'center' });
+          pdf.text('GST: 05-07-8500-014-73', 105, 287.8, { align: 'center' });
+
+          pdf.setDrawColor(37, 99, 235);
+          pdf.setLineWidth(0.35);
+          pdf.circle(105, 275.2, 2.8);
+          pdf.roundedRect(103.25, 274.4, 3.5, 2.35, 0.35, 0.35);
+          pdf.line(103.25, 274.4, 105, 275.7);
+          pdf.line(106.75, 274.4, 105, 275.7);
+          pdf.line(103.25, 276.75, 104.55, 275.6);
+          pdf.line(106.75, 276.75, 105.45, 275.6);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(5.6);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(form.email || 'sales@classicelectronics.com.pk', 105, 292.2, { align: 'center' });
+
+          pdf.setFontSize(6.2);
+          pdf.text(form.phonePrimary || '+92 3 111 777 510', 174, 286.2, { align: 'center' });
+          pdf.text(form.phoneSecondary || '+92 321 5180308', 174, 290.2, { align: 'center' });
+        };
+
+        const drawQuotationShell = () => {
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+          if (logoDataUrl) {
+            pdf.addImage(logoDataUrl, 'PNG', 4, 5, 79, 30, undefined, 'FAST');
+            pdf.setGState(new GState({ opacity: 0.18, 'stroke-opacity': 0.18 }));
+            pdf.addImage(logoDataUrl, 'PNG', 47, 134, 118, 45, undefined, 'FAST');
+            pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
+          }
+
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(24);
+          pdf.text(`Quotation:${form.invoiceNo || '0050'}`, 199, 15, { align: 'right' });
+          pdf.setFontSize(15);
+          pdf.text(`Date: ${form.date || '--/--/----'}`, 199, 22.5, { align: 'right' });
+          pdf.text(`Date: ${form.date || '--/--/----'}`, 198.8, 22.5, { align: 'right' });
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.setFontSize(15);
+          pdf.text(`Indent No: ${form.purchaseOrder || ''}`, 199, 31, { align: 'right' });
+          pdf.text(`Indent No: ${form.purchaseOrder || ''}`, 198.8, 31, { align: 'right' });
+          pdf.text(`Enquiry No: ${form.quotationNo || ''}`, 199, 38.8, { align: 'right' });
+          pdf.text(`Enquiry No: ${form.quotationNo || ''}`, 198.8, 38.8, { align: 'right' });
+
+          pdf.setDrawColor(...purple);
+          pdf.setLineWidth(0.7);
+          pdf.roundedRect(2, 53, 206, 197, 5, 5, 'S');
+
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.text('Manage Purchase;', 8, 57);
+          pdf.text(form.companyName || 'Fecto Cement Ltd', 8, 61);
+          pdf.text(`${form.location || 'Rawalpindi'}:`, 8, 65);
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.setFontSize(8);
+          pdf.text('Reference to your quotation the details is as below.', 8, 70);
+
+          drawQuotationFooter();
+        };
+
+        const drawQuotationTableHeader = (startY: number) => {
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.62);
+          pdf.rect(tableX, startY, tableWidth, headerHeight);
+          pdf.line(descriptionX, startY, descriptionX, startY + headerHeight);
+          pdf.line(remarksX, startY, remarksX, startY + headerHeight);
+          pdf.line(totalX, startY, totalX, startY + headerHeight);
+          pdf.line(descriptionX, startY + 6.5, remarksX, startY + 6.5);
+          pdf.line(descriptionX + descriptionPartWidth, startY + 6.5, descriptionX + descriptionPartWidth, startY + headerHeight);
+          pdf.line(descriptionX + descriptionPartWidth * 2, startY + 6.5, descriptionX + descriptionPartWidth * 2, startY + headerHeight);
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.6);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text('Sr', tableX + 5, startY + 8.4, { align: 'center' });
+          pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, startY + 4.5, { align: 'center' });
+          pdf.text('UOM', descriptionX + descriptionPartWidth / 2, startY + 11.4, { align: 'center' });
+          pdf.text('QTY', descriptionX + descriptionPartWidth * 1.5, startY + 11.4, { align: 'center' });
+          pdf.text('Unit Price', descriptionX + descriptionPartWidth * 2.5, startY + 11.4, { align: 'center' });
+          pdf.text('Remarks/Picture', remarksX + remarksWidth / 2, startY + 8.4, { align: 'center' });
+          pdf.text('Total', totalX + totalWidth / 2, startY + 8.4, { align: 'center' });
+
+          return startY + headerHeight;
+        };
+
+        const drawQuotationRow = (item: InvoiceItem, index: number, rowY: number, rowHeight: number) => {
           const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
           const itemImage = quotationImageDataUrls[index];
 
-          if (index > 0) pdf.line(tableX, rowY, tableX + tableWidth, rowY);
-
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.62);
+          pdf.rect(tableX, rowY, tableWidth, rowHeight);
+          pdf.line(descriptionX, rowY, descriptionX, rowY + rowHeight);
+          pdf.line(remarksX, rowY, remarksX, rowY + rowHeight);
+          pdf.line(totalX, rowY, totalX, rowY + rowHeight);
           pdf.line(descriptionX, rowY + rowHeight - 8, remarksX, rowY + rowHeight - 8);
           pdf.line(descriptionX + descriptionPartWidth, rowY + rowHeight - 8, descriptionX + descriptionPartWidth, rowY + rowHeight);
           pdf.line(descriptionX + descriptionPartWidth * 2, rowY + rowHeight - 8, descriptionX + descriptionPartWidth * 2, rowY + rowHeight);
@@ -203,7 +266,7 @@ export const downloadInvoicePdf = async ({
             const imageHeight = Math.min(26, Math.max(rowHeight - 24, 12));
             const imageX = remarksX + (remarksWidth - imageWidth) / 2;
             const textHeight = Math.max(remarksLines.length, 1) * 4.6;
-            const imageY = Math.min(rowY + 10 + textHeight, rowY + rowHeight - imageHeight - 5);
+            const imageY = Math.min(rowY + 7 + textHeight, rowY + rowHeight - imageHeight - 5);
             pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
           }
           pdf.setFont('helvetica', 'bolditalic');
@@ -211,34 +274,29 @@ export const downloadInvoicePdf = async ({
           pdf.text(formatPdfRs(itemTotal), totalX + totalWidth / 2, rowY + rowHeight / 2 + 2, {
             align: 'center',
           });
-          rowY += rowHeight;
-        });
+        };
 
-        const afterTableY = tableY + tableHeight + 8;
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(5.4);
-        pdf.text('If you have any questions concerning this quotation please tell us.', 8, afterTableY);
+        const drawQuotationTotals = (detailsY: number) => {
+          pdf.setFont('helvetica', 'bolditalic');
+          pdf.setFontSize(9);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text('Delivery Period :', 8, detailsY);
+          pdf.text('Validity Date:', 8, detailsY + 8);
+          pdf.setFont('helvetica', 'italic');
+          pdf.rect(51, detailsY - 5, 43, 7);
+          pdf.text(form.deliveryPeriod || '4 Weeks', 72.5, detailsY, { align: 'center' });
+          pdf.rect(51, detailsY + 3, 43, 7);
+          pdf.text('1 WEEK', 72.5, detailsY + 8, { align: 'center' });
 
-        const detailsY = afterTableY + 10;
-        pdf.setFont('helvetica', 'bolditalic');
-        pdf.setFontSize(9);
-        pdf.text('Delivery Period :', 8, detailsY);
-        pdf.text('Validity Date:', 8, detailsY + 8);
-        pdf.setFont('helvetica', 'italic');
-        pdf.rect(51, detailsY - 5, 43, 7);
-        pdf.text(form.deliveryPeriod || '4 Weeks', 72.5, detailsY, { align: 'center' });
-        pdf.rect(51, detailsY + 3, 43, 7);
-        pdf.text('1 WEEK', 72.5, detailsY + 8, { align: 'center' });
-
-        const totalsX = 140;
-        const totalsValueX = 165;
-        const totalsBoxWidth = 31;
-        [
-          ['Sub Total', formatPdfRs(totalAmount), detailsY - 5],
-          ['Tax', '18%', detailsY + 3],
-          ['Total', formatPdfRs(taxAmount), detailsY + 11],
-          ['Total as', formatPdfRs(grandTotal), detailsY + 19],
-        ].forEach(([label, value, y]) => {
+          const totalsX = 140;
+          const totalsValueX = 165;
+          const totalsBoxWidth = 31;
+          [
+            ['Sub Total', formatPdfRs(totalAmount), detailsY - 5],
+            ['Tax', '18%', detailsY + 3],
+            ['Total', formatPdfRs(taxAmount), detailsY + 11],
+            ['Total as', formatPdfRs(grandTotal), detailsY + 19],
+          ].forEach(([label, value, y]) => {
           pdf.setFont('helvetica', 'bolditalic');
           pdf.text(String(label), totalsX - 15, Number(y) + 5);
           pdf.setFont('helvetica', 'italic');
@@ -246,54 +304,45 @@ export const downloadInvoicePdf = async ({
           pdf.text(String(value), totalsValueX + totalsBoxWidth / 2, Number(y) + 5, {
             align: 'center',
           });
+          });
+
+          if (stampDataUrl) {
+            pdf.addImage(stampDataUrl, 'PNG', 8, detailsY + 20, 46, 27.6, undefined, 'FAST');
+          }
+        };
+
+        drawQuotationShell();
+        let rowY = drawQuotationTableHeader(tableY);
+
+        quotationItems.forEach((item, index) => {
+          const rowHeight = quotationRowHeights[index];
+          const isLastRow = index === quotationItems.length - 1;
+          const requiredBottom = isLastRow ? contentBottomY - detailsBlockHeight : contentBottomY;
+
+          if (rowY + rowHeight > requiredBottom && rowY > tableY + headerHeight) {
+            pdf.addPage();
+            drawQuotationShell();
+            rowY = drawQuotationTableHeader(tableY);
+          }
+
+          drawQuotationRow(item, index, rowY, rowHeight);
+          rowY += rowHeight;
         });
 
-        const stampY = Math.min(detailsY + 45, 216);
-        if (stampDataUrl) pdf.addImage(stampDataUrl, 'PNG', 5, stampY, 42, 25.2, undefined, 'FAST');
+        let afterTableY = rowY + 8;
 
-        pdf.setFont('helvetica', 'bolditalic');
-        pdf.setTextColor(...purple);
-        pdf.setFontSize(7.8);
-        pdf.text('THANK YOU FOR YOUR BUSINESS!', 105, 261.2, { align: 'center' });
+        if (afterTableY + detailsBlockHeight > contentBottomY) {
+          pdf.addPage();
+          drawQuotationShell();
+          rowY = drawQuotationTableHeader(tableY);
+          afterTableY = rowY + 8;
+        }
+
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(5.4);
         pdf.setTextColor(0, 0, 0);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(4.9);
-        pdf.text('A wide range of industrial instrument & sensing solutions', 105, 265.1, {
-          align: 'center',
-        });
-
-        if (globeDataUrl) pdf.addImage(globeDataUrl, 'PNG', 38, 272.8, 4.8, 4.8, undefined, 'FAST');
-        if (whatsappDataUrl) pdf.addImage(whatsappDataUrl, 'PNG', 171.2, 272.9, 4.6, 4.6, undefined, 'FAST');
-
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(5.5);
-        pdf.text(form.website || 'www.classicelectronics.com.pk', 41, 286.2, { align: 'center' });
-        pdf.text(form.address || '133 G St # 109 Sector G 11/3 Islamabad', 41, 290, {
-          align: 'center',
-          maxWidth: 56,
-        });
-
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(6.3);
-        pdf.text('NTN: 1700506', 105, 283.6, { align: 'center' });
-        pdf.text('GST: 05-07-8500-014-73', 105, 287.8, { align: 'center' });
-
-        pdf.setDrawColor(37, 99, 235);
-        pdf.setLineWidth(0.35);
-        pdf.circle(105, 275.2, 2.8);
-        pdf.roundedRect(103.25, 274.4, 3.5, 2.35, 0.35, 0.35);
-        pdf.line(103.25, 274.4, 105, 275.7);
-        pdf.line(106.75, 274.4, 105, 275.7);
-        pdf.line(103.25, 276.75, 104.55, 275.6);
-        pdf.line(106.75, 276.75, 105.45, 275.6);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(5.6);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(form.email || 'sales@classicelectronics.com.pk', 105, 292.2, { align: 'center' });
-
-        pdf.setFontSize(6.2);
-        pdf.text(form.phonePrimary || '+92 3 111 777 510', 174, 286.2, { align: 'center' });
-        pdf.text(form.phoneSecondary || '+92 321 5180308', 174, 290.2, { align: 'center' });
+        pdf.text('If you have any questions concerning this quotation please tell us.', 8, afterTableY);
+        drawQuotationTotals(afterTableY + 10);
 
         pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
         return;

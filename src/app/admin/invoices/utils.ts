@@ -234,7 +234,7 @@ export const getFrontendAssetUrl = (assetPath: string): string => {
 
 export const loadImageAsPngDataUrl = async (
   url: string,
-  options: { whiteBackground?: boolean } = {}
+  options: { transparentWhite?: boolean; whiteBackground?: boolean } = {}
 ): Promise<string | null> => {
   try {
     const response = await fetch(url);
@@ -266,6 +266,20 @@ export const loadImageAsPngDataUrl = async (
           }
 
           context.drawImage(image, 0, 0);
+
+          if (options.transparentWhite) {
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const { data } = imageData;
+
+            for (let index = 0; index < data.length; index += 4) {
+              if (data[index] > 245 && data[index + 1] > 245 && data[index + 2] > 245) {
+                data[index + 3] = 0;
+              }
+            }
+
+            context.putImageData(imageData, 0, 0);
+          }
+
           resolve(canvas.toDataURL('image/png'));
         };
 
