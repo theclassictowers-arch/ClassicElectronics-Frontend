@@ -25,11 +25,11 @@ export const QuotationPreview = ({
   const quotationRowHeights = quotationItems.map((item) => {
     const remarksLength = (item.remarks || item.productName || '').length;
     const descriptionLength = (item.description || item.productName || '').length;
-    const remarksRows = Math.max(1, Math.ceil(remarksLength / 34));
-    const descriptionRows = Math.max(1, Math.ceil(descriptionLength / 42));
-    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 84 : 0;
-    const remarksHeight = remarksRows * 17 + imageHeight + 28;
-    const descriptionHeight = descriptionRows * 17 + 58;
+    const remarksRows = Math.max(1, Math.ceil(remarksLength / 28));
+    const descriptionRows = Math.max(1, Math.ceil(descriptionLength / 30));
+    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 92 : 0;
+    const remarksHeight = remarksRows * 18 + imageHeight + 42;
+    const descriptionHeight = descriptionRows * 18 + 76;
 
     return Math.max(minimumRowHeight, remarksHeight, descriptionHeight);
   });
@@ -173,9 +173,9 @@ export const QuotationPreview = ({
 
               {/* DESCRIPTION */}
 
-              <div className="grid grid-rows-[1fr_30px] border-r-[2px] border-black">
+              <div className="grid min-w-0 grid-rows-[minmax(0,1fr)_30px] overflow-hidden border-r-[2px] border-black">
 
-                <div className="min-w-0 overflow-hidden whitespace-pre-wrap break-words px-3 py-4 text-[14px] [overflow-wrap:anywhere]">
+                <div className="min-w-0 overflow-hidden whitespace-pre-wrap break-words px-3 py-4 text-[14px] leading-[18px] [overflow-wrap:anywhere]">
                   {item.description ||
                     item.productName ||
                     ''}
@@ -199,13 +199,13 @@ export const QuotationPreview = ({
 
               {/* REMARKS */}
 
-              <div className="border-r-[2px] border-black px-3 py-3">
-                <div className="flex h-full flex-col items-center gap-2">
-                  <div className="w-full min-w-0 overflow-hidden whitespace-pre-wrap break-words text-left [overflow-wrap:anywhere]">
+              <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
+                <div className="flex h-full min-w-0 flex-col items-center gap-2 overflow-hidden">
+                  <div className="w-full min-w-0 overflow-hidden whitespace-pre-wrap break-words text-left leading-[18px] [overflow-wrap:anywhere]">
                     {item.remarks || item.productName || ''}
                   </div>
                   {item.showPicture && getPictureSource(item.picture) ? (
-                    <div className="mt-1 flex h-[78px] w-[120px] shrink-0 items-center justify-center overflow-hidden border border-slate-300 bg-white">
+                    <div className="mt-1 flex h-[84px] w-[130px] max-w-full shrink-0 items-center justify-center overflow-hidden border border-slate-300 bg-white">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getPictureSource(item.picture)}

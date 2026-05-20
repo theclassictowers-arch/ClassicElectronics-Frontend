@@ -60,7 +60,7 @@ export const downloadInvoicePdf = async ({
         const remarksWidth = 78;
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
         const splitPdfCellText = (value: string, width: number) =>
-          pdf.splitTextToSize(value.replace(/(\S{24})/g, '$1 '), width) as string[];
+          pdf.splitTextToSize(value.replace(/(\S{16})/g, '$1 '), width) as string[];
         const fitPdfText = (value: string, width: number) => {
           const text = value || '';
           if (pdf.getTextWidth(text) <= width) return text;
@@ -127,10 +127,12 @@ export const downloadInvoicePdf = async ({
             item.remarks || item.productName || '',
             remarksWidth - 5
           );
-          const textHeight = Math.max(descriptionLines.length, remarksLines.length, 1) * 4.3;
+          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.4 + 15;
+          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.4;
           const imageHeight = quotationImageDataUrls[index] ? 25 : 0;
+          const remarksHeight = remarksTextHeight + imageHeight + 14;
 
-          return Math.max(minimumRowHeight, textHeight + imageHeight + 12);
+          return Math.max(minimumRowHeight, descriptionHeight, remarksHeight);
         });
         const tableHeight =
           headerHeight + quotationRowHeights.reduce((height, rowHeight) => height + rowHeight, 0);
