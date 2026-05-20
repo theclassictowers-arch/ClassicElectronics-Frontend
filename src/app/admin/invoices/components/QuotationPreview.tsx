@@ -39,11 +39,11 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const baseRowHeight =
     quotationItems.length <= 1 ? 150 : quotationItems.length === 2 ? 210 : 165;
   const rowHeights = quotationItems.map((item) => {
-    const descriptionRows = estimateWrappedRows(item.description || item.productName || '', 28);
-    const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 32);
-    const imageHeight = showItemImage(item) ? 92 : 0;
-    const descriptionHeight = descriptionRows * 21 + 62;
-    const remarksHeight = remarksRows * 21 + imageHeight + 34;
+    const descriptionRows = estimateWrappedRows(item.description || item.productName || '', 24);
+    const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 27);
+    const imageHeight = showItemImage(item) ? 104 : 0;
+    const descriptionHeight = descriptionRows * 22 + 74;
+    const remarksHeight = remarksRows * 22 + imageHeight + 50;
 
     return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
   });
@@ -52,8 +52,9 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const tableHeaderHeight = 48;
   const tableHeight =
     tableHeaderHeight + rowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
-  const noteTop = tableTop + tableHeight + 8;
-  const detailsTop = noteTop + 20;
+  const tableBottomGap = 26;
+  const noteTop = tableTop + tableHeight + tableBottomGap;
+  const detailsTop = noteTop + 28;
 
   return (
     <div className="quotation-a4 relative mx-auto h-[1123px] w-[794px] overflow-hidden bg-white text-black">
@@ -138,8 +139,8 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
           return (
             <div
               key={item.id}
-              className="grid grid-cols-[38px_270px_285px_117px] border-b-[2px] border-black last:border-b-0"
-              style={{ height: rowHeight }}
+              className="grid min-w-0 grid-cols-[38px_270px_285px_117px] overflow-hidden border-b-[2px] border-black last:border-b-0"
+              style={{ minHeight: rowHeight }}
             >
               <div className="flex items-center justify-center border-r-[2px] border-black">
                 {index + 1}
@@ -156,16 +157,27 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   {item.description || item.productName || ''}
                 </div>
 
-                <div className="grid grid-cols-3 border-t-[2px] border-black text-center text-[15px] italic leading-[30px]">
-                  <div className="overflow-hidden border-r-[2px] border-black px-1">
+                <div className="grid min-w-0 grid-cols-[90px_90px_90px] overflow-hidden border-t-[2px] border-black text-center text-[15px] italic leading-[30px]">
+                  <div
+                    className="min-w-0 overflow-hidden truncate border-r-[2px] border-black px-1"
+                    title={item.uom || 'NOS'}
+                  >
                     {item.uom || 'NOS'}
                   </div>
 
-                  <div className="overflow-hidden border-r-[2px] border-black bg-sky-100 px-1">
+                  <div
+                    className="min-w-0 overflow-hidden truncate border-r-[2px] border-black bg-sky-100 px-1"
+                    title={String(item.quantity || 0)}
+                  >
                     {item.quantity || 0}
                   </div>
 
-                  <div className="overflow-hidden px-1">{formatCurrency(item.unitPrice || 0)}</div>
+                  <div
+                    className="min-w-0 overflow-hidden truncate px-1"
+                    title={formatCurrency(item.unitPrice || 0)}
+                  >
+                    {formatCurrency(item.unitPrice || 0)}
+                  </div>
                 </div>
               </div>
 
@@ -182,12 +194,12 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-auto flex h-[76px] w-full items-center justify-center overflow-hidden">
+                    <div className="mt-auto flex h-[88px] w-full shrink-0 items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
                         alt={item.productName || item.description || 'Item image'}
-                        className="max-h-[76px] max-w-[170px] object-contain"
+                        className="max-h-[88px] max-w-[170px] object-contain"
                       />
                     </div>
                   ) : null}

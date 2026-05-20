@@ -59,6 +59,7 @@ export const downloadInvoicePdf = async ({
         const descriptionWidth = 76;
         const remarksWidth = 78;
         const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
+        const descriptionPartWidth = descriptionWidth / 3;
         const splitPdfCellText = (value: string, width: number) =>
           pdf.splitTextToSize(value.replace(/(\S{12})/g, '$1 '), width) as string[];
         const fitPdfText = (value: string, width: number) => {
@@ -127,10 +128,10 @@ export const downloadInvoicePdf = async ({
             item.remarks || item.productName || '',
             remarksWidth - 5
           );
-          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.6 + 17;
-          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.6;
-          const imageHeight = quotationImageDataUrls[index] ? 26 : 0;
-          const remarksHeight = remarksTextHeight + imageHeight + 16;
+          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.8 + 20;
+          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.8;
+          const imageHeight = quotationImageDataUrls[index] ? 28 : 0;
+          const remarksHeight = remarksTextHeight + imageHeight + 20;
 
           return Math.max(minimumRowHeight, descriptionHeight, remarksHeight);
         });
@@ -148,16 +149,16 @@ export const downloadInvoicePdf = async ({
         pdf.line(remarksX, tableY, remarksX, tableY + tableHeight);
         pdf.line(totalX, tableY, totalX, tableY + tableHeight);
         pdf.line(descriptionX, tableY + 6.5, remarksX, tableY + 6.5);
-        pdf.line(descriptionX + 25.33, tableY + 6.5, descriptionX + 25.33, tableY + headerHeight);
-        pdf.line(descriptionX + 50.66, tableY + 6.5, descriptionX + 50.66, tableY + headerHeight);
+        pdf.line(descriptionX + descriptionPartWidth, tableY + 6.5, descriptionX + descriptionPartWidth, tableY + headerHeight);
+        pdf.line(descriptionX + descriptionPartWidth * 2, tableY + 6.5, descriptionX + descriptionPartWidth * 2, tableY + headerHeight);
 
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7.6);
         pdf.text('Sr', tableX + 5, tableY + 8.4, { align: 'center' });
         pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, tableY + 4.5, { align: 'center' });
-        pdf.text('UOM', descriptionX + 12.66, tableY + 11.4, { align: 'center' });
-        pdf.text('QTY', descriptionX + 38, tableY + 11.4, { align: 'center' });
-        pdf.text('Unit Price', descriptionX + 63.33, tableY + 11.4, { align: 'center' });
+        pdf.text('UOM', descriptionX + descriptionPartWidth / 2, tableY + 11.4, { align: 'center' });
+        pdf.text('QTY', descriptionX + descriptionPartWidth * 1.5, tableY + 11.4, { align: 'center' });
+        pdf.text('Unit Price', descriptionX + descriptionPartWidth * 2.5, tableY + 11.4, { align: 'center' });
         pdf.text('Remarks/Picture', remarksX + remarksWidth / 2, tableY + 8.4, { align: 'center' });
         pdf.text('Total', totalX + totalWidth / 2, tableY + 8.4, { align: 'center' });
 
@@ -170,8 +171,8 @@ export const downloadInvoicePdf = async ({
           if (index > 0) pdf.line(tableX, rowY, tableX + tableWidth, rowY);
 
           pdf.line(descriptionX, rowY + rowHeight - 8, remarksX, rowY + rowHeight - 8);
-          pdf.line(descriptionX + 25.33, rowY + rowHeight - 8, descriptionX + 25.33, rowY + rowHeight);
-          pdf.line(descriptionX + 50.66, rowY + rowHeight - 8, descriptionX + 50.66, rowY + rowHeight);
+          pdf.line(descriptionX + descriptionPartWidth, rowY + rowHeight - 8, descriptionX + descriptionPartWidth, rowY + rowHeight);
+          pdf.line(descriptionX + descriptionPartWidth * 2, rowY + rowHeight - 8, descriptionX + descriptionPartWidth * 2, rowY + rowHeight);
 
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(8);
@@ -183,11 +184,11 @@ export const downloadInvoicePdf = async ({
           );
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
-          pdf.text(fitPdfText(item.uom || 'NOS', 22), descriptionX + 12.66, rowY + rowHeight - 2.5, { align: 'center' });
-          pdf.text(fitPdfText(String(item.quantity || 0), 20), descriptionX + 38, rowY + rowHeight - 2.5, {
+          pdf.text(fitPdfText(item.uom || 'NOS', descriptionPartWidth - 3), descriptionX + descriptionPartWidth / 2, rowY + rowHeight - 2.5, { align: 'center' });
+          pdf.text(fitPdfText(String(item.quantity || 0), descriptionPartWidth - 3), descriptionX + descriptionPartWidth * 1.5, rowY + rowHeight - 2.5, {
             align: 'center',
           });
-          pdf.text(fitPdfText(formatPdfRs(item.unitPrice || 0), 24), descriptionX + 63.33, rowY + rowHeight - 2.5, {
+          pdf.text(fitPdfText(formatPdfRs(item.unitPrice || 0), descriptionPartWidth - 3), descriptionX + descriptionPartWidth * 2.5, rowY + rowHeight - 2.5, {
             align: 'center',
           });
           pdf.setFont('helvetica', 'normal');
@@ -199,10 +200,10 @@ export const downloadInvoicePdf = async ({
           pdf.text(remarksLines, remarksX + 2, rowY + 7);
           if (itemImage) {
             const imageWidth = Math.min(30, remarksWidth - 12);
-            const imageHeight = Math.min(24, Math.max(rowHeight - 20, 12));
+            const imageHeight = Math.min(26, Math.max(rowHeight - 24, 12));
             const imageX = remarksX + (remarksWidth - imageWidth) / 2;
-            const textHeight = Math.max(remarksLines.length, 1) * 4.4;
-            const imageY = Math.min(rowY + 9 + textHeight, rowY + rowHeight - imageHeight - 4);
+            const textHeight = Math.max(remarksLines.length, 1) * 4.6;
+            const imageY = Math.min(rowY + 10 + textHeight, rowY + rowHeight - imageHeight - 5);
             pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
           }
           pdf.setFont('helvetica', 'bolditalic');
@@ -213,12 +214,12 @@ export const downloadInvoicePdf = async ({
           rowY += rowHeight;
         });
 
-        const afterTableY = tableY + tableHeight + 3;
+        const afterTableY = tableY + tableHeight + 8;
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(5.4);
         pdf.text('If you have any questions concerning this quotation please tell us.', 8, afterTableY);
 
-        const detailsY = afterTableY + 6;
+        const detailsY = afterTableY + 10;
         pdf.setFont('helvetica', 'bolditalic');
         pdf.setFontSize(9);
         pdf.text('Delivery Period :', 8, detailsY);
