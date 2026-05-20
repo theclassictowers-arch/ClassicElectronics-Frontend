@@ -51,7 +51,7 @@ export const downloadInvoicePdf = async ({
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
         const tableX = 8;
-        const tableY = 69;
+        const tableY = 75;
         const tableWidth = 194;
         const headerHeight = 13;
         const minimumRowHeight = quotationItems.length <= 2 ? 40 : quotationItems.length <= 4 ? 30 : 22;
@@ -107,17 +107,17 @@ export const downloadInvoicePdf = async ({
 
         pdf.setDrawColor(...purple);
         pdf.setLineWidth(0.7);
-        pdf.roundedRect(2, 50, 206, 200, 5, 5, 'S');
+        pdf.roundedRect(2, 53, 206, 197, 5, 5, 'S');
 
         pdf.setTextColor(0, 0, 0);
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
-        pdf.text('Manage Purchase;', 8, 49);
-        pdf.text(form.companyName || 'Fecto Cement Ltd', 8, 56);
-        pdf.text(`${form.location || 'Rawalpindi'}:`, 8, 63);
+        pdf.text('Manage Purchase;', 8, 57);
+        pdf.text(form.companyName || 'Fecto Cement Ltd', 8, 64);
+        pdf.text(`${form.location || 'Rawalpindi'}:`, 8, 71);
         pdf.setFont('helvetica', 'bolditalic');
         pdf.setFontSize(8);
-        pdf.text('Reference to your quotation the details is as below.', 8, 68);
+        pdf.text('Reference to your quotation the details is as below.', 8, 74);
 
         const quotationRowHeights = quotationItems.map((item, index) => {
           const descriptionLines = splitPdfCellText(

@@ -82,9 +82,9 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute left-[4px] top-[145px] h-[801px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
+      <div className="absolute left-[4px] top-[156px] h-[790px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
 
-      <div className="absolute left-[285px] top-[145px] h-[28px] w-[485px] rounded-br-[18px] border-b-[3px] border-r-[3px] border-violet-600 bg-white" />
+      <div className="absolute left-[285px] top-[156px] h-[28px] w-[485px] rounded-br-[18px] border-b-[3px] border-r-[3px] border-violet-600 bg-white" />
 
       <div className="pointer-events-none absolute left-[118px] top-[385px] opacity-[0.14]">
         <Image
