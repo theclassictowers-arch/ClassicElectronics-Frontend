@@ -28,7 +28,7 @@ export const StandardDocumentPreview = ({
   return (
     <>
       <div className="flex items-start justify-between gap-6">
-        <div className="max-w-[210px] shrink-0">
+        <div className="max-w-[285px] shrink-0">
           <Image
             src={CLASSIC_LOGO_SRC}
             alt="Classic Electronics"
@@ -46,17 +46,17 @@ export const StandardDocumentPreview = ({
             fontStretch: 'condensed',
           }}
         >
-          <div className="text-[16px] font-black uppercase leading-[1.08] tracking-[0.04em] text-slate-950 sm:text-[18px]">
+          <div className="text-[20px] font-black uppercase leading-none text-slate-950">
             {activeDocument.pdfTitle}: {form.invoiceNo || '---'}
           </div>
-          <div className="mt-1 text-[15px] font-black leading-[1.08] text-slate-950 sm:text-[17px]">
+          <div className="mt-[2px] text-[14px] font-black leading-none text-slate-950">
             Date: {form.date || '--/--/----'}
           </div>
-          <div className="mt-2 w-full space-y-1">
-            <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
+          <div className="mt-[4px] w-full space-y-[3px]">
+            <div className="text-[14px] font-black italic leading-none text-slate-950">
               {activeDocument.purchaseLabel}: {form.purchaseOrder || '____________'}
             </div>
-            <div className="text-[14px] font-black italic leading-[1.12] text-slate-950 sm:text-[15px]">
+            <div className="text-[14px] font-black italic leading-none text-slate-950">
               {activeDocument.referenceLabel}: {form.quotationNo || '____________'}
             </div>
           </div>
@@ -98,23 +98,14 @@ export const StandardDocumentPreview = ({
                   <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                     Sr
                   </th>
-                  <th className="w-[35%] border-r-2 border-slate-950 px-2 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                  <th className="w-[43%] border-r-2 border-slate-950 px-2 py-2 text-center text-[11px] font-medium sm:text-[13px]">
                     Description
                   </th>
-                  <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
-                    UOM
+                  <th className="w-[30%] border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                    Remarks
                   </th>
-                  <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
-                    QTY
-                  </th>
-                  <th className="w-14 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
-                    Unit Price
-                  </th>
-                  <th className="w-[17%] border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
-                    Remarks/Picture
-                  </th>
-                  <th className="w-16 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
-                    Total
+                  <th className="w-[21%] px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                    Price
                   </th>
                 </tr>
               </thead>
@@ -132,15 +123,6 @@ export const StandardDocumentPreview = ({
                       </td>
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
                         {item.description || 'Item description'}
-                      </td>
-                      <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
-                        {item.uom || '--'}
-                      </td>
-                      <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
-                        {item.quantity || 0}
-                      </td>
-                      <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-[12px] sm:text-[13px]">
-                        {formatCurrency(item.unitPrice || 0)}
                       </td>
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-700 sm:text-[12px]">
                         <div className="space-y-2">
@@ -167,8 +149,27 @@ export const StandardDocumentPreview = ({
                           )}
                         </div>
                       </td>
-                      <td className="px-1 py-3 text-center text-[12px] font-semibold sm:text-[13px]">
-                        {formatCurrency(itemTotal)}
+                      <td className="p-0 text-[12px] sm:text-[13px]">
+                        <div className="grid h-full min-h-[96px] grid-rows-4">
+                          {[
+                            ['UOM', item.uom || '--', false],
+                            ['Price', formatCurrency(item.unitPrice || 0), false],
+                            ['QTY', String(item.quantity || 0), false],
+                            ['Total', formatCurrency(itemTotal), true],
+                          ].map(([label, value, isTotal]) => (
+                            <div
+                              key={String(label)}
+                              className="grid grid-cols-[42px_1fr] border-b-2 border-slate-950 last:border-b-0"
+                            >
+                              <div className={`flex items-center border-r-2 border-slate-950 px-1 ${isTotal ? 'font-bold' : ''}`}>
+                                {label}
+                              </div>
+                              <div className={`flex min-w-0 items-center justify-center overflow-hidden truncate px-1 text-center ${isTotal ? 'font-bold' : ''}`}>
+                                {value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     </tr>
                   );

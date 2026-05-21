@@ -70,9 +70,15 @@ export const downloadInvoicePdf = async ({
           );
         };
 
+        const fitPdfText = (value: string, width: number) => {
+          let text = value;
+          while (pdf.getTextWidth(text) > width && text.length > 1) {
+            text = text.slice(0, -1);
+          }
+          return text;
+        };
+
         const drawClassicFooter = () => {
-          pdf.setFillColor(245, 243, 255);
-          pdf.rect(0, 274, pageWidth, 23, 'F');
           const footerAddress = form.address || '133G St # 109 Sector G 11/3, Islamabad';
           const footerAddressLines = footerAddress.toLowerCase().includes('islamabad')
             ? [footerAddress.replace(/,?\s*islamabad/i, '').trim(), 'Islamabad']
@@ -125,10 +131,10 @@ export const downloadInvoicePdf = async ({
         const headerHeight = 13;
         const minimumRowHeight = 20;
         const srWidth = 10;
-        const descriptionWidth = 76;
-        const remarksWidth = 78;
-        const totalWidth = tableWidth - srWidth - descriptionWidth - remarksWidth;
-        const descriptionPartWidth = descriptionWidth / 3;
+        const descriptionWidth = 93;
+        const remarksWidth = 60;
+        const priceLabelWidth = 12;
+        const priceValueWidth = tableWidth - srWidth - descriptionWidth - remarksWidth - priceLabelWidth;
         const splitPdfCellText = (value: string, width: number, fontSize = 8) => {
           const previousFontSize = pdf.getFontSize();
           pdf.setFontSize(fontSize);
@@ -180,7 +186,8 @@ export const downloadInvoicePdf = async ({
         });
         const descriptionX = tableX + srWidth;
         const remarksX = descriptionX + descriptionWidth;
-        const totalX = remarksX + remarksWidth;
+        const priceX = remarksX + remarksWidth;
+        const priceValueX = priceX + priceLabelWidth;
 
         const contentBottomY = 250;
         const detailsBlockHeight = 60;
@@ -230,21 +237,15 @@ export const downloadInvoicePdf = async ({
           pdf.rect(tableX, startY, tableWidth, headerHeight);
           pdf.line(descriptionX, startY, descriptionX, startY + headerHeight);
           pdf.line(remarksX, startY, remarksX, startY + headerHeight);
-          pdf.line(totalX, startY, totalX, startY + headerHeight);
-          pdf.line(descriptionX, startY + 6.5, remarksX, startY + 6.5);
-          pdf.line(descriptionX + descriptionPartWidth, startY + 6.5, descriptionX + descriptionPartWidth, startY + headerHeight);
-          pdf.line(descriptionX + descriptionPartWidth * 2, startY + 6.5, descriptionX + descriptionPartWidth * 2, startY + headerHeight);
+          pdf.line(priceX, startY, priceX, startY + headerHeight);
 
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(7.6);
           pdf.setTextColor(0, 0, 0);
           pdf.text('Sr', tableX + 5, startY + 8.4, { align: 'center' });
-          pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, startY + 4.5, { align: 'center' });
-          pdf.text('UOM', descriptionX + descriptionPartWidth / 2, startY + 11.4, { align: 'center' });
-          pdf.text('QTY', descriptionX + descriptionPartWidth * 1.5, startY + 11.4, { align: 'center' });
-          pdf.text('Unit Price', descriptionX + descriptionPartWidth * 2.5, startY + 11.4, { align: 'center' });
-          pdf.text('Remarks/Picture', remarksX + remarksWidth / 2, startY + 8.4, { align: 'center' });
-          pdf.text('Total', totalX + totalWidth / 2, startY + 8.4, { align: 'center' });
+          pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, startY + 8.4, { align: 'center' });
+          pdf.text('Remarks', remarksX + remarksWidth / 2, startY + 8.4, { align: 'center' });
+          pdf.text('Price', priceX + (priceLabelWidth + priceValueWidth) / 2, startY + 8.4, { align: 'center' });
 
           return startY + headerHeight;
         };
@@ -258,10 +259,12 @@ export const downloadInvoicePdf = async ({
           pdf.rect(tableX, rowY, tableWidth, rowHeight);
           pdf.line(descriptionX, rowY, descriptionX, rowY + rowHeight);
           pdf.line(remarksX, rowY, remarksX, rowY + rowHeight);
-          pdf.line(totalX, rowY, totalX, rowY + rowHeight);
-          pdf.line(descriptionX, rowY + rowHeight - 8, remarksX, rowY + rowHeight - 8);
-          pdf.line(descriptionX + descriptionPartWidth, rowY + rowHeight - 8, descriptionX + descriptionPartWidth, rowY + rowHeight);
-          pdf.line(descriptionX + descriptionPartWidth * 2, rowY + rowHeight - 8, descriptionX + descriptionPartWidth * 2, rowY + rowHeight);
+          pdf.line(priceX, rowY, priceX, rowY + rowHeight);
+          pdf.line(priceValueX, rowY, priceValueX, rowY + rowHeight);
+          for (let priceRowIndex = 1; priceRowIndex < 4; priceRowIndex += 1) {
+            const priceRowY = rowY + (rowHeight / 4) * priceRowIndex;
+            pdf.line(priceX, priceRowY, tableX + tableWidth, priceRowY);
+          }
 
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(8);
@@ -273,12 +276,19 @@ export const downloadInvoicePdf = async ({
           );
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
-          pdf.text(fitPdfText(item.uom || 'NOS', descriptionPartWidth - 3), descriptionX + descriptionPartWidth / 2, rowY + rowHeight - 2.5, { align: 'center' });
-          pdf.text(fitPdfText(String(item.quantity || 0), descriptionPartWidth - 3), descriptionX + descriptionPartWidth * 1.5, rowY + rowHeight - 2.5, {
-            align: 'center',
-          });
-          pdf.text(fitPdfText(formatPdfRs(item.unitPrice || 0), descriptionPartWidth - 3), descriptionX + descriptionPartWidth * 2.5, rowY + rowHeight - 2.5, {
-            align: 'center',
+          const priceRows: Array<[string, string, boolean]> = [
+            ['UOM', item.uom || 'NOS', false],
+            ['Price', formatPdfRs(item.unitPrice || 0), false],
+            ['QTY', String(item.quantity || 0), false],
+            ['Total', formatPdfRs(itemTotal), true],
+          ];
+          priceRows.forEach(([label, value, isTotal], priceRowIndex) => {
+            const priceTextY = rowY + (rowHeight / 4) * priceRowIndex + rowHeight / 8 + 1.5;
+            pdf.setFont('helvetica', isTotal ? 'bolditalic' : 'italic');
+            pdf.text(label, priceX + 1.2, priceTextY);
+            pdf.text(fitPdfText(value, priceValueWidth - 2), priceValueX + priceValueWidth / 2, priceTextY, {
+              align: 'center',
+            });
           });
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(7.5);
@@ -296,11 +306,6 @@ export const downloadInvoicePdf = async ({
             const imageY = Math.min(rowY + 5 + textHeight, rowY + rowHeight - imageHeight - 1.5);
             pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
           }
-          pdf.setFont('helvetica', 'bolditalic');
-          pdf.setFontSize(8.2);
-          pdf.text(formatPdfRs(itemTotal), totalX + totalWidth / 2, rowY + rowHeight / 2 + 2, {
-            align: 'center',
-          });
         };
 
         const drawQuotationTotals = (detailsY: number) => {
@@ -388,7 +393,7 @@ export const downloadInvoicePdf = async ({
           const rowHeight = 22.5;
           const visibleRows = Math.max(items.length, 1);
           const tableHeight = headerHeight + rowHeight * visibleRows;
-          const columns = [29, 80, 25, 38];
+          const columns = [17, 82, 43, 30];
           const lineColor: [number, number, number] = [0, 0, 0];
 
           pdf.setFillColor(255, 255, 255);
@@ -446,31 +451,42 @@ export const downloadInvoicePdf = async ({
 
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(10.5);
-          pdf.text('S.No', tableX + 10.5, tableY + 4.2);
-          pdf.text('Particulars', tableX + 60, tableY + 4.2);
-          pdf.text('Qty', tableX + 113, tableY + 4.2);
-          pdf.text('Remarks', tableX + 137, tableY + 4.2);
+          pdf.text('S.No', tableX + 4.5, tableY + 4.2);
+          pdf.text('Particulars', tableX + 47, tableY + 4.2);
+          pdf.text('Remarks', tableX + 111, tableY + 4.2);
+          pdf.text('Details', tableX + 155, tableY + 4.2);
 
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
 
           items.forEach((item, index) => {
             const rowTop = tableY + headerHeight + index * rowHeight;
+            const detailsX = tableX + columns[0] + columns[1] + columns[2];
+            const detailsLabelWidth = 11;
 
-            pdf.text(String(index + 1), tableX + 14, rowTop + 12.5);
-            pdf.text(String(item.quantity || ''), tableX + 118, rowTop + 12.5, {
-              align: 'center',
-            });
+            pdf.text(String(index + 1), tableX + 8.5, rowTop + 12.5, { align: 'center' });
             pdf.text(
-              pdf.splitTextToSize(item.remarks || '', columns[3] - 4),
-              tableX + 136,
+              pdf.splitTextToSize(item.remarks || '', columns[2] - 4),
+              tableX + columns[0] + columns[1] + 2,
               rowTop + 12.5
             );
             pdf.text(
               pdf.splitTextToSize(item.description || item.productName || 'Item particulars', columns[1] - 5),
-              tableX + 31,
+              tableX + columns[0] + 2,
               rowTop + 12.2
             );
+            pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + rowHeight);
+            pdf.line(detailsX, rowTop + rowHeight / 2, detailsX + columns[3], rowTop + rowHeight / 2);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('UOM', detailsX + 1.2, rowTop + 7.2);
+            pdf.text('QTY', detailsX + 1.2, rowTop + rowHeight / 2 + 7.2);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + 7.2, {
+              align: 'center',
+            });
+            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + rowHeight / 2 + 7.2, {
+              align: 'center',
+            });
           });
 
           const signatureY = 135;
@@ -495,8 +511,8 @@ export const downloadInvoicePdf = async ({
       const innerPadding = 4;
       const contentLeftX = margin + innerPadding;
       const contentRightX = pageWidth - margin - innerPadding;
-      const tableColumnWidths = [10, 72, 9, 9, 15, 38, 29];
-      const tableHeaders = ['Sr', 'Description', 'UOM', 'QTY', 'Unit Price', 'Remarks/Picture', 'Total'];
+      const tableColumnWidths = [10, 77, 55, 40];
+      const tableHeaders = ['Sr', 'Description', 'Remarks', 'Price'];
       const primaryTextColor: [number, number, number] = [15, 23, 42];
       const mutedTextColor: [number, number, number] = [71, 85, 105];
       const accentColor: [number, number, number] = [109, 40, 217];
@@ -604,25 +620,25 @@ export const downloadInvoicePdf = async ({
         drawClassicFooter();
 
         if (logoDataUrl) {
-          pdf.addImage(logoDataUrl, 'PNG', contentLeftX, 8, 50, 19, undefined, 'FAST');
+          pdf.addImage(logoDataUrl, 'PNG', contentLeftX, 5, 79, 30, undefined, 'FAST');
         }
 
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...primaryTextColor);
-        pdf.setFontSize(15);
-        pdf.text(`${activeDocument.pdfTitle}: ${form.invoiceNo || '---'}`, contentRightX, 15, {
+        pdf.setFontSize(16);
+        pdf.text(`${activeDocument.pdfTitle}: ${form.invoiceNo || '---'}`, contentRightX, 14, {
           align: 'right',
         });
-        pdf.setFontSize(13.2);
-        pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 22.5, {
+        pdf.setFontSize(12);
+        pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 19, {
           align: 'right',
         });
         pdf.setFont('helvetica', 'bolditalic');
-        pdf.setFontSize(10.8);
-        pdf.text(`${activeDocument.purchaseLabel}: ${form.purchaseOrder || '____________'}`, contentRightX, 29.5, {
+        pdf.setFontSize(12);
+        pdf.text(`${activeDocument.purchaseLabel}: ${form.purchaseOrder || '____________'}`, contentRightX, 24, {
           align: 'right',
         });
-        pdf.text(`${activeDocument.referenceLabel}: ${form.quotationNo || '____________'}`, contentRightX, 36.5, {
+        pdf.text(`${activeDocument.referenceLabel}: ${form.quotationNo || '____________'}`, contentRightX, 29, {
           align: 'right',
         });
 
@@ -665,7 +681,7 @@ export const downloadInvoicePdf = async ({
         ) as string[];
         const remarksLines = pdf.splitTextToSize(
           item.remarks || item.productName || 'Remarks',
-          tableColumnWidths[5] - 4
+          tableColumnWidths[2] - 4
         ) as string[];
         const itemImage = itemImageDataUrls[index];
         const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
@@ -673,7 +689,7 @@ export const downloadInvoicePdf = async ({
         const descriptionHeight = Math.max(descriptionLines.length, 1) * 4;
         const remarksHeight = Math.max(remarksLines.length, 1) * 4;
         const imageHeight = itemImage ? 18 : 0;
-        const rowHeight = Math.max(16, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6);
+        const rowHeight = Math.max(28, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6);
 
         if (cursorY + rowHeight > outerBorderBottomY - 8) {
           pdf.addPage();
@@ -683,48 +699,58 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(...primaryTextColor);
         }
 
-        let currentX = contentLeftX;
-        const rowValues = [
-          String(index + 1),
-          descriptionLines,
-          item.uom || '--',
-          String(item.quantity || 0),
-          formatCurrency(item.unitPrice || 0),
-          remarksLines,
-          formatCurrency(itemTotal),
-        ] as const;
+        const srX = contentLeftX;
+        const descriptionCellX = srX + tableColumnWidths[0];
+        const remarksCellX = descriptionCellX + tableColumnWidths[1];
+        const priceCellX = remarksCellX + tableColumnWidths[2];
+        const priceLabelWidth = 13;
+        const priceValueWidth = tableColumnWidths[3] - priceLabelWidth;
 
-        rowValues.forEach((value, valueIndex) => {
-          const cellWidth = tableColumnWidths[valueIndex];
-          pdf.setDrawColor(...borderColor);
-          pdf.rect(currentX, cursorY, cellWidth, rowHeight);
-
-          if (valueIndex === 1) {
-            pdf.text(value as string[], currentX + 2, cursorY + 4.8);
-          } else if (valueIndex === 5) {
-            pdf.setTextColor(...mutedTextColor);
-            pdf.text(value as string[], currentX + 2, cursorY + 4.8);
-
-            if (itemImage) {
-              const imageY = cursorY + Math.max(remarksHeight + 4, 10);
-              const maxImageWidth = cellWidth - 4;
-              const maxImageHeight = Math.max(rowHeight - (imageY - cursorY) - 2, 8);
-              const imageSize = Math.min(maxImageWidth, maxImageHeight);
-
-              if (imageSize > 6) {
-                pdf.addImage(itemImage, 'PNG', currentX + 2, imageY, imageSize, imageSize, undefined, 'FAST');
-              }
-            }
-
-            pdf.setTextColor(...primaryTextColor);
-          } else {
-            pdf.text(String(value), currentX + cellWidth / 2, cursorY + 6, {
-              align: 'center',
-            });
-          }
-
-          currentX += cellWidth;
+        pdf.setDrawColor(...borderColor);
+        [srX, descriptionCellX, remarksCellX, priceCellX].forEach((cellX, cellIndex) => {
+          pdf.rect(cellX, cursorY, tableColumnWidths[cellIndex], rowHeight);
         });
+
+        pdf.text(String(index + 1), srX + tableColumnWidths[0] / 2, cursorY + rowHeight / 2 + 2, {
+          align: 'center',
+        });
+        pdf.text(descriptionLines, descriptionCellX + 2, cursorY + 4.8);
+
+        pdf.setTextColor(...mutedTextColor);
+        pdf.text(remarksLines, remarksCellX + 2, cursorY + 4.8);
+        if (itemImage) {
+          const imageY = cursorY + Math.max(remarksHeight + 4, 10);
+          const maxImageWidth = tableColumnWidths[2] - 4;
+          const maxImageHeight = Math.max(rowHeight - (imageY - cursorY) - 2, 8);
+          const imageSize = Math.min(maxImageWidth, maxImageHeight);
+
+          if (imageSize > 6) {
+            pdf.addImage(itemImage, 'PNG', remarksCellX + 2, imageY, imageSize, imageSize, undefined, 'FAST');
+          }
+        }
+        pdf.setTextColor(...primaryTextColor);
+
+        pdf.line(priceCellX + priceLabelWidth, cursorY, priceCellX + priceLabelWidth, cursorY + rowHeight);
+        for (let priceRowIndex = 1; priceRowIndex < 4; priceRowIndex += 1) {
+          const priceRowY = cursorY + (rowHeight / 4) * priceRowIndex;
+          pdf.line(priceCellX, priceRowY, priceCellX + tableColumnWidths[3], priceRowY);
+        }
+
+        const priceRows: Array<[string, string, boolean]> = [
+          ['UOM', item.uom || '--', false],
+          ['Price', formatCurrency(item.unitPrice || 0), false],
+          ['QTY', String(item.quantity || 0), false],
+          ['Total', formatCurrency(itemTotal), true],
+        ];
+        priceRows.forEach(([label, value, isTotal], priceRowIndex) => {
+          const priceTextY = cursorY + (rowHeight / 4) * priceRowIndex + rowHeight / 8 + 1.5;
+          pdf.setFont('helvetica', isTotal ? 'bold' : 'normal');
+          pdf.text(label, priceCellX + 1.2, priceTextY);
+          pdf.text(fitPdfText(value, priceValueWidth - 2), priceCellX + priceLabelWidth + priceValueWidth / 2, priceTextY, {
+            align: 'center',
+          });
+        });
+        pdf.setFont('helvetica', 'normal');
 
         cursorY += rowHeight;
       }

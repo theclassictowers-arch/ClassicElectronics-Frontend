@@ -109,25 +109,20 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         className="absolute left-[30px] w-[710px] border-[2px] border-black bg-white text-[14px]"
         style={{ top: tableTop }}
       >
-        <div className="grid h-[48px] grid-cols-[38px_270px_285px_117px] border-b-[2px] border-black text-center">
+        <div className="grid h-[48px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[13px]">
           <div className="flex items-center justify-center border-r-[2px] border-black">
             Sr
           </div>
 
-          <div className="border-r-[2px] border-black">
-            <div className="h-[24px] leading-[24px]">DESCRIPTION</div>
-            <div className="grid h-[24px] grid-cols-3 border-t-[2px] border-black leading-[24px]">
-              <div className="border-r-[2px] border-black">UOM</div>
-              <div className="border-r-[2px] border-black">QTY</div>
-              <div>Unit Price</div>
-            </div>
+          <div className="flex items-center justify-center border-r-[2px] border-black">
+            DESCRIPTION
           </div>
 
           <div className="flex items-center justify-center border-r-[2px] border-black">
-            Remarks/Picture
+            Remarks
           </div>
 
-          <div className="flex items-center justify-center">Total</div>
+          <div className="flex items-center justify-center">Price</div>
         </div>
 
         {quotationItems.map((item, index) => {
@@ -138,46 +133,21 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
           return (
             <div
               key={item.id}
-              className="grid min-w-0 grid-cols-[38px_270px_285px_117px] overflow-hidden border-b-[2px] border-black last:border-b-0"
+              className="grid min-w-0 grid-cols-[38px_330px_220px_122px] overflow-hidden border-b-[2px] border-black last:border-b-0"
               style={{ minHeight: rowHeight }}
             >
               <div className="flex items-center justify-center border-r-[2px] border-black">
                 {index + 1}
               </div>
 
-              <div className="grid min-w-0 grid-rows-[1fr_30px] border-r-[2px] border-black">
-                <div
-                  className="min-h-0 overflow-hidden px-3 py-4 text-[14px] leading-[21px]"
-                  style={{
-                    overflowWrap: 'anywhere',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {item.description || item.productName || ''}
-                </div>
-
-                <div className="grid min-w-0 grid-cols-[90px_90px_90px] overflow-hidden border-t-[2px] border-black text-center text-[15px] italic leading-[30px]">
-                  <div
-                    className="min-w-0 overflow-hidden truncate border-r-[2px] border-black px-1"
-                    title={item.uom || 'NOS'}
-                  >
-                    {item.uom || 'NOS'}
-                  </div>
-
-                  <div
-                    className="min-w-0 overflow-hidden truncate border-r-[2px] border-black bg-sky-100 px-1"
-                    title={String(item.quantity || 0)}
-                  >
-                    {item.quantity || 0}
-                  </div>
-
-                  <div
-                    className="min-w-0 overflow-hidden truncate px-1"
-                    title={formatCurrency(item.unitPrice || 0)}
-                  >
-                    {formatCurrency(item.unitPrice || 0)}
-                  </div>
-                </div>
+              <div
+                className="min-h-0 overflow-hidden border-r-[2px] border-black px-3 py-4 text-[14px] leading-[21px]"
+                style={{
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {item.description || item.productName || ''}
               </div>
 
               <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
@@ -205,8 +175,25 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                 </div>
               </div>
 
-              <div className="flex items-center justify-center overflow-hidden px-2 text-center text-[17px] font-bold italic">
-                {formatCurrency(itemTotal)}
+              <div className="grid min-w-0 grid-rows-4 overflow-hidden text-[13px] leading-none">
+                {[
+                  ['UOM', item.uom || 'NOS', false],
+                  ['Price', formatCurrency(item.unitPrice || 0), false],
+                  ['QTY', String(item.quantity || 0), false],
+                  ['Total', formatCurrency(itemTotal), true],
+                ].map(([label, value, isTotal]) => (
+                  <div
+                    key={String(label)}
+                    className="grid grid-cols-[45px_1fr] border-b-[2px] border-black last:border-b-0"
+                  >
+                    <div className={`flex items-center border-r-[2px] border-black px-1 ${isTotal ? 'font-bold' : ''}`}>
+                      {label}
+                    </div>
+                    <div className={`flex min-w-0 items-center justify-center overflow-hidden truncate px-1 text-center ${isTotal ? 'font-bold' : ''}`}>
+                      {value}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           );

@@ -22,7 +22,7 @@ export const DocumentFooter = ({ form, className = '' }: DocumentFooterProps) =>
   const addressLines = getFooterAddressLines(form.address);
 
   return (
-    <div className={`h-[66px] w-full shrink-0 bg-violet-50 px-0 py-0 text-black ${className}`}>
+    <div className={`h-[66px] w-full shrink-0 px-0 py-0 text-black ${className}`}>
       <div className="relative h-full w-full">
         <div className="absolute bottom-[4px] left-0 right-0 grid grid-cols-3 text-[11px] leading-[14px]">
           <div className="flex h-[52px] translate-x-[10px] items-end justify-center gap-2 text-center">

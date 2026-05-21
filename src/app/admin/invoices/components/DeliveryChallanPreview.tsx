@@ -55,10 +55,10 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
     <table className="mt-1 w-full table-fixed border-collapse border border-black text-[14px]">
       <thead>
         <tr className="h-6 border-b border-black">
-          <th className="w-[17%] border-r border-black text-center font-semibold">S.No</th>
-          <th className="w-[47%] border-r border-black text-center font-semibold">Particulars</th>
-          <th className="w-[14%] border-r border-black text-center font-semibold">Qty</th>
-          <th className="w-[22%] text-center font-semibold">Remarks</th>
+          <th className="w-[10%] border-r border-black text-center font-semibold">S.No</th>
+          <th className="w-[48%] border-r border-black text-center font-semibold">Particulars</th>
+          <th className="w-[24%] border-r border-black text-center font-semibold">Remarks</th>
+          <th className="w-[18%] text-center font-semibold">Details</th>
         </tr>
       </thead>
       <tbody>
@@ -68,8 +68,20 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
             <td className="border-r border-black px-3 py-8">
               {item.description || item.productName || 'Item particulars'}
             </td>
-            <td className="border-r border-black px-3 py-8 text-center">{item.quantity || ''}</td>
-            <td className="px-3 py-8">{item.remarks}</td>
+            <td className="border-r border-black px-3 py-8">{item.remarks}</td>
+            <td className="p-0">
+              <div className="grid h-24 grid-rows-2">
+                {[
+                  ['UOM', item.uom || 'PCS'],
+                  ['QTY', String(item.quantity || '')],
+                ].map(([label, value]) => (
+                  <div key={label} className="grid grid-cols-[44px_1fr] border-b border-black last:border-b-0">
+                    <div className="flex items-center border-r border-black px-1 font-semibold">{label}</div>
+                    <div className="flex items-center justify-center px-1 text-center">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </td>
           </tr>
         ))}
       </tbody>
