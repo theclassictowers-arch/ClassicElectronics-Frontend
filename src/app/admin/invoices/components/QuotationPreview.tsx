@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import { Mail } from 'lucide-react';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
 import { createInvoiceItem, formatCurrency, getPictureSource } from '../utils';
+import { DocumentFooter } from './DocumentFooter';
 
 type QuotationPreviewProps = {
   form: InvoiceForm;
@@ -49,7 +49,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
   });
 
-  const tableTop = 260;
+  const tableTop = 236;
   const tableHeaderHeight = 48;
   const tableHeight =
     tableHeaderHeight + rowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
@@ -70,22 +70,22 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute right-[22px] top-[10px] text-right font-black">
-        <div className="text-[34px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
-        <div className="mt-[4px] text-[22px] leading-none">
+      <div className="absolute right-[22px] top-[8px] text-right font-black">
+        <div className="text-[20px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
+        <div className="mt-[2px] text-[14px] leading-none">
           Date: {form.date || '01/04/2026'}
         </div>
-        <div className="mt-[10px] text-[22px] italic leading-none">
+        <div className="mt-[4px] text-[14px] italic leading-none">
           Indent No: {form.purchaseOrder || ''}
         </div>
-        <div className="mt-[6px] text-[22px] italic leading-none">
+        <div className="mt-[3px] text-[14px] italic leading-none">
           Enquiry No: {form.quotationNo || ''}
         </div>
       </div>
 
-      <div className="absolute left-[4px] top-[156px] h-[790px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
+      <div className="absolute left-[4px] top-[132px] h-[874px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
 
-      <div className="pointer-events-none absolute left-[118px] top-[385px] opacity-[0.14]">
+      <div className="pointer-events-none absolute left-[118px] top-[351px] opacity-[0.14]">
         <Image
           src={CLASSIC_LOGO_SRC}
           alt=""
@@ -95,13 +95,13 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[32px] top-[170px] text-[15px] leading-[18px]">
+      <div className="absolute left-[32px] top-[146px] text-[15px] leading-[18px]">
         <div>Manage Purchase;</div>
         <div>{form.companyName || 'Fecto Cement Ltd'}</div>
         <div>{form.location || 'Rawalpindi'}:</div>
       </div>
 
-      <div className="absolute left-[30px] top-[230px] text-[14px] font-bold italic">
+      <div className="absolute left-[30px] top-[206px] text-[13px] font-bold italic">
         Reference to your quotation the details is as below.
       </div>
 
@@ -213,7 +213,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         })}
       </div>
 
-      <div className="absolute left-[30px] text-[10px] italic" style={{ top: noteTop }}>
+      <div className="absolute left-[30px] text-[13px] font-bold italic" style={{ top: noteTop }}>
         If you have any questions concerning this quotation please tell us.
       </div>
 
@@ -241,80 +241,35 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
           {formatCurrency(totalAmount)}
         </div>
 
-        <div>Tax</div>
-        <div className="border-x-[2px] border-b-[2px] border-black text-center font-normal">
-          18%
-        </div>
-
-        <div>Total</div>
+        <div>Tax 18%</div>
         <div className="border-x-[2px] border-b-[2px] border-black text-center font-normal">
           {formatCurrency(taxAmount)}
         </div>
 
-        <div>Total as</div>
+        <div>Total</div>
         <div className="border-x-[2px] border-b-[2px] border-black text-center font-normal">
           {formatCurrency(grandTotal)}
         </div>
       </div>
 
-      <div className="absolute left-[18px] top-[760px] w-[160px]">
+      <div className="absolute left-[30px] top-[885px] w-[145px]">
         <Image
           src="/quotation-stamp-signature.png"
           alt=""
           width={250}
           height={150}
-          className="h-auto w-[150px] mix-blend-multiply"
+          className="h-auto w-[135px] mix-blend-multiply"
         />
       </div>
 
-      <div className="absolute bottom-[48px] left-[150px]">
-        <Image
-          src="/quotation-globe.png"
-          alt=""
-          width={90}
-          height={90}
-          className="h-auto w-[38px]"
-        />
+      <div className="absolute left-[30px] top-[964px] text-left text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+        {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
+      </div>
+      <div className="absolute left-0 right-0 top-[980px] text-center text-[11px] font-bold leading-none text-black">
+        {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
       </div>
 
-      <div className="absolute bottom-[82px] left-0 right-0 text-center">
-        <div className="text-[17px] font-bold italic text-violet-700">
-          THANK YOU FOR YOUR BUSINESS!
-        </div>
-        <div className="mt-[4px] text-[10px] font-bold">
-          A wide range of industrial instrument & sensing solutions
-        </div>
-      </div>
-
-      <div className="absolute bottom-[48px] left-[383px] flex h-[28px] w-[28px] items-center justify-center rounded-full border-[2px] border-blue-600 text-blue-600">
-        <Mail size={17} strokeWidth={2.4} />
-      </div>
-
-      <div className="absolute bottom-[8px] left-[88px] w-[190px] text-center text-[11px] leading-[14px]">
-        <div>{form.website || 'www.classicelectronics.com.pk'}</div>
-        <div>{form.address || '133 G St # 109 Sector G 11/3 Islamabad'}</div>
-      </div>
-
-      <div className="absolute bottom-[8px] left-[302px] w-[210px] text-center text-[11px] leading-[14px]">
-        <div className="font-bold">NTN: 1700506</div>
-        <div className="font-bold">GST: 05-07-8500-014-73</div>
-        <div>{form.email || 'sales@classicelectronics.com.pk'}</div>
-      </div>
-
-      <div className="absolute bottom-[49px] right-[84px]">
-        <Image
-          src="/quotation-whatsapp.png"
-          alt=""
-          width={60}
-          height={60}
-          className="h-auto w-[30px]"
-        />
-      </div>
-
-      <div className="absolute bottom-[12px] right-[8px] w-[125px] text-center text-[12px] leading-[15px]">
-        <div>{form.phonePrimary || '+92 3 111 777 510'}</div>
-        <div>{form.phoneSecondary || '+92 321 5180308'}</div>
-      </div>
+      <DocumentFooter form={form} className="absolute bottom-[10px] left-0 right-0" />
     </div>
   );
 };

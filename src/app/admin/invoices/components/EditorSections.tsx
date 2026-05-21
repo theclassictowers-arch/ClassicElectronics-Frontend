@@ -120,10 +120,16 @@ export const CustomerDetailsSection = ({
         label="Saved Customer"
         value={selectedCustomerId}
         onChange={onCustomerSelect}
-        options={customers.map((customer) => ({
-          label: customer.location ? `${customer.name} - ${customer.location}` : customer.name,
-          value: customer._id,
-        }))}
+        options={customers.map((customer) => {
+          const customerLocation =
+            [customer.location1, customer.location2, customer.city].filter(Boolean).join(', ') ||
+            customer.location;
+
+          return {
+            label: customerLocation ? `${customer.name} - ${customerLocation}` : customer.name,
+            value: customer._id,
+          };
+        })}
         placeholder={customerLoading ? 'Loading customers...' : 'Select customer'}
         disabled={customerLoading || customers.length === 0}
       />

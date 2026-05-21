@@ -26,7 +26,9 @@ type SortKey = 'name' | 'location' | 'gst' | 'ntn' | 'email' | 'status' | 'updat
 type SortDirection = 'asc' | 'desc';
 type CustomerForm = {
   name: string;
-  location: string;
+  location1: string;
+  location2: string;
+  city: string;
   gst: string;
   ntn: string;
   email: string;
@@ -39,7 +41,9 @@ type CustomerForm = {
 
 const emptyCustomerForm = (): CustomerForm => ({
   name: '',
-  location: '',
+  location1: '',
+  location2: '',
+  city: '',
   gst: '',
   ntn: '',
   email: '',
@@ -50,9 +54,19 @@ const emptyCustomerForm = (): CustomerForm => ({
   status: 'active',
 });
 
+const getCustomerLocation = (customer: CustomerRecord): string =>
+  [customer.location1, customer.location2, customer.city].filter(Boolean).join(', ') ||
+  customer.location ||
+  '';
+
+const getFormLocation = (form: CustomerForm): string =>
+  [form.location1, form.location2, form.city].map((value) => value.trim()).filter(Boolean).join(', ');
+
 const toCustomerForm = (customer: CustomerRecord): CustomerForm => ({
   name: customer.name || '',
-  location: customer.location || '',
+  location1: customer.location1 || customer.location || '',
+  location2: customer.location2 || '',
+  city: customer.city || '',
   gst: customer.gst ? normalizeCustomerGst(customer.gst) : '',
   ntn: customer.ntn ? formatNtnNumber(customer.ntn) : '',
   email: customer.email || '',
@@ -65,7 +79,10 @@ const toCustomerForm = (customer: CustomerRecord): CustomerForm => ({
 
 const toPayload = (form: CustomerForm): CustomerPayload => ({
   name: form.name.trim(),
-  location: form.location.trim(),
+  location: getFormLocation(form),
+  location1: form.location1.trim(),
+  location2: form.location2.trim(),
+  city: form.city.trim(),
   gst: normalizeCustomerGst(form.gst).trim(),
   ntn: formatNtnNumber(form.ntn).trim(),
   email: form.email.trim(),
@@ -108,7 +125,7 @@ const formatDateTime = (value?: string) => {
 };
 
 const getSortValue = (customer: CustomerRecord, key: SortKey): string =>
-  String(customer[key] || '').toLowerCase();
+  String(key === 'location' ? getCustomerLocation(customer) : customer[key] || '').toLowerCase();
 
 const CustomersAdminPage = () => {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
@@ -159,6 +176,9 @@ const CustomersAdminPage = () => {
         return [
           customer.name,
           customer.location,
+          customer.location1,
+          customer.location2,
+          customer.city,
           customer.gst,
           customer.ntn,
           customer.email,
@@ -309,7 +329,7 @@ const CustomersAdminPage = () => {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name, location, GST, NTN, email or phone..."
+              placeholder="Search name, location, city, GST, NTN, email or phone..."
               className="w-full rounded-lg border border-slate-700 bg-[#0b1120] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
             />
           </div>
@@ -366,7 +386,7 @@ const CustomersAdminPage = () => {
                       <div className="truncate font-semibold text-white">{customer.name || '---'}</div>
                       <div className="mt-1 truncate text-xs text-slate-500">{customer.contactPerson || 'No contact person'}</div>
                     </td>
-                    <td className="p-4 text-sm text-slate-300">{customer.location || '---'}</td>
+                    <td className="p-4 text-sm text-slate-300">{getCustomerLocation(customer) || '---'}</td>
                     <td className="p-4 text-sm text-slate-300">{customer.gst || '---'}</td>
                     <td className="p-4 text-sm text-slate-300">{customer.ntn || '---'}</td>
                     <td className="p-4">
@@ -429,7 +449,9 @@ const CustomersAdminPage = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Detail icon={Building2} label="Name" value={selectedCustomer.name} />
-              <Detail icon={MapPin} label="Location" value={selectedCustomer.location} />
+              <Detail icon={MapPin} label="Location 1" value={selectedCustomer.location1 || selectedCustomer.location} />
+              <Detail icon={MapPin} label="Location 2" value={selectedCustomer.location2} />
+              <Detail icon={MapPin} label="City" value={selectedCustomer.city} />
               <Detail icon={Building2} label="GST" value={selectedCustomer.gst} />
               <Detail icon={Building2} label="NTN" value={selectedCustomer.ntn} />
               <Detail icon={Mail} label="Email" value={selectedCustomer.email} />
@@ -455,7 +477,7 @@ const CustomersAdminPage = () => {
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-white">{editingCustomer ? 'Edit Customer' : 'Add Customer'}</h2>
-                <p className="text-sm text-slate-400">Same name and same location will not be duplicated.</p>
+                <p className="text-sm text-slate-400">Same name and same location details will not be duplicated.</p>
               </div>
               <button
                 type="button"
@@ -468,7 +490,9 @@ const CustomersAdminPage = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <EditorField label="Customer Name" value={form.name} onChange={(value) => handleFormChange('name', value)} />
-              <EditorField label="Location" value={form.location} onChange={(value) => handleFormChange('location', value)} />
+              <EditorField label="Location 1" value={form.location1} onChange={(value) => handleFormChange('location1', value)} />
+              <EditorField label="Location 2" value={form.location2} onChange={(value) => handleFormChange('location2', value)} />
+              <EditorField label="City" value={form.city} onChange={(value) => handleFormChange('city', value)} />
               <EditorField
                 label="GST"
                 value={form.gst}

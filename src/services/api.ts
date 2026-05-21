@@ -694,6 +694,9 @@ export type CustomerRecord = {
   _id: string;
   name: string;
   location: string;
+  location1?: string;
+  location2?: string;
+  city?: string;
   gst: string;
   ntn: string;
   email: string;

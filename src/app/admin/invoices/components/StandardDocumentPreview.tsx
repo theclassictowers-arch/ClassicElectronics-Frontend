@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import { Globe, Mail, Phone } from 'lucide-react';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from '../types';
 import { SALES_TAX_RATE, documentTypes, formatCurrency, getPictureSource } from '../utils';
+import { DocumentFooter } from './DocumentFooter';
 
 type ActiveDocument = (typeof documentTypes)[number];
 
@@ -64,7 +64,7 @@ export const StandardDocumentPreview = ({
       </div>
 
       <div
-        className="relative mt-5 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
+        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
         style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
       >
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
@@ -212,65 +212,18 @@ export const StandardDocumentPreview = ({
             </div>
           </div>
 
+          <div className="absolute bottom-4 left-5 text-left text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+            {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
+          </div>
+          <div className="absolute bottom-4 left-0 right-0 text-center text-[11px] font-bold leading-none text-black">
+            {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
+          </div>
+
           <div className="flex-1" />
-
-          <div className="pt-10 text-right">
-            <div className="text-base font-bold text-violet-700 sm:text-[20px]">
-              {form.thankYouNote}
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-[22px] border-2 border-violet-600 bg-white/85 px-4 py-3">
-            <div className="pb-2 text-center text-[12px] font-semibold text-slate-900 sm:text-[13px]">
-              {form.subtitle}
-            </div>
-            <div className="grid min-w-0 gap-4 border-t border-violet-200 pt-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] md:items-start">
-              <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-                <div className="rounded-lg bg-cyan-100 p-2 text-cyan-700">
-                  <Globe size={15} />
-                </div>
-                <div className="min-w-0">
-                  <div className="whitespace-nowrap text-[12px] font-semibold text-slate-900">
-                    {form.website}
-                  </div>
-                  <div className="mt-1 break-words text-[11px] leading-relaxed text-slate-600">
-                    {form.address}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-                <div className="rounded-lg bg-violet-100 p-2 text-violet-700">
-                  <Mail size={15} />
-                </div>
-                <div className="min-w-0 text-[11px] leading-relaxed text-slate-600">
-                  {isTaxDocument ? (
-                    <>
-                      <div>NTN: 1700506</div>
-                      <div>GST: 05-07-8500-014-73</div>
-                    </>
-                  ) : null}
-                  <div className="mt-1 break-all font-medium text-slate-900">{form.email}</div>
-                </div>
-              </div>
-
-              <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-                <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700">
-                  <Phone size={15} />
-                </div>
-                <div className="min-w-0">
-                  <div className="break-words text-[13px] font-semibold text-slate-900">
-                    {form.phonePrimary}
-                  </div>
-                  <div className="mt-1 break-words text-[11px] text-slate-600">
-                    {form.phoneSecondary}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
+
+      <DocumentFooter form={form} className="mt-0" />
     </>
   );
 };

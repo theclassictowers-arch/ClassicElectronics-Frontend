@@ -32,7 +32,7 @@ const TopHeader = () => {
             sales@classicelectronics.com.pk
           </a>
           <a
-            href="tel:+923335114499"
+            href="tel:+923111777510"
             className="hover:text-cyan-400 transition-colors"
           >
             +923 111 777 510

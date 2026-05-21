@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
 import { GST_REGISTRATION_PLACEHOLDER } from '../utils';
+import { DocumentFooter } from './DocumentFooter';
 
 type DeliveryChallanPreviewProps = {
   form: InvoiceForm;
@@ -37,7 +38,7 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
       </div>
     </div>
 
-    <div className="mt-1 grid grid-cols-[110px_1fr_125px_155px] gap-x-2 text-[14px] leading-[1.55]">
+    <div className="mt-4 grid grid-cols-[110px_1fr_125px_155px] gap-x-2 text-[14px] leading-[1.55]">
       <div>Name of Buyer</div>
       <div className="font-semibold">{form.companyName || 'Customer Company'}</div>
       <div>Our Sale tax Reg #:</div>
@@ -83,23 +84,13 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
       <div>Director</div>
     </div>
 
-    <div className="mt-auto grid grid-cols-[150px_1fr_150px] items-center gap-5 border-t border-slate-300 pt-4 text-[11px] leading-tight">
-      <Image
-        src={CLASSIC_LOGO_SRC}
-        alt="Classic Electronics"
-        width={300}
-        height={120}
-        className="h-auto w-[135px]"
-      />
-      <div className="text-center">
-        <div>{form.website}</div>
-        <div>{form.address}</div>
-        <div>{form.email}</div>
-      </div>
-      <div className="text-right">
-        <div>{form.phonePrimary}</div>
-        <div>{form.phoneSecondary}</div>
-      </div>
+    <div className="mt-8 text-right text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+      {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
     </div>
+    <div className="mt-2 text-center text-[11px] font-bold leading-none text-black">
+      {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
+    </div>
+
+    <DocumentFooter form={form} className="-mx-8 mt-0 w-[calc(100%+64px)]" />
   </div>
 );

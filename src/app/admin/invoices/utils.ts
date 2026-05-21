@@ -124,6 +124,20 @@ export const formatGstRegistration = (value: string): string => {
 export const normalizeCustomerGst = (value: string): string =>
   value.trim() === '18' ? '' : formatGstRegistration(value);
 
+export const formatClassicPhoneDisplay = (value: string, fallback: string): string => {
+  const digits = value.replace(/\D/g, '');
+
+  if (digits === '923111777510' || digits === '03111777510' || digits === '3111777510') {
+    return '+923 111 777 510';
+  }
+
+  if (digits === '923215180308' || digits === '03215180308' || digits === '3215180308') {
+    return '+923 215 180 308';
+  }
+
+  return value.trim() || fallback;
+};
+
 export const formatNtnNumber = (value: string): string => {
   const digits = value.replace(/\D/g, '').slice(0, 8);
   const groups = [digits.slice(0, 7), digits.slice(7, 8)].filter(Boolean);
@@ -151,8 +165,8 @@ export const createInvoiceForm = (): InvoiceForm => ({
   website: 'www.classicelectronics.com.pk',
   address: '133G St # 109 Sector G 11/3, Islamabad',
   email: 'sales@classicelectronics.com.pk',
-  phonePrimary: '+92 3 111 777 510',
-  phoneSecondary: '+92 321 5180308',
+  phonePrimary: '+923 111 777 510',
+  phoneSecondary: '+923 215 180 308',
   directorName: 'M Fawad Younas',
 });
 

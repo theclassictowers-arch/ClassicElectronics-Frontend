@@ -130,6 +130,55 @@ const SalesTaxInvoicePage = () => {
     0
   );
 
+  const getNextSequenceValue = (value: string): string => {
+    const textValue = String(value || '').trim();
+    if (!textValue) return '';
+
+    const matches = [...textValue.matchAll(/\d+/g)];
+    const lastMatch = matches[matches.length - 1];
+    if (!lastMatch) return textValue;
+
+    const numericText = lastMatch[0];
+    const nextNumber = String(Number(numericText) + 1).padStart(numericText.length, '0');
+    const startIndex = lastMatch.index || 0;
+
+    return `${textValue.slice(0, startIndex)}${nextNumber}${textValue.slice(startIndex + numericText.length)}`;
+  };
+
+  const loadNextQuotationNumber = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    try {
+      const [latestQuotation] = await getSalesDocuments<InvoiceForm, InvoiceHistoryRecord['items'][number]>(
+        token,
+        'quotation',
+        {
+          limit: 1,
+          sortBy: 'createdAt',
+          order: 'desc',
+        }
+      );
+
+      const latestNumber = latestQuotation?.form?.invoiceNo || latestQuotation?.documentNo || '';
+      const nextNumber = getNextSequenceValue(latestNumber);
+      if (!nextNumber) return;
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        invoiceNo: nextNumber,
+      }));
+    } catch (error) {
+      console.error('Failed to load next quotation number', error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeDocumentType === 'quotation' && !savedDocumentId) {
+      void loadNextQuotationNumber();
+    }
+  }, [activeDocumentType, savedDocumentId]);
+
   const handleFormChange = (field: keyof InvoiceForm, value: string) => {
     setSaveStatus('');
     setCustomerStatus('');
@@ -182,11 +231,15 @@ const SalesTaxInvoicePage = () => {
 
     const customer = customers.find((item) => item._id === customerId);
     if (!customer) return;
+    const customerLocation =
+      [customer.location1, customer.location2, customer.city].filter(Boolean).join(', ') ||
+      customer.location ||
+      '';
 
     setForm((currentForm) => ({
       ...currentForm,
       companyName: customer.name || '',
-      location: customer.location || '',
+      location: customerLocation,
       gst: customer.gst ? normalizeCustomerGst(customer.gst) : '',
       ntn: customer.ntn ? formatNtnNumber(customer.ntn) : '',
     }));
