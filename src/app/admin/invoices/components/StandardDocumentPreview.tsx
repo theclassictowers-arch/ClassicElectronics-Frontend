@@ -212,10 +212,10 @@ export const StandardDocumentPreview = ({
             </div>
           </div>
 
-          <div className="absolute bottom-4 left-5 text-left text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+          <div className="absolute bottom-[30px] left-0 right-0 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
             {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
           </div>
-          <div className="absolute bottom-4 left-0 right-0 text-center text-[11px] font-bold leading-none text-black">
+          <div className="absolute bottom-[10px] left-0 right-0 text-center text-[14px] font-bold leading-none text-black">
             {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
           </div>
 

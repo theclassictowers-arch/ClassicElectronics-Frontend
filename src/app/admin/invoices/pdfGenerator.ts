@@ -52,7 +52,7 @@ export const downloadInvoicePdf = async ({
         const drawBodyThankYou = (x: number, y: number, align: 'left' | 'center' | 'right' = 'right') => {
           const text = form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!';
           pdf.setFont('helvetica', 'bolditalic');
-          pdf.setFontSize(11);
+          pdf.setFontSize(10.5);
           pdf.setTextColor(...classicPurple);
           pdf.text(text, x, y, { align });
           pdf.setTextColor(0, 0, 0);
@@ -61,7 +61,7 @@ export const downloadInvoicePdf = async ({
         const drawBodySubtitle = (y: number) => {
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(8.25);
+          pdf.setFontSize(10.5);
           pdf.text(
             form.subtitle || 'A wide range of industrial instrument & sensing solutions',
             105,
@@ -333,9 +333,9 @@ export const downloadInvoicePdf = async ({
           });
 
           if (stampDataUrl) {
-            pdf.addImage(stampDataUrl, 'PNG', 8, 237, 40, 24, undefined, 'FAST');
+            pdf.addImage(stampDataUrl, 'PNG', 21, detailsY + 18, 45, 27, undefined, 'FAST');
           }
-          drawBodyThankYou(tableX, 263, 'left');
+          drawBodyThankYou(105, 262, 'center');
           drawBodySubtitle(268);
         };
 
@@ -480,8 +480,8 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'bold');
           pdf.text(form.directorName || 'M Fawad  Younis', leftX, signatureY + 25.7);
           pdf.text('Director', leftX, signatureY + 30.8);
-          drawBodyThankYou(leftX, 245, 'left');
-          drawBodySubtitle(250);
+          drawBodyThankYou(105, 262, 'center');
+          drawBodySubtitle(268);
 
           drawClassicFooter();
         };
@@ -775,8 +775,8 @@ export const downloadInvoicePdf = async ({
       pdf.setFontSize(9.5);
       pdf.setTextColor(...primaryTextColor);
       pdf.text('Director', contentLeftX + 1, signatureLabelY);
-      drawBodyThankYou(contentLeftX, outerBorderBottomY - 8, 'left');
-      drawBodySubtitle(outerBorderBottomY - 3);
+      drawBodyThankYou(105, outerBorderBottomY - 10, 'center');
+      drawBodySubtitle(outerBorderBottomY - 4);
 
       pdf.save(buildPdfFileName(activeDocument.fileSlug, form.invoiceNo, form.date));
 

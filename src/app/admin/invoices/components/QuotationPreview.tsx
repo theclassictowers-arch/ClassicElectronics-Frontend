@@ -83,7 +83,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute left-[4px] top-[132px] h-[874px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
+      <div className="absolute left-[4px] top-[132px] h-[905px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
 
       <div className="pointer-events-none absolute left-[118px] top-[351px] opacity-[0.14]">
         <Image
@@ -252,20 +252,20 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute left-[30px] top-[885px] w-[145px]">
+      <div className="absolute left-[75px] w-[160px]" style={{ top: detailsTop + 66 }}>
         <Image
           src="/quotation-stamp-signature.png"
           alt=""
           width={250}
           height={150}
-          className="h-auto w-[135px] mix-blend-multiply"
+          className="h-auto w-[155px] mix-blend-multiply"
         />
       </div>
 
-      <div className="absolute left-[30px] top-[964px] text-left text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+      <div className="absolute left-0 right-0 top-[996px] text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
         {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
       </div>
-      <div className="absolute left-0 right-0 top-[980px] text-center text-[11px] font-bold leading-none text-black">
+      <div className="absolute left-0 right-0 top-[1015px] text-center text-[14px] font-bold leading-none text-black">
         {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
       </div>
 
