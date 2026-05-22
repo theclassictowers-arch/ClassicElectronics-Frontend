@@ -1,7 +1,13 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from '../types';
-import { SALES_TAX_RATE, documentTypes, formatCurrency, getPictureSource } from '../utils';
+import {
+  SALES_TAX_RATE,
+  documentTypes,
+  formatCurrency,
+  getCustomerDetailRows,
+  getPictureSource,
+} from '../utils';
 import { DocumentFooter } from './DocumentFooter';
 
 type ActiveDocument = (typeof documentTypes)[number];
@@ -22,6 +28,7 @@ export const StandardDocumentPreview = ({
   totalAmount,
 }: StandardDocumentPreviewProps) => {
   const isTaxDocument = activeDocumentType === 'invoice';
+  const customerRows = getCustomerDetailRows(form);
   const salesTaxAmount = totalAmount * SALES_TAX_RATE;
   const grandTotalWithTax = isTaxDocument ? totalAmount + salesTaxAmount : totalAmount;
 
@@ -52,14 +59,16 @@ export const StandardDocumentPreview = ({
           <div className="mt-[2px] text-[14px] font-black leading-none text-slate-950">
             Date: {form.date || '--/--/----'}
           </div>
-          <div className="mt-[4px] w-full space-y-[3px]">
-            <div className="text-[14px] font-black italic leading-none text-slate-950">
-              {activeDocument.purchaseLabel}: {form.purchaseOrder || '____________'}
+          {activeDocumentType === 'bill' ? null : (
+            <div className="mt-[4px] w-full space-y-[3px]">
+              <div className="text-[14px] font-black italic leading-none text-slate-950">
+                {activeDocument.purchaseLabel}: {form.purchaseOrder || '____________'}
+              </div>
+              <div className="text-[14px] font-black italic leading-none text-slate-950">
+                {activeDocument.referenceLabel}: {form.quotationNo || '____________'}
+              </div>
             </div>
-            <div className="text-[14px] font-black italic leading-none text-slate-950">
-              {activeDocument.referenceLabel}: {form.quotationNo || '____________'}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -80,15 +89,13 @@ export const StandardDocumentPreview = ({
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
         <div className="relative flex h-full flex-1 flex-col">
-          <div className="mb-3 max-w-md text-[14px] leading-snug text-slate-900 sm:text-[16px]">
-            <div>{form.companyName || 'Customer Company'}</div>
-            <div>{form.location ? `${form.location}:` : 'Location:'}</div>
-            {isTaxDocument ? (
-              <>
-                <div>GST: {form.gst || '________________'}</div>
-                <div>NTN: {form.ntn || '________________'}</div>
-              </>
-            ) : null}
+          <div className="mb-3 grid max-w-[430px] grid-cols-[112px_1fr] gap-x-2 text-[13px] leading-snug text-slate-900 sm:text-[14px]">
+            {customerRows.map(([label, value]) => (
+              <div key={label} className="contents">
+                <div className="font-semibold">{label}</div>
+                <div className="min-w-0 break-words">{value || '________________'}</div>
+              </div>
+            ))}
           </div>
 
           <div className="overflow-hidden rounded-[20px] border-2 border-slate-950 bg-white">

@@ -179,15 +179,33 @@ const SalesTaxInvoicePage = () => {
     }
   }, [activeDocumentType, savedDocumentId]);
 
-  const handleFormChange = (field: keyof InvoiceForm, value: string) => {
+  const handleFormChange = (field: keyof InvoiceForm, value: string | boolean) => {
     setSaveStatus('');
     setCustomerStatus('');
-    if (field === 'companyName' || field === 'location') {
+    if (typeof value === 'boolean') {
+      setForm((currentForm) => ({
+        ...currentForm,
+        [field]: value,
+      }));
+      return;
+    }
+
+    if (
+      field === 'companyName' ||
+      field === 'customerAbbreviation' ||
+      field === 'location' ||
+      field === 'customerAddress1' ||
+      field === 'customerAddress2' ||
+      field === 'customerCity' ||
+      field === 'customerPhone'
+    ) {
       setSelectedCustomerId('');
     }
     setForm((currentForm) => ({
       ...currentForm,
       [field]: value,
+      ...(field === 'customerAddress1' ? { location: value } : {}),
+      ...(field === 'location' && !currentForm.customerAddress1 ? { customerAddress1: value } : {}),
     }));
   };
 
@@ -216,11 +234,19 @@ const SalesTaxInvoicePage = () => {
 
   const buildCustomerPayload = (): CustomerPayload => ({
     name: form.companyName.trim(),
-    location: form.location.trim(),
+    abbreviation: form.customerAbbreviation.trim(),
+    location: [form.customerAddress1, form.customerAddress2, form.customerCity]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join(', ') || form.location.trim(),
+    location1: (form.customerAddress1 || form.location).trim(),
+    location2: form.customerAddress2.trim(),
+    city: form.customerCity.trim(),
+    country: 'Pakistan',
     gst: normalizeCustomerGst(form.gst).trim(),
     ntn: formatNtnNumber(form.ntn).trim(),
     email: '',
-    phonePrimary: '',
+    phonePrimary: form.customerPhone.trim(),
     phoneSecondary: '',
     status: 'active',
   });
@@ -231,15 +257,21 @@ const SalesTaxInvoicePage = () => {
 
     const customer = customers.find((item) => item._id === customerId);
     if (!customer) return;
-    const customerLocation =
-      [customer.location1, customer.location2, customer.city].filter(Boolean).join(', ') ||
-      customer.location ||
-      '';
+    const address1 = customer.location1 || customer.location || '';
+    const address2 = customer.location2 || '';
+    const city = customer.city || '';
+    const phone = customer.phonePrimary || customer.phoneSecondary || '';
+    const customerLocation = [address1, address2, city, customer.country].filter(Boolean).join(', ');
 
     setForm((currentForm) => ({
       ...currentForm,
       companyName: customer.name || '',
+      customerAbbreviation: customer.abbreviation || '',
       location: customerLocation,
+      customerAddress1: address1,
+      customerAddress2: address2,
+      customerCity: city,
+      customerPhone: phone,
       gst: customer.gst ? normalizeCustomerGst(customer.gst) : '',
       ntn: customer.ntn ? formatNtnNumber(customer.ntn) : '',
     }));
@@ -504,7 +536,8 @@ const SalesTaxInvoicePage = () => {
     }
 
     if (activeDocumentType === 'quotation') {
-      const hasCustomer = form.companyName.trim() && form.location.trim();
+      const hasCustomer =
+        form.companyName.trim() && (form.customerAddress1.trim() || form.location.trim());
       const hasProduct = items.some(
         (item) =>
           item.productId.trim() &&

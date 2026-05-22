@@ -63,13 +63,20 @@ export const DocumentDetailsSection = ({
         />
       )}
       {activeDocumentType === 'quotation' ? (
-        <SelectField
-          label="Delivery Period"
-          value={form.deliveryPeriod}
-          onChange={(value) => onFormChange('deliveryPeriod', value)}
-          options={deliveryPeriodOptions}
-          placeholder="Select delivery period"
-        />
+        <>
+          <SelectField
+            label="Delivery Period"
+            value={form.deliveryPeriod}
+            onChange={(value) => onFormChange('deliveryPeriod', value)}
+            options={deliveryPeriodOptions}
+            placeholder="Select delivery period"
+          />
+          <Field
+            label="Validity Date"
+            value={form.validityDate}
+            onChange={(value) => onFormChange('validityDate', value)}
+          />
+        </>
       ) : null}
     </div>
   </section>
@@ -122,11 +129,13 @@ export const CustomerDetailsSection = ({
         onChange={onCustomerSelect}
         options={customers.map((customer) => {
           const customerLocation =
-            [customer.location1, customer.location2, customer.city].filter(Boolean).join(', ') ||
+            [customer.location1, customer.location2, customer.city, customer.country].filter(Boolean).join(', ') ||
             customer.location;
 
           return {
-            label: customerLocation ? `${customer.name} - ${customerLocation}` : customer.name,
+            label: customerLocation
+              ? `${customer.name}${customer.abbreviation ? ` (${customer.abbreviation})` : ''} - ${customerLocation}`
+              : `${customer.name}${customer.abbreviation ? ` (${customer.abbreviation})` : ''}`,
             value: customer._id,
           };
         })}
@@ -140,43 +149,62 @@ export const CustomerDetailsSection = ({
         onChange={(value) => onFormChange('companyName', value)}
       />
       <Field
-        label={activeDocumentType === 'deliveryChallan' ? 'Address' : 'Location'}
-        value={form.location}
-        onChange={(value) => onFormChange('location', value)}
+        label="Abbreviation"
+        value={form.customerAbbreviation}
+        onChange={(value) => onFormChange('customerAbbreviation', value)}
       />
-      {activeDocumentType === 'bill' ? null : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label={activeDocumentType === 'deliveryChallan' ? 'Sales Tax Registration No' : 'GST'}
-            value={activeDocumentType === 'deliveryChallan' ? form.gst : normalizeCustomerGst(form.gst)}
-            onChange={(value) =>
-              onFormChange(
-                'gst',
-                activeDocumentType === 'deliveryChallan'
-                  ? formatGstRegistration(value)
-                  : normalizeCustomerGst(value)
-              )
-            }
-            placeholder={
+      <Field
+        label="Address 1"
+        value={form.customerAddress1 || form.location}
+        onChange={(value) => onFormChange('customerAddress1', value)}
+      />
+      <Field
+        label="Address 2"
+        value={form.customerAddress2}
+        onChange={(value) => onFormChange('customerAddress2', value)}
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="City"
+          value={form.customerCity}
+          onChange={(value) => onFormChange('customerCity', value)}
+        />
+        <Field
+          label="Tel No."
+          value={form.customerPhone}
+          onChange={(value) => onFormChange('customerPhone', value)}
+          inputMode="tel"
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label={activeDocumentType === 'deliveryChallan' ? 'Sales Tax Registration No' : 'GST'}
+          value={activeDocumentType === 'deliveryChallan' ? form.gst : normalizeCustomerGst(form.gst)}
+          onChange={(value) =>
+            onFormChange(
+              'gst',
               activeDocumentType === 'deliveryChallan'
-                ? GST_REGISTRATION_PLACEHOLDER
-                : CUSTOMER_GST_PLACEHOLDER
-            }
-            inputMode="numeric"
-            maxLength={16}
-          />
-          {activeDocumentType === 'deliveryChallan' ? null : (
-            <Field
-              label="NTN"
-              value={form.ntn}
-              onChange={(value) => onFormChange('ntn', formatNtnNumber(value))}
-              placeholder={CUSTOMER_NTN_PLACEHOLDER}
-              inputMode="numeric"
-              maxLength={9}
-            />
-          )}
-        </div>
-      )}
+                ? formatGstRegistration(value)
+                : normalizeCustomerGst(value)
+            )
+          }
+          placeholder={
+            activeDocumentType === 'deliveryChallan'
+              ? GST_REGISTRATION_PLACEHOLDER
+              : CUSTOMER_GST_PLACEHOLDER
+          }
+          inputMode="numeric"
+          maxLength={16}
+        />
+        <Field
+          label="NTN"
+          value={form.ntn}
+          onChange={(value) => onFormChange('ntn', formatNtnNumber(value))}
+          placeholder={CUSTOMER_NTN_PLACEHOLDER}
+          inputMode="numeric"
+          maxLength={9}
+        />
+      </div>
     </div>
   </section>
 );

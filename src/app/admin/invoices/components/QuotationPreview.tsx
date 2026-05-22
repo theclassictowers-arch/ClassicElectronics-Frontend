@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
-import { createInvoiceItem, formatCurrency, getPictureSource } from '../utils';
+import { createInvoiceItem, formatCurrency, getCustomerDetailRows, getPictureSource } from '../utils';
 import { DocumentFooter } from './DocumentFooter';
 
 type QuotationPreviewProps = {
@@ -31,6 +31,18 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const taxAmount = totalAmount * 0.18;
   const grandTotal = totalAmount + taxAmount;
   const quotationItems = items.length > 0 ? items : [createInvoiceItem()];
+  const customerRows = getCustomerDetailRows(form);
+  const showTaxNotice = form.showQuotationTaxNotice !== false;
+  const showTerms = form.showQuotationTerms !== false;
+  const thankYouTop = 996;
+  const thankYouGap = 20;
+  const noticeTermsGap = 5;
+  const noticeHeight = 66;
+  const termsHeight = 76;
+  const termsTop = thankYouTop - thankYouGap - termsHeight;
+  const noticeTop = showTerms
+    ? termsTop - noticeTermsGap - noticeHeight
+    : thankYouTop - thankYouGap - noticeHeight;
 
   const showItemImage = (item: InvoiceItem) => {
     const hasImage = Boolean(getPictureSource(item.picture));
@@ -49,12 +61,18 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
   });
 
-  const tableTop = 236;
+  const tableTop = 284;
   const tableHeaderHeight = 48;
+  const bodyBottom = 960;
+  const detailsBlockHeight = 210;
+  const tableBottomGap = 28;
+  const maxTableBodyHeight = bodyBottom - tableTop - tableHeaderHeight - detailsBlockHeight - tableBottomGap;
+  const cappedRowHeights = rowHeights.map((height) =>
+    Math.min(height, Math.max(130, Math.floor(maxTableBodyHeight / quotationItems.length)))
+  );
   const tableHeight =
-    tableHeaderHeight + rowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
-  const tableBottomGap = 26;
-  const noteTop = tableTop + tableHeight + tableBottomGap;
+    tableHeaderHeight + cappedRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
+  const noteTop = Math.min(tableTop + tableHeight + tableBottomGap, bodyBottom - detailsBlockHeight);
   const detailsTop = noteTop + 28;
 
   return (
@@ -70,7 +88,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute right-[22px] top-[8px] text-right font-black">
+      <div className="absolute right-[22px] top-[8px] w-[340px] text-right font-black">
         <div className="text-[20px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
         <div className="mt-[2px] text-[14px] leading-none">
           Date: {form.date || '01/04/2026'}
@@ -83,7 +101,8 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute left-[4px] top-[132px] h-[905px] w-[786px] rounded-[22px] border-[3px] border-violet-600 bg-white" />
+      <div className="absolute left-[17px] top-[132px] h-[905px] w-[760px] rounded-[34px] border-2 border-violet-600 bg-white" />
+      <div className="absolute left-[41px] top-[132px] h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
       <div className="pointer-events-none absolute left-[118px] top-[351px] opacity-[0.14]">
         <Image
@@ -95,18 +114,21 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[32px] top-[146px] text-[15px] leading-[18px]">
-        <div>Manage Purchase;</div>
-        <div>{form.companyName || 'Fecto Cement Ltd'}</div>
-        <div>{form.location || 'Rawalpindi'}:</div>
+      <div className="absolute left-[44px] top-[142px] grid grid-cols-[105px_1fr] gap-x-2 text-[12px] leading-[14px]">
+        {customerRows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <div className="font-semibold">{label}</div>
+            <div className="max-w-[300px] truncate">{value || '________________'}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="absolute left-[30px] top-[206px] text-[13px] font-bold italic">
+      <div className="absolute left-[42px] top-[256px] text-[13px] font-bold italic">
         Reference to your quotation the details is as below.
       </div>
 
       <div
-        className="absolute left-[30px] w-[710px] border-[2px] border-black bg-white text-[14px]"
+        className="absolute left-[42px] w-[710px] border-[2px] border-black bg-white text-[14px]"
         style={{ top: tableTop }}
       >
         <div className="grid h-[48px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[13px]">
@@ -128,13 +150,13 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         {quotationItems.map((item, index) => {
           const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
           const imageSrc = getPictureSource(item.picture);
-          const rowHeight = rowHeights[index];
+          const rowHeight = cappedRowHeights[index];
 
           return (
             <div
               key={item.id}
               className="grid min-w-0 grid-cols-[38px_330px_220px_122px] overflow-hidden border-b-[2px] border-black last:border-b-0"
-              style={{ minHeight: rowHeight }}
+              style={{ height: rowHeight }}
             >
               <div className="flex items-center justify-center border-r-[2px] border-black">
                 {index + 1}
@@ -200,12 +222,15 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         })}
       </div>
 
-      <div className="absolute left-[30px] text-[13px] font-bold italic" style={{ top: noteTop }}>
+      <div
+        className="absolute left-[58px] max-w-[660px] text-[13px] font-bold italic"
+        style={{ top: noteTop }}
+      >
         If you have any questions concerning this quotation please tell us.
       </div>
 
       <div
-        className="absolute left-[28px] grid grid-cols-[150px_130px] text-[16px] font-bold italic leading-[30px]"
+        className="absolute left-[40px] grid grid-cols-[150px_130px] text-[16px] font-bold italic leading-[30px]"
         style={{ top: detailsTop }}
       >
         <div>Delivery Period:</div>
@@ -215,12 +240,12 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
 
         <div>Validity Date:</div>
         <div className="border-x-[2px] border-b-[2px] border-black bg-pink-100 text-center font-normal">
-          1 WEEK
+          {form.validityDate || '1 WEEK'}
         </div>
       </div>
 
       <div
-        className="absolute right-[42px] grid grid-cols-[85px_170px] items-center text-[16px] font-bold italic leading-[31px]"
+        className="absolute right-[54px] grid grid-cols-[85px_170px] items-center text-[16px] font-bold italic leading-[31px]"
         style={{ top: detailsTop - 7 }}
       >
         <div>Sub Total</div>
@@ -248,6 +273,33 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
           className="h-auto w-[155px] mix-blend-multiply"
         />
       </div>
+
+      {showTaxNotice ? (
+        <div
+          className="absolute left-[45px] w-[300px] border-2 border-black bg-yellow-200 px-4 py-2 text-center text-[14px] font-black uppercase leading-[18px] text-red-600"
+          style={{ top: noticeTop }}
+        >
+          <div>Please do not reduct</div>
+          <div>income tax as it was payed</div>
+          <div>while importing</div>
+        </div>
+      ) : null}
+
+      {showTerms ? (
+        <div
+          className="absolute left-[42px] w-[710px] border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]"
+          style={{ top: termsTop }}
+        >
+          <div className="font-bold">Terms &amp; Conditions</div>
+          <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
+          <div>
+            Please make cheque payments payable to <span className="text-[16px] font-black">Classic Electronic</span>
+          </div>
+          <div className="text-[16px] font-black">
+            Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
+          </div>
+        </div>
+      ) : null}
 
       <div className="absolute left-0 right-0 top-[996px] text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
         {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}

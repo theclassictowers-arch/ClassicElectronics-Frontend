@@ -4,7 +4,7 @@ import { Field } from './FormFields';
 
 type FooterDetailsSectionProps = {
   form: InvoiceForm;
-  onFormChange: (field: keyof InvoiceForm, value: string) => void;
+  onFormChange: (field: keyof InvoiceForm, value: string | boolean) => void;
 };
 
 export const FooterDetailsSection = ({ form, onFormChange }: FooterDetailsSectionProps) => (
@@ -25,6 +25,20 @@ export const FooterDetailsSection = ({ form, onFormChange }: FooterDetailsSectio
         value={form.subtitle}
         onChange={(value) => onFormChange('subtitle', value)}
       />
+      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
+        <ToggleButton
+          label="Quotation Tax Notice"
+          enabled={form.showQuotationTaxNotice !== false}
+          onToggle={() =>
+            onFormChange('showQuotationTaxNotice', !(form.showQuotationTaxNotice !== false))
+          }
+        />
+        <ToggleButton
+          label="Quotation Terms"
+          enabled={form.showQuotationTerms !== false}
+          onToggle={() => onFormChange('showQuotationTerms', !(form.showQuotationTerms !== false))}
+        />
+      </div>
       <Field
         label="Website"
         value={form.website}
@@ -55,4 +69,31 @@ export const FooterDetailsSection = ({ form, onFormChange }: FooterDetailsSectio
       />
     </div>
   </section>
+);
+
+type ToggleButtonProps = {
+  label: string;
+  enabled: boolean;
+  onToggle: () => void;
+};
+
+const ToggleButton = ({ label, enabled, onToggle }: ToggleButtonProps) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
+      enabled
+        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
+        : 'border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-500'
+    }`}
+  >
+    <span>{label}</span>
+    <span
+      className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+        enabled ? 'bg-emerald-400 text-slate-950' : 'bg-slate-700 text-slate-200'
+      }`}
+    >
+      {enabled ? 'Enabled' : 'Disabled'}
+    </span>
+  </button>
 );

@@ -55,16 +55,6 @@ export const documentTypes: Array<{
     fileSlug: 'sales-tax-invoice',
   },
   {
-    type: 'bill',
-    label: 'Bill',
-    title: 'Bill Page',
-    pdfTitle: 'BILL',
-    numberLabel: 'Bill No',
-    purchaseLabel: 'Purchase Order',
-    referenceLabel: 'Reference No',
-    fileSlug: 'bill',
-  },
-  {
     type: 'deliveryChallan',
     label: 'Delivery Challan',
     title: 'Delivery Challan Page',
@@ -73,6 +63,16 @@ export const documentTypes: Array<{
     purchaseLabel: 'PO',
     referenceLabel: 'Invoice / PO Ref',
     fileSlug: 'delivery-challan',
+  },
+  {
+    type: 'bill',
+    label: 'Bill',
+    title: 'Bill Page',
+    pdfTitle: 'BILL',
+    numberLabel: 'Bill No',
+    purchaseLabel: 'Purchase Order',
+    referenceLabel: 'Reference No',
+    fileSlug: 'bill',
   },
 ];
 
@@ -156,12 +156,20 @@ export const createInvoiceForm = (): InvoiceForm => ({
   purchaseOrder: '',
   quotationNo: '',
   companyName: '',
+  customerAbbreviation: '',
   location: '',
+  customerAddress1: '',
+  customerAddress2: '',
+  customerCity: '',
+  customerPhone: '',
   gst: '',
   ntn: '',
   subtitle: 'A wide range of industrial instrument & sensing solutions',
   thankYouNote: 'THANK YOU FOR YOUR BUSINESS!',
+  showQuotationTaxNotice: true,
+  showQuotationTerms: true,
   deliveryPeriod: '4 Weeks',
+  validityDate: '1 WEEK',
   website: 'www.classicelectronics.com.pk',
   address: '133G St # 109 Sector G 11/3, Islamabad',
   email: 'sales@classicelectronics.com.pk',
@@ -169,6 +177,44 @@ export const createInvoiceForm = (): InvoiceForm => ({
   phoneSecondary: '+923 215 180 308',
   directorName: 'M Fawad Younas',
 });
+
+export const getCustomerAddressParts = (form: InvoiceForm) => {
+  const address1 = form.customerAddress1?.trim() || form.location?.trim() || '';
+  const address2 = form.customerAddress2?.trim() || '';
+  const city = form.customerCity?.trim() || '';
+  const phone = form.customerPhone?.trim() || '';
+
+  return {
+    name: form.companyName?.trim() || 'Customer Name',
+    address1,
+    address2,
+    city,
+    phone,
+    gst: form.gst?.trim() || '',
+    ntn: form.ntn?.trim() || '',
+  };
+};
+
+export const getCustomerDetailRows = (
+  form: InvoiceForm,
+  options: { includeTaxIds?: boolean } = {}
+): Array<[string, string]> => {
+  const details = getCustomerAddressParts(form);
+  const rows: Array<[string, string]> = [
+    ['Customer Name', details.name],
+    ['Address 1', details.address1 || 'Customer Address'],
+    ['Address 2', details.address2 || ''],
+    ['City', details.city],
+    ['Telephone No.', details.phone],
+  ];
+
+  if (options.includeTaxIds !== false) {
+    rows.push(['GST', details.gst || '________________']);
+    rows.push(['NTN', details.ntn || '________________']);
+  }
+
+  return rows;
+};
 
 export const createInvoiceItem = (): InvoiceItem => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -314,6 +360,26 @@ export const buildPdfFileName = (fileSlug: string, documentNo: string, date: str
   const cleanDate = date.trim().replace(/[^0-9-]+/g, '-') || 'date';
 
   return `${fileSlug}-${cleanDocumentNo}-${cleanDate}.pdf`;
+};
+
+export const buildSalesPdfFileName = (documentType: DocumentType, form: InvoiceForm): string => {
+  const cleanPart = (value: string, fallback = '') =>
+    (value || fallback).trim().replace(/[^a-zA-Z0-9]+/g, '') || fallback;
+  const documentNo = cleanPart(form.invoiceNo, 'document');
+  const abbreviation = cleanPart(form.customerAbbreviation);
+  const purchaseOrder = cleanPart(form.purchaseOrder);
+  const prefixByType: Record<DocumentType, string> = {
+    quotation: 'Q',
+    deliveryChallan: 'D',
+    invoice: 'I',
+    bill: 'B',
+  };
+
+  if (documentType === 'bill') {
+    return `${prefixByType[documentType]}${documentNo}.pdf`;
+  }
+
+  return `${prefixByType[documentType]}${documentNo}${abbreviation}${purchaseOrder}.pdf`;
 };
 
 export const normalizeHistoryItems = (

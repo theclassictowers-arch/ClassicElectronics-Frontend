@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
-import { GST_REGISTRATION_PLACEHOLDER } from '../utils';
+import { getCustomerDetailRows } from '../utils';
 import { DocumentFooter } from './DocumentFooter';
 
 type DeliveryChallanPreviewProps = {
@@ -9,100 +9,142 @@ type DeliveryChallanPreviewProps = {
   items: InvoiceItem[];
 };
 
-export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) => (
-  <div className="relative flex min-h-[1040px] flex-col overflow-hidden bg-white px-8 py-10 text-black">
-    <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
-      <Image
-        src={CLASSIC_LOGO_SRC}
-        alt=""
-        width={900}
-        height={360}
-        className="h-auto w-[78%] max-w-[520px]"
-      />
-    </div>
+export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewProps) => {
+  const customerRows = getCustomerDetailRows(form);
 
-    <div className="relative z-10 flex items-start justify-between">
-      <div>
-        <Image
-          src={CLASSIC_LOGO_SRC}
-          alt="Classic Electronics"
-          width={300}
-          height={120}
-          className="h-auto w-[190px]"
-          priority
-        />
+  return (
+    <>
+      <div className="flex items-start justify-between gap-6">
+        <div className="max-w-[285px] shrink-0">
+          <Image
+            src={CLASSIC_LOGO_SRC}
+            alt="Classic Electronics"
+            width={360}
+            height={135}
+            className="h-auto w-full"
+            priority
+          />
+        </div>
+        <div className="ml-auto w-full max-w-[340px] text-right">
+          <div className="text-[20px] font-black uppercase leading-none text-slate-950">
+            DELIVERY CHALLAN: {form.invoiceNo || '---'}
+          </div>
+          <div className="mt-[4px] text-[14px] font-black leading-none text-slate-950">
+            Date: {form.date || '--/--/----'}
+          </div>
+          <div className="mt-[4px] w-full space-y-[3px]">
+            <div className="text-[14px] font-black italic leading-none text-slate-950">
+              Purchase Order: {form.purchaseOrder || '____________'}
+            </div>
+            <div className="text-[14px] font-black italic leading-none text-slate-950">
+              Quotation No: {form.quotationNo || '____________'}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="pt-4 text-right text-[16px] font-semibold leading-tight">
-        <div>Delivery Challan:{form.invoiceNo || '---'}</div>
-        <div>Date: {form.date || '--/--/----'}</div>
-      </div>
-    </div>
 
-    <div className="mt-4 grid grid-cols-[110px_1fr_125px_155px] gap-x-2 text-[14px] leading-[1.55]">
-      <div>Name of Buyer</div>
-      <div className="font-semibold">{form.companyName || 'Customer Company'}</div>
-      <div>Our Sale tax Reg #:</div>
-      <div>05-07-8500-014-73</div>
-      <div>Address</div>
-      <div className="font-semibold">{form.location || 'Customer Address'}</div>
-    </div>
+      <div
+        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
+        style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+      >
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
+          <Image
+            src={CLASSIC_LOGO_SRC}
+            alt=""
+            width={900}
+            height={360}
+            className="h-auto w-[76%] max-w-[500px]"
+          />
+        </div>
+        <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
-    <div className="mt-16 text-[14px] leading-[1.55]">
-      <div>Sales Tax Registration No {form.gst || GST_REGISTRATION_PLACEHOLDER}</div>
-      <div>PO:{form.purchaseOrder || '________________'}</div>
-    </div>
+        <div className="relative flex h-full flex-1 flex-col">
+          <div className="grid max-w-[460px] grid-cols-[120px_1fr] gap-x-2 text-[13px] leading-snug text-slate-900 sm:text-[14px]">
+              {customerRows.map(([label, value]) => (
+                <div key={label} className="contents">
+                  <div className="font-semibold">{label}</div>
+                  <div className="min-w-0 break-words">{value || '________________'}</div>
+                </div>
+              ))}
+          </div>
 
-    <table className="mt-1 w-full table-fixed border-collapse border border-black text-[14px]">
-      <thead>
-        <tr className="h-6 border-b border-black">
-          <th className="w-[10%] border-r border-black text-center font-semibold">S.No</th>
-          <th className="w-[48%] border-r border-black text-center font-semibold">Particulars</th>
-          <th className="w-[24%] border-r border-black text-center font-semibold">Remarks</th>
-          <th className="w-[18%] text-center font-semibold">Details</th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item, index) => (
-          <tr key={item.id} className="h-24 align-top">
-            <td className="border-r border-black px-3 py-8 text-center">{index + 1}</td>
-            <td className="border-r border-black px-3 py-8">
-              {item.description || item.productName || 'Item particulars'}
-            </td>
-            <td className="border-r border-black px-3 py-8">{item.remarks}</td>
-            <td className="p-0">
-              <div className="grid h-24 grid-rows-2">
-                {[
-                  ['UOM', item.uom || 'PCS'],
-                  ['QTY', String(item.quantity || '')],
-                ].map(([label, value]) => (
-                  <div key={label} className="grid grid-cols-[44px_1fr] border-b border-black last:border-b-0">
-                    <div className="flex items-center border-r border-black px-1 font-semibold">{label}</div>
-                    <div className="flex items-center justify-center px-1 text-center">{value}</div>
-                  </div>
+          <div className="mt-8 overflow-hidden rounded-[20px] border-2 border-slate-950 bg-white">
+            <table className="w-full table-fixed border-collapse text-slate-950">
+              <thead>
+                <tr className="border-b-2 border-slate-950">
+                  <th className="w-[10%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                    S.No
+                  </th>
+                  <th className="w-[48%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                    Particulars
+                  </th>
+                  <th className="w-[24%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                    Remarks
+                  </th>
+                  <th className="w-[18%] px-2 py-2 text-center text-[12px] font-semibold">
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    className="min-h-24 align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
+                  >
+                    <td className="border-r-2 border-slate-950 px-3 py-6 text-center text-sm">
+                      {index + 1}
+                    </td>
+                    <td className="border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
+                      {item.description || item.productName || 'Item particulars'}
+                    </td>
+                    <td className="border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
+                      {item.remarks}
+                    </td>
+                    <td className="p-0 text-[13px]">
+                      <div className="grid h-full min-h-[96px] grid-rows-2">
+                        {[
+                          ['UOM', item.uom || 'PCS'],
+                          ['QTY', String(item.quantity || '')],
+                        ].map(([label, value]) => (
+                          <div
+                            key={label}
+                            className="grid grid-cols-[46px_1fr] border-b-2 border-slate-950 last:border-b-0"
+                          >
+                            <div className="flex items-center border-r-2 border-slate-950 px-1 font-semibold">
+                              {label}
+                            </div>
+                            <div className="flex items-center justify-center px-1 text-center">
+                              {value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+              </tbody>
+            </table>
+          </div>
 
-    <div className="mt-8 flex items-start gap-6">
-      <div className="pt-4 text-[14px]">From Classic Electronics</div>
-    </div>
+          <div className="mt-8 text-[14px] text-slate-950">From Classic Electronics</div>
+          <div className="mt-16 text-[14px] font-semibold leading-snug text-slate-950">
+            <div>{form.directorName || 'M Fawad  Younis'}</div>
+            <div>Director</div>
+          </div>
 
-    <div className="mt-20 text-[14px] font-semibold leading-[1.55]">
-      <div>{form.directorName || 'M Fawad  Younis'}</div>
-      <div>Director</div>
-    </div>
+          <div className="absolute bottom-[30px] left-0 right-0 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+            {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
+          </div>
+          <div className="absolute bottom-[10px] left-0 right-0 text-center text-[14px] font-bold leading-none text-black">
+            {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
+          </div>
 
-    <div className="mt-8 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
-      {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
-    </div>
-    <div className="mt-2 text-center text-[14px] font-bold leading-none text-black">
-      {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
-    </div>
+          <div className="flex-1" />
+        </div>
+      </div>
 
-    <DocumentFooter form={form} className="-mx-8 mt-0 w-[calc(100%+64px)]" />
-  </div>
-);
+      <DocumentFooter form={form} className="mt-0" />
+    </>
+  );
+};

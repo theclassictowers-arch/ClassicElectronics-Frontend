@@ -693,10 +693,12 @@ export const updateSalesDocument = async <TForm, TItem>(
 export type CustomerRecord = {
   _id: string;
   name: string;
+  abbreviation?: string;
   location: string;
   location1?: string;
   location2?: string;
   city?: string;
+  country?: string;
   gst: string;
   ntn: string;
   email: string;
