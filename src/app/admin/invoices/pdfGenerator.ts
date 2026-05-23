@@ -487,12 +487,23 @@ export const downloadInvoicePdf = async ({
           const tableY = 98;
           const tableWidth = contentRightX - contentLeftX;
           const headerHeight = 10;
-          const rowHeight = 28;
-          const visibleRows = Math.max(items.length, 1);
-          const tableHeight = headerHeight + rowHeight * visibleRows;
           const columns = [18, 87, 43, 34];
           const borderColor: [number, number, number] = [15, 23, 42];
           const customerRows = getCustomerDetailRows(form);
+          const deliveryRowHeights =
+            items.length > 0
+              ? items.map((item) => {
+                  const particularsLines = pdf.splitTextToSize(
+                    item.description || item.productName || 'Item particulars',
+                    columns[1] - 5
+                  ) as string[];
+                  const remarksLines = pdf.splitTextToSize(item.remarks || '', columns[2] - 4) as string[];
+
+                  return Math.max(28, Math.max(particularsLines.length, remarksLines.length, 1) * 4.5 + 12);
+                })
+              : [28];
+          const tableHeight =
+            headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
             const tabEndX = margin + 68;
             const tabTopY = 37;
@@ -558,10 +569,11 @@ export const downloadInvoicePdf = async ({
             pdf.line(columnX, tableY, columnX, tableY + tableHeight);
           });
           pdf.line(tableX, tableY + headerHeight, tableX + tableWidth, tableY + headerHeight);
-          for (let rowIndex = 1; rowIndex < visibleRows; rowIndex += 1) {
-            const rowLineY = tableY + headerHeight + rowHeight * rowIndex;
+          let rowLineY = tableY + headerHeight;
+          deliveryRowHeights.slice(0, -1).forEach((itemRowHeight) => {
+            rowLineY += itemRowHeight;
             pdf.line(tableX, rowLineY, tableX + tableWidth, rowLineY);
-          }
+          });
 
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(9.5);
@@ -573,12 +585,13 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(9.5);
 
+          let rowTop = tableY + headerHeight;
           items.forEach((item, index) => {
-            const rowTop = tableY + headerHeight + index * rowHeight;
+            const itemRowHeight = deliveryRowHeights[index] || 28;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
 
-            pdf.text(String(index + 1), tableX + columns[0] / 2, rowTop + rowHeight / 2 + 2, { align: 'center' });
+            pdf.text(String(index + 1), tableX + columns[0] / 2, rowTop + itemRowHeight / 2 + 2, { align: 'center' });
             pdf.text(
               pdf.splitTextToSize(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
@@ -589,18 +602,19 @@ export const downloadInvoicePdf = async ({
               tableX + columns[0] + 2,
               rowTop + 7
             );
-            pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + rowHeight);
-            pdf.line(detailsX, rowTop + rowHeight / 2, detailsX + columns[3], rowTop + rowHeight / 2);
+            pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + itemRowHeight);
+            pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3], rowTop + itemRowHeight / 2);
             pdf.setFont('helvetica', 'bold');
             pdf.text('UOM', detailsX + 1.2, rowTop + 8.8);
-            pdf.text('QTY', detailsX + 1.2, rowTop + rowHeight / 2 + 8.8);
+            pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight / 2 + 8.8);
             pdf.setFont('helvetica', 'normal');
             pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + 8.8, {
               align: 'center',
             });
-            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + rowHeight / 2 + 8.8, {
+            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight / 2 + 8.8, {
               align: 'center',
             });
+            rowTop += itemRowHeight;
           });
 
           const signatureY = Math.min(tableY + tableHeight + 16, 198);
@@ -643,7 +657,7 @@ export const downloadInvoicePdf = async ({
       const hasInvoiceNoticeBlocks =
         activeDocumentType === 'invoice' &&
         (form.showQuotationTaxNotice !== false || form.showQuotationTerms !== false);
-      const bodyContentBottomY = outerBorderBottomY - (hasInvoiceNoticeBlocks ? 75 : 22);
+      const bodyContentBottomY = outerBorderBottomY - (hasInvoiceNoticeBlocks ? 42 : 22);
       const tabTopY = 37;
       const tabWidth = 68;
       const borderRadius = 8;
@@ -803,10 +817,10 @@ export const downloadInvoicePdf = async ({
         const showTaxNotice = form.showQuotationTaxNotice !== false;
         const showTerms = form.showQuotationTerms !== false;
         const thankYouY = outerBorderBottomY - 10;
-        const boxGapY = 1.3;
-        const thankYouTopGapY = 5.3;
-        const termsBoxHeight = 24;
-        const yellowBoxHeight = 20;
+        const boxGapY = 1.2;
+        const thankYouTopGapY = 3;
+        const termsBoxHeight = 17;
+        const yellowBoxHeight = 14;
         const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
         const yellowBoxY = showTerms
           ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
@@ -815,13 +829,13 @@ export const downloadInvoicePdf = async ({
         if (showTaxNotice) {
           pdf.setDrawColor(0, 0, 0);
           pdf.setFillColor(254, 240, 138);
-          pdf.rect(contentLeftX, yellowBoxY, 84, yellowBoxHeight, 'FD');
+          pdf.rect(contentLeftX, yellowBoxY, 74, yellowBoxHeight, 'FD');
           pdf.setTextColor(220, 38, 38);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9.8);
-          pdf.text('PLEASE DO NOT REDUCT', contentLeftX + 42, yellowBoxY + 5, { align: 'center' });
-          pdf.text('INCOME TAX AS IT WAS PAYED', contentLeftX + 42, yellowBoxY + 11, { align: 'center' });
-          pdf.text('WHILE IMPORTING', contentLeftX + 42, yellowBoxY + 17, { align: 'center' });
+          pdf.setFontSize(8.4);
+          pdf.text('PLEASE DO NOT REDUCT', contentLeftX + 37, yellowBoxY + 3.8, { align: 'center' });
+          pdf.text('INCOME TAX AS IT WAS PAYED', contentLeftX + 37, yellowBoxY + 8.1, { align: 'center' });
+          pdf.text('WHILE IMPORTING', contentLeftX + 37, yellowBoxY + 12.4, { align: 'center' });
         }
 
         if (showTerms) {
@@ -832,20 +846,20 @@ export const downloadInvoicePdf = async ({
           pdf.setLineDashPattern([], 0);
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(8.5);
-          pdf.text('Terms & Conditions', contentLeftX + 2, termsBoxY + 5);
+          pdf.setFontSize(7.5);
+          pdf.text('Terms & Conditions', contentLeftX + 2, termsBoxY + 3.8);
           pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7.7);
+          pdf.setFontSize(6.5);
           pdf.text(
             'All goods remain the property of Classic Electronic until full payment has been received.',
             contentLeftX + 2,
-            termsBoxY + 10
+            termsBoxY + 7.5
           );
-          pdf.text('Please make cheque payments payable to', contentLeftX + 2, termsBoxY + 15);
+          pdf.text('Please make cheque payments payable to', contentLeftX + 2, termsBoxY + 11.2);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(10.5);
-          pdf.text('Classic Electronic', contentLeftX + 65, termsBoxY + 15);
-          pdf.text('Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248', contentLeftX + 2, termsBoxY + 21);
+          pdf.setFontSize(8.4);
+          pdf.text('Classic Electronic', contentLeftX + 53, termsBoxY + 11.2);
+          pdf.text('Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248', contentLeftX + 2, termsBoxY + 15.2);
         }
 
         pdf.setTextColor(...primaryTextColor);
@@ -957,7 +971,10 @@ export const downloadInvoicePdf = async ({
         cursorY += finalRowHeight;
       }
 
-      if (cursorY + 52 > bodyContentBottomY) {
+      const totalsBottomLimit = hasInvoiceNoticeBlocks ? outerBorderBottomY - 32 : bodyContentBottomY;
+      const totalsBlockHeight = includeTax ? 34 : 22;
+
+      if (cursorY + 8 + totalsBlockHeight > totalsBottomLimit) {
         pdf.addPage();
         cursorY = drawPageHeader(false);
       }
