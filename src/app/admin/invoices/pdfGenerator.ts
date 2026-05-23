@@ -818,7 +818,7 @@ export const downloadInvoicePdf = async ({
         const showTerms = form.showQuotationTerms !== false;
         const thankYouY = outerBorderBottomY - 10;
         const boxGapY = 1.2;
-        const thankYouTopGapY = 3;
+        const thankYouTopGapY = 5.3;
         const termsBoxHeight = 17;
         const yellowBoxHeight = 14;
         const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;

@@ -226,7 +226,7 @@ export const StandardDocumentPreview = ({
             {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
           </div>
           {showInvoiceTerms ? (
-            <div className="absolute bottom-[50px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]">
+            <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]">
               <div className="font-bold">Terms &amp; Conditions</div>
               <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
               <div>
@@ -240,7 +240,7 @@ export const StandardDocumentPreview = ({
           {showInvoiceTaxNotice ? (
             <div
               className={`absolute left-5 w-[300px] border-2 border-black bg-yellow-200 px-4 py-2 text-center text-[14px] font-black uppercase leading-[18px] text-red-600 ${
-                showInvoiceTerms ? 'bottom-[132px]' : 'bottom-[50px]'
+                showInvoiceTerms ? 'bottom-[122px]' : 'bottom-[40px]'
               }`}
             >
               <div>Please do not reduct</div>
