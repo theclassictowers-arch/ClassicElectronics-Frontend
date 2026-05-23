@@ -228,7 +228,7 @@ export const downloadInvoicePdf = async ({
           pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
           if (logoDataUrl) {
-            pdf.addImage(logoDataUrl, 'PNG', 4, 5, 79, 30, undefined, 'FAST');
+            pdf.addImage(logoDataUrl, 'PNG', 9.3, 5, 79, 30, undefined, 'FAST');
             pdf.setGState(new GState({ opacity: 0.18, 'stroke-opacity': 0.18 }));
             pdf.addImage(logoDataUrl, 'PNG', 47, 116, 118, 45, undefined, 'FAST');
             pdf.setGState(new GState({ opacity: 1, 'stroke-opacity': 1 }));
@@ -237,13 +237,13 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(16);
-          pdf.text(`Quotation:${form.invoiceNo || '0050'}`, 199, 14, { align: 'right' });
+          pdf.text(`QUOTATION: ${form.invoiceNo || '---'}`, 195, 28, { align: 'right' });
           pdf.setFontSize(12);
-          pdf.text(`Date: ${form.date || '--/--/----'}`, 199, 19, { align: 'right' });
+          pdf.text(`Date: ${form.date || '--/--/----'}`, 195, 33, { align: 'right' });
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(12);
-          pdf.text(`Indent No: ${form.purchaseOrder || ''}`, 199, 24, { align: 'right' });
-          pdf.text(`Enquiry No: ${form.quotationNo || ''}`, 199, 29, { align: 'right' });
+          pdf.text(`Indent No: ${form.purchaseOrder || '____________'}`, 195, 38, { align: 'right' });
+          pdf.text(`Enquiry No: ${form.quotationNo || '____________'}`, 195, 43, { align: 'right' });
 
           pdf.setDrawColor(...purple);
           pdf.setLineWidth(1.05);
@@ -436,55 +436,6 @@ export const downloadInvoicePdf = async ({
             pdf.addImage(stampDataUrl, 'PNG', 21, detailsY + 18, 45, 27, undefined, 'FAST');
           }
 
-          const showTaxNotice = form.showQuotationTaxNotice !== false;
-          const showTerms = form.showQuotationTerms !== false;
-          const thankYouY = 262;
-          const boxGapY = 1.3;
-          const thankYouTopGapY = 5.3;
-          const termsBoxHeight = 24;
-          const yellowBoxHeight = 20;
-          const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
-          const yellowBoxY = showTerms
-            ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
-            : thankYouY - thankYouTopGapY - yellowBoxHeight;
-
-          if (showTaxNotice) {
-            pdf.setDrawColor(0, 0, 0);
-            pdf.setFillColor(254, 240, 138);
-            pdf.rect(4.4, yellowBoxY, 84, yellowBoxHeight, 'FD');
-            pdf.setTextColor(220, 38, 38);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(9.8);
-            pdf.text('PLEASE DO NOT REDUCT', 46.4, yellowBoxY + 5, { align: 'center' });
-            pdf.text('INCOME TAX AS IT WAS PAYED', 46.4, yellowBoxY + 11, { align: 'center' });
-            pdf.text('WHILE IMPORTING', 46.4, yellowBoxY + 17, { align: 'center' });
-          }
-
-          if (showTerms) {
-            pdf.setDrawColor(4, 120, 87);
-            pdf.setLineDashPattern([1.5, 1.2], 0);
-            pdf.setFillColor(255, 255, 255);
-            pdf.rect(15, termsBoxY, 180, termsBoxHeight, 'FD');
-            pdf.setLineDashPattern([], 0);
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(8.5);
-            pdf.text('Terms & Conditions', 17, termsBoxY + 5);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(7.7);
-            pdf.text(
-              'All goods remain the property of Classic Electronic until full payment has been received.',
-              17,
-              termsBoxY + 10
-            );
-            pdf.text('Please make cheque payments payable to', 17, termsBoxY + 15);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(10.5);
-            pdf.text('Classic Electronic', 80, termsBoxY + 15);
-            pdf.text('Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248', 17, termsBoxY + 21);
-          }
-          pdf.setTextColor(0, 0, 0);
-
           drawBodyThankYou(105, 262, 'center');
           drawBodySubtitle(268);
         };
@@ -582,14 +533,14 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(15, 23, 42);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(16);
-          pdf.text(`DELIVERY CHALLAN: ${form.invoiceNo || '---'}`, contentRightX, 14, { align: 'right' });
+          pdf.text(`DELIVERY CHALLAN: ${form.invoiceNo || '---'}`, contentRightX, 28, { align: 'right' });
           pdf.setFontSize(12);
-          pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 19, { align: 'right' });
+          pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 33, { align: 'right' });
           pdf.setFont('helvetica', 'bolditalic');
-          pdf.text(`Purchase Order: ${form.purchaseOrder || '____________'}`, contentRightX, 24, {
+          pdf.text(`Purchase Order: ${form.purchaseOrder || '____________'}`, contentRightX, 38, {
             align: 'right',
           });
-          pdf.text(`Quotation No: ${form.quotationNo || '____________'}`, contentRightX, 29, {
+          pdf.text(`Quotation No: ${form.quotationNo || '____________'}`, contentRightX, 43, {
             align: 'right',
           });
 
@@ -656,9 +607,17 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10.5);
           pdf.text('From Classic Electronics', contentLeftX + 1, signatureY);
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(15);
+          pdf.setTextColor(14, 116, 144);
+          pdf.text(form.directorName || 'M Fawad Younas', contentLeftX + 1, signatureY + 25.7);
+          pdf.setDrawColor(203, 213, 225);
+          pdf.setLineWidth(0.35);
+          pdf.line(contentLeftX + 1, signatureY + 28.2, contentLeftX + 33, signatureY + 28.2);
           pdf.setFont('helvetica', 'bold');
-          pdf.text(form.directorName || 'M Fawad  Younis', contentLeftX + 1, signatureY + 25.7);
-          pdf.text('Director', contentLeftX + 1, signatureY + 30.8);
+          pdf.setFontSize(9.5);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text('Director', contentLeftX + 1, signatureY + 34.9);
           drawBodyThankYou(105, 262, 'center');
           drawBodySubtitle(268);
         };
@@ -681,7 +640,10 @@ export const downloadInvoicePdf = async ({
       const lightBorderColor: [number, number, number] = [203, 213, 225];
       const outerBorderTopY = 46;
       const outerBorderBottomY = 272;
-      const bodyContentBottomY = outerBorderBottomY - 22;
+      const hasInvoiceNoticeBlocks =
+        activeDocumentType === 'invoice' &&
+        (form.showQuotationTaxNotice !== false || form.showQuotationTerms !== false);
+      const bodyContentBottomY = outerBorderBottomY - (hasInvoiceNoticeBlocks ? 75 : 22);
       const tabTopY = 37;
       const tabWidth = 68;
       const borderRadius = 8;
@@ -798,20 +760,20 @@ export const downloadInvoicePdf = async ({
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...primaryTextColor);
         pdf.setFontSize(16);
-        pdf.text(`${activeDocument.pdfTitle}: ${form.invoiceNo || '---'}`, contentRightX, 14, {
+        pdf.text(`${activeDocument.pdfTitle}: ${form.invoiceNo || '---'}`, contentRightX, 28, {
           align: 'right',
         });
         pdf.setFontSize(12);
-        pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 19, {
+        pdf.text(`Date: ${form.date || '--/--/----'}`, contentRightX, 33, {
           align: 'right',
         });
         if (activeDocumentType !== 'bill') {
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(12);
-          pdf.text(`${activeDocument.purchaseLabel}: ${form.purchaseOrder || '____________'}`, contentRightX, 24, {
+          pdf.text(`${activeDocument.purchaseLabel}: ${form.purchaseOrder || '____________'}`, contentRightX, 38, {
             align: 'right',
           });
-          pdf.text(`${activeDocument.referenceLabel}: ${form.quotationNo || '____________'}`, contentRightX, 29, {
+          pdf.text(`${activeDocument.referenceLabel}: ${form.quotationNo || '____________'}`, contentRightX, 43, {
             align: 'right',
           });
         }
@@ -833,6 +795,60 @@ export const downloadInvoicePdf = async ({
         }
 
         return drawTableHeader(cursorY);
+      };
+
+      const drawInvoiceNoticeBlocks = () => {
+        if (activeDocumentType !== 'invoice') return;
+
+        const showTaxNotice = form.showQuotationTaxNotice !== false;
+        const showTerms = form.showQuotationTerms !== false;
+        const thankYouY = outerBorderBottomY - 10;
+        const boxGapY = 1.3;
+        const thankYouTopGapY = 5.3;
+        const termsBoxHeight = 24;
+        const yellowBoxHeight = 20;
+        const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
+        const yellowBoxY = showTerms
+          ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
+          : thankYouY - thankYouTopGapY - yellowBoxHeight;
+
+        if (showTaxNotice) {
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setFillColor(254, 240, 138);
+          pdf.rect(contentLeftX, yellowBoxY, 84, yellowBoxHeight, 'FD');
+          pdf.setTextColor(220, 38, 38);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(9.8);
+          pdf.text('PLEASE DO NOT REDUCT', contentLeftX + 42, yellowBoxY + 5, { align: 'center' });
+          pdf.text('INCOME TAX AS IT WAS PAYED', contentLeftX + 42, yellowBoxY + 11, { align: 'center' });
+          pdf.text('WHILE IMPORTING', contentLeftX + 42, yellowBoxY + 17, { align: 'center' });
+        }
+
+        if (showTerms) {
+          pdf.setDrawColor(4, 120, 87);
+          pdf.setLineDashPattern([1.5, 1.2], 0);
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(contentLeftX, termsBoxY, contentRightX - contentLeftX, termsBoxHeight, 'FD');
+          pdf.setLineDashPattern([], 0);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(8.5);
+          pdf.text('Terms & Conditions', contentLeftX + 2, termsBoxY + 5);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.7);
+          pdf.text(
+            'All goods remain the property of Classic Electronic until full payment has been received.',
+            contentLeftX + 2,
+            termsBoxY + 10
+          );
+          pdf.text('Please make cheque payments payable to', contentLeftX + 2, termsBoxY + 15);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(10.5);
+          pdf.text('Classic Electronic', contentLeftX + 65, termsBoxY + 15);
+          pdf.text('Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248', contentLeftX + 2, termsBoxY + 21);
+        }
+
+        pdf.setTextColor(...primaryTextColor);
       };
 
       let cursorY = drawPageHeader(true);
@@ -987,6 +1003,7 @@ export const downloadInvoicePdf = async ({
       pdf.setFontSize(9.5);
       pdf.setTextColor(...primaryTextColor);
       pdf.text('Director', contentLeftX + 1, signatureLabelY);
+      drawInvoiceNoticeBlocks();
       drawBodyThankYou(105, outerBorderBottomY - 10, 'center');
       drawBodySubtitle(outerBorderBottomY - 4);
 

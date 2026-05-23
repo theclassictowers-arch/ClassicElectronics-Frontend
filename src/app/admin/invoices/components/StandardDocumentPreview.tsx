@@ -29,6 +29,8 @@ export const StandardDocumentPreview = ({
 }: StandardDocumentPreviewProps) => {
   const isTaxDocument = activeDocumentType === 'invoice';
   const customerRows = getCustomerDetailRows(form);
+  const showInvoiceTaxNotice = isTaxDocument && form.showQuotationTaxNotice !== false;
+  const showInvoiceTerms = isTaxDocument && form.showQuotationTerms !== false;
   const salesTaxAmount = totalAmount * SALES_TAX_RATE;
   const grandTotalWithTax = isTaxDocument ? totalAmount + salesTaxAmount : totalAmount;
 
@@ -223,6 +225,29 @@ export const StandardDocumentPreview = ({
           <div className="absolute bottom-[30px] left-0 right-0 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
             {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
           </div>
+          {showInvoiceTerms ? (
+            <div className="absolute bottom-[50px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]">
+              <div className="font-bold">Terms &amp; Conditions</div>
+              <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
+              <div>
+                Please make cheque payments payable to <span className="text-[16px] font-black">Classic Electronic</span>
+              </div>
+              <div className="text-[16px] font-black">
+                Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
+              </div>
+            </div>
+          ) : null}
+          {showInvoiceTaxNotice ? (
+            <div
+              className={`absolute left-5 w-[300px] border-2 border-black bg-yellow-200 px-4 py-2 text-center text-[14px] font-black uppercase leading-[18px] text-red-600 ${
+                showInvoiceTerms ? 'bottom-[132px]' : 'bottom-[50px]'
+              }`}
+            >
+              <div>Please do not reduct</div>
+              <div>income tax as it was payed</div>
+              <div>while importing</div>
+            </div>
+          ) : null}
           <div className="absolute bottom-[10px] left-0 right-0 text-center text-[14px] font-bold leading-none text-black">
             {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
           </div>

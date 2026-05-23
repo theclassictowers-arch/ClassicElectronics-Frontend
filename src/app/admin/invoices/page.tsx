@@ -691,7 +691,11 @@ const SalesTaxInvoicePage = () => {
                 onRemoveItem={handleRemoveItem}
               />
 
-              <FooterDetailsSection form={form} onFormChange={handleFormChange} />
+              <FooterDetailsSection
+                activeDocumentType={activeDocumentType}
+                form={form}
+                onFormChange={handleFormChange}
+              />
             </div>
 
             <section className="invoice-print-panel rounded-[32px] border border-slate-800 bg-[#0b1120] p-3 shadow-[0_25px_60px_rgba(15,23,42,0.5)]">

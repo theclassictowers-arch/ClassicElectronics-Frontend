@@ -128,9 +128,13 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
           </div>
 
           <div className="mt-8 text-[14px] text-slate-950">From Classic Electronics</div>
-          <div className="mt-16 text-[14px] font-semibold leading-snug text-slate-950">
-            <div>{form.directorName || 'M Fawad  Younis'}</div>
-            <div>Director</div>
+          <div className="mt-16 max-w-xs">
+            <div className="text-[20px] italic text-sky-700 sm:text-[22px]">
+              {form.directorName || 'M Fawad Younas'}
+            </div>
+            <div className="mt-2 w-28 border-t border-slate-400 pt-1 text-[12px] font-semibold text-slate-900">
+              Director
+            </div>
           </div>
 
           <div className="absolute bottom-[30px] left-0 right-0 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">

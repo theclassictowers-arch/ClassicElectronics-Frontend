@@ -32,17 +32,6 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const grandTotal = totalAmount + taxAmount;
   const quotationItems = items.length > 0 ? items : [createInvoiceItem()];
   const customerRows = getCustomerDetailRows(form);
-  const showTaxNotice = form.showQuotationTaxNotice !== false;
-  const showTerms = form.showQuotationTerms !== false;
-  const thankYouTop = 996;
-  const thankYouGap = 20;
-  const noticeTermsGap = 5;
-  const noticeHeight = 66;
-  const termsHeight = 76;
-  const termsTop = thankYouTop - thankYouGap - termsHeight;
-  const noticeTop = showTerms
-    ? termsTop - noticeTermsGap - noticeHeight
-    : thankYouTop - thankYouGap - noticeHeight;
 
   const showItemImage = (item: InvoiceItem) => {
     const hasImage = Boolean(getPictureSource(item.picture));
@@ -88,16 +77,26 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute right-[22px] top-[8px] w-[340px] text-right font-black">
-        <div className="text-[20px] leading-none">Quotation:{form.invoiceNo || '0050'}</div>
-        <div className="mt-[2px] text-[14px] leading-none">
-          Date: {form.date || '01/04/2026'}
+      <div
+        className="absolute right-[22px] top-[8px] w-[340px] text-right"
+        style={{
+          fontFamily: '"Arial Narrow", Arial, Helvetica, sans-serif',
+          fontStretch: 'condensed',
+        }}
+      >
+        <div className="text-[20px] font-black uppercase leading-none text-slate-950">
+          QUOTATION: {form.invoiceNo || '---'}
         </div>
-        <div className="mt-[4px] text-[14px] italic leading-none">
-          Indent No: {form.purchaseOrder || ''}
+        <div className="mt-[2px] text-[14px] font-black leading-none text-slate-950">
+          Date: {form.date || '--/--/----'}
         </div>
-        <div className="mt-[3px] text-[14px] italic leading-none">
-          Enquiry No: {form.quotationNo || ''}
+        <div className="mt-[4px] w-full space-y-[3px]">
+          <div className="text-[14px] font-black italic leading-none text-slate-950">
+            Indent No: {form.purchaseOrder || '____________'}
+          </div>
+          <div className="text-[14px] font-black italic leading-none text-slate-950">
+            Enquiry No: {form.quotationNo || '____________'}
+          </div>
         </div>
       </div>
 
@@ -273,33 +272,6 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
           className="h-auto w-[155px] mix-blend-multiply"
         />
       </div>
-
-      {showTaxNotice ? (
-        <div
-          className="absolute left-[45px] w-[300px] border-2 border-black bg-yellow-200 px-4 py-2 text-center text-[14px] font-black uppercase leading-[18px] text-red-600"
-          style={{ top: noticeTop }}
-        >
-          <div>Please do not reduct</div>
-          <div>income tax as it was payed</div>
-          <div>while importing</div>
-        </div>
-      ) : null}
-
-      {showTerms ? (
-        <div
-          className="absolute left-[42px] w-[710px] border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]"
-          style={{ top: termsTop }}
-        >
-          <div className="font-bold">Terms &amp; Conditions</div>
-          <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
-          <div>
-            Please make cheque payments payable to <span className="text-[16px] font-black">Classic Electronic</span>
-          </div>
-          <div className="text-[16px] font-black">
-            Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
-          </div>
-        </div>
-      ) : null}
 
       <div className="absolute left-0 right-0 top-[996px] text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
         {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}

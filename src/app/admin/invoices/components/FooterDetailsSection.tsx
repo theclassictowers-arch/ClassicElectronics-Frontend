@@ -4,10 +4,11 @@ import { Field } from './FormFields';
 
 type FooterDetailsSectionProps = {
   form: InvoiceForm;
+  activeDocumentType: string;
   onFormChange: (field: keyof InvoiceForm, value: string | boolean) => void;
 };
 
-export const FooterDetailsSection = ({ form, onFormChange }: FooterDetailsSectionProps) => (
+export const FooterDetailsSection = ({ form, activeDocumentType, onFormChange }: FooterDetailsSectionProps) => (
   <section className="rounded-3xl border border-slate-800 bg-[#111827] p-5 shadow-xl">
     <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-cyan-300">
       <Mail size={16} />
@@ -25,20 +26,22 @@ export const FooterDetailsSection = ({ form, onFormChange }: FooterDetailsSectio
         value={form.subtitle}
         onChange={(value) => onFormChange('subtitle', value)}
       />
-      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
-        <ToggleButton
-          label="Quotation Tax Notice"
-          enabled={form.showQuotationTaxNotice !== false}
-          onToggle={() =>
-            onFormChange('showQuotationTaxNotice', !(form.showQuotationTaxNotice !== false))
-          }
-        />
-        <ToggleButton
-          label="Quotation Terms"
-          enabled={form.showQuotationTerms !== false}
-          onToggle={() => onFormChange('showQuotationTerms', !(form.showQuotationTerms !== false))}
-        />
-      </div>
+      {activeDocumentType === 'invoice' ? (
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
+          <ToggleButton
+            label="Invoice Tax Notice"
+            enabled={form.showQuotationTaxNotice !== false}
+            onToggle={() =>
+              onFormChange('showQuotationTaxNotice', !(form.showQuotationTaxNotice !== false))
+            }
+          />
+          <ToggleButton
+            label="Invoice Terms"
+            enabled={form.showQuotationTerms !== false}
+            onToggle={() => onFormChange('showQuotationTerms', !(form.showQuotationTerms !== false))}
+          />
+        </div>
+      ) : null}
       <Field
         label="Website"
         value={form.website}
