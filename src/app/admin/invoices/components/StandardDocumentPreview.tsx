@@ -91,17 +91,11 @@ export const StandardDocumentPreview = ({
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
         <div className="relative flex h-full flex-1 flex-col">
-          <div className="mb-3 grid max-w-[430px] grid-cols-[44px_1fr] gap-x-2 text-[12px] leading-snug text-slate-900">
+          <div className="mb-3 flex max-w-[430px] flex-col text-[12px] leading-snug text-slate-900">
             {customerRows.map(([label, value], index) => (
-              label ? (
-                <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words">
-                  {label} {value || '________________'}
-                </div>
-              ) : (
-                <div key={`customer-${index}`} className="col-span-2 min-w-0 break-words">
-                  {value || '________________'}
-                </div>
-              )
+              <div key={`${label || 'customer'}-${index}`} className="min-w-0 break-words">
+                {label ? `${label} ${value || '________________'}` : value || '________________'}
+              </div>
             ))}
           </div>
 
@@ -138,7 +132,9 @@ export const StandardDocumentPreview = ({
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
                         {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
                         {item.description ? (
-                          <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
+                          <div className={item.productName ? 'mt-1 whitespace-pre-wrap' : 'whitespace-pre-wrap'}>
+                            {item.description}
+                          </div>
                         ) : !item.productName ? (
                           'Item description'
                         ) : null}

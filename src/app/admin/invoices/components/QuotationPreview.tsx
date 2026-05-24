@@ -113,17 +113,11 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[44px] top-[142px] grid grid-cols-[42px_1fr] gap-x-2 text-[12px] leading-[14px]">
+      <div className="absolute left-[44px] top-[142px] flex max-w-[405px] flex-col text-[12px] leading-[14px]">
         {customerRows.map(([label, value], index) => (
-          label ? (
-            <div key={`${label}-${index}`} className="col-span-2 max-w-[405px] truncate">
-              {label} {value || '________________'}
-            </div>
-          ) : (
-            <div key={`customer-${index}`} className="col-span-2 max-w-[405px] truncate">
-              {value || '________________'}
-            </div>
-          )
+          <div key={`${label || 'customer'}-${index}`} className="truncate">
+            {label ? `${label} ${value || '________________'}` : value || '________________'}
+          </div>
         ))}
       </div>
 
@@ -175,7 +169,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               >
                 {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                 {item.description ? (
-                  <div className={item.productName ? 'mt-1 font-normal' : 'font-normal'}>
+                  <div className={item.productName ? 'mt-1 whitespace-pre-wrap font-normal' : 'whitespace-pre-wrap font-normal'}>
                     {item.description}
                   </div>
                 ) : null}

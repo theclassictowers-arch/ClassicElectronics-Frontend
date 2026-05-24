@@ -59,17 +59,11 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
         <div className="relative flex h-full flex-1 flex-col">
-          <div className="grid max-w-[460px] grid-cols-[44px_1fr] gap-x-2 text-[12px] leading-snug text-slate-900">
+          <div className="flex max-w-[460px] flex-col text-[12px] leading-snug text-slate-900">
               {customerRows.map(([label, value], index) => (
-                label ? (
-                  <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words">
-                    {label} {value || '________________'}
-                  </div>
-                ) : (
-                  <div key={`customer-${index}`} className="col-span-2 min-w-0 break-words">
-                    {value || '________________'}
-                  </div>
-                )
+                <div key={`${label || 'customer'}-${index}`} className="min-w-0 break-words">
+                  {label ? `${label} ${value || '________________'}` : value || '________________'}
+                </div>
               ))}
           </div>
 
@@ -100,7 +94,7 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                     <td className="border-r-2 border-slate-950 px-3 py-6 text-center text-sm">
                       {index + 1}
                     </td>
-                    <td className="border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
+                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
                       {item.description || item.productName || 'Item particulars'}
                     </td>
                     <td className="border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
@@ -132,7 +126,7 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
             </table>
           </div>
 
-          <div className="mt-8 text-[14px] text-slate-950">From Classic Electronics</div>
+          <div className="mt-12 text-[14px] text-slate-950">From Classic Electronics</div>
           <div className="mt-16 max-w-xs">
             <div className="text-[20px] italic text-sky-700 sm:text-[22px]">
               {form.directorName || 'M Fawad Younas'}

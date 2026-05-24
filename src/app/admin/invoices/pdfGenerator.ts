@@ -78,6 +78,19 @@ export const downloadInvoicePdf = async ({
           return text;
         };
 
+        const splitPdfTextPreservingNewlines = (value: string, width: number, fontSize?: number) => {
+          const previousFontSize = pdf.getFontSize();
+          if (fontSize) pdf.setFontSize(fontSize);
+
+          const lines = value.split(/\r?\n/).flatMap((line) => {
+            if (!line.trim()) return [''];
+            return pdf.splitTextToSize(line.replace(/(\S{12})/g, '$1 '), width) as string[];
+          });
+
+          if (fontSize) pdf.setFontSize(previousFontSize);
+          return lines;
+        };
+
         const containImageSize = (imageDataUrl: string, maxWidth: number, maxHeight: number) => {
           try {
             const properties = pdf.getImageProperties(imageDataUrl);
@@ -173,12 +186,7 @@ export const downloadInvoicePdf = async ({
         const priceLabelWidth = 12;
         const priceValueWidth = tableWidth - srWidth - descriptionWidth - remarksWidth - priceLabelWidth;
         const splitPdfCellText = (value: string, width: number, fontSize = 8) => {
-          const previousFontSize = pdf.getFontSize();
-          pdf.setFontSize(fontSize);
-          const lines = pdf.splitTextToSize(value.replace(/(\S{12})/g, '$1 '), width) as string[];
-          pdf.setFontSize(previousFontSize);
-
-          return lines;
+          return splitPdfTextPreservingNewlines(value, width, fontSize);
         };
         const fitPdfText = (value: string, width: number) => {
           const text = value || '';
@@ -534,11 +542,11 @@ export const downloadInvoicePdf = async ({
           const deliveryRowHeights =
             items.length > 0
               ? items.map((item) => {
-                  const particularsLines = pdf.splitTextToSize(
+                  const particularsLines = splitPdfTextPreservingNewlines(
                     item.description || item.productName || 'Item particulars',
                     columns[1] - 5
-                  ) as string[];
-                  const remarksLines = pdf.splitTextToSize(item.remarks || '', columns[2] - 4) as string[];
+                  );
+                  const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
                   return Math.max(28, Math.max(particularsLines.length, remarksLines.length, 1) * 4.5 + 12);
                 })
@@ -634,12 +642,12 @@ export const downloadInvoicePdf = async ({
 
             pdf.text(String(index + 1), tableX + columns[0] / 2, rowTop + itemRowHeight / 2 + 2, { align: 'center' });
             pdf.text(
-              pdf.splitTextToSize(item.remarks || '', columns[2] - 4),
+              splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
               rowTop + 7
             );
             pdf.text(
-              pdf.splitTextToSize(item.description || item.productName || 'Item particulars', columns[1] - 5),
+              splitPdfTextPreservingNewlines(item.description || item.productName || 'Item particulars', columns[1] - 5),
               tableX + columns[0] + 2,
               rowTop + 7
             );
@@ -658,7 +666,7 @@ export const downloadInvoicePdf = async ({
             rowTop += itemRowHeight;
           });
 
-          const signatureY = Math.min(tableY + tableHeight + 16, 198);
+          const signatureY = Math.min(tableY + tableHeight + 12, 220);
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10.5);
           pdf.text('From Classic Electronics', contentLeftX + 1, signatureY);
@@ -914,10 +922,10 @@ export const downloadInvoicePdf = async ({
 
       for (const [index, item] of items.entries()) {
         const nameLines = item.productName
-          ? (pdf.splitTextToSize(item.productName, tableColumnWidths[1] - 4) as string[])
+          ? splitPdfTextPreservingNewlines(item.productName, tableColumnWidths[1] - 4)
           : [];
         const descriptionLines = item.description
-          ? (pdf.splitTextToSize(item.description, tableColumnWidths[1] - 4) as string[])
+          ? splitPdfTextPreservingNewlines(item.description, tableColumnWidths[1] - 4)
           : [];
         const remarksLines = pdf.splitTextToSize(
           item.remarks || item.productName || 'Remarks',
