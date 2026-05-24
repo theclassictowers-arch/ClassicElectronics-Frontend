@@ -48,6 +48,7 @@ export const downloadInvoicePdf = async ({
         const grandTotalWithTax = includeTax ? totalAmount + salesTaxAmount : totalAmount;
         const classicPurple: [number, number, number] = [109, 40, 217];
         const footerFontSize = 9;
+        const bodyShiftUpY = 7.9;
 
         const drawBodyThankYou = (x: number, y: number, align: 'left' | 'center' | 'right' = 'right') => {
           const text = form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!';
@@ -176,7 +177,7 @@ export const downloadInvoicePdf = async ({
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
         const tableX = 15;
-        const tableY = 82.3;
+        const tableY = 82.3 - bodyShiftUpY;
         const tableWidth = 180;
         const headerHeight = 13;
         const minimumRowHeight = 20;
@@ -339,10 +340,10 @@ export const downloadInvoicePdf = async ({
 
           pdf.setTextColor(0, 0, 0);
           pdf.setFontSize(9);
-          drawCustomerRows(getCustomerDetailRows(form), 15, 50, 14, 101, 4);
+          drawCustomerRows(getCustomerDetailRows(form), 15, 50 - bodyShiftUpY, 14, 101, 4);
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(9.75);
-          pdf.text('Reference to your quotation the details is as below.', 15, 78);
+          pdf.text('Reference to your quotation the details is as below.', 15, 78 - bodyShiftUpY);
 
           drawClassicFooter();
         };
@@ -533,7 +534,7 @@ export const downloadInvoicePdf = async ({
           const contentLeftX = margin + innerPadding;
           const contentRightX = pageWidth - margin - innerPadding;
           const tableX = contentLeftX;
-          const tableY = 98;
+          const tableY = 98 - bodyShiftUpY;
           const tableWidth = contentRightX - contentLeftX;
           const headerHeight = 10;
           const columns = [18, 87, 43, 34];
@@ -551,9 +552,9 @@ export const downloadInvoicePdf = async ({
                   const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
-                  return Math.max(18, Math.max(particularsLineCount, remarksLines.length, 1) * 4.5 + 4.5);
+                  return Math.max(16, Math.max(particularsLineCount, remarksLines.length, 1) * 4.2 + 3.8);
                 })
-              : [18];
+              : [16];
           const tableHeight =
             headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
@@ -610,7 +611,7 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(15, 23, 42);
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(9);
-          drawCustomerRows(customerRows, contentLeftX + 1, 58, 14, 110, 5);
+          drawCustomerRows(customerRows, contentLeftX + 1, 50 - bodyShiftUpY, 14, 110, 5);
 
           pdf.setDrawColor(...borderColor);
           pdf.setLineWidth(0.5);
@@ -639,7 +640,7 @@ export const downloadInvoicePdf = async ({
 
           let rowTop = tableY + headerHeight;
           items.forEach((item, index) => {
-            const itemRowHeight = deliveryRowHeights[index] || 18;
+            const itemRowHeight = deliveryRowHeights[index] || 16;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
             const nameLines = item.productName
@@ -653,13 +654,13 @@ export const downloadInvoicePdf = async ({
             pdf.text(
               splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
-              rowTop + 4.8
+              rowTop + 4.3
             );
-            let particularsY = rowTop + 4.8;
+            let particularsY = rowTop + 4.3;
             if (nameLines.length) {
               pdf.setFont('helvetica', 'bold');
               pdf.text(nameLines, tableX + columns[0] + 2, particularsY);
-              particularsY += nameLines.length * 4.5 + (descriptionLines.length ? 1.5 : 0);
+              particularsY += nameLines.length * 4.2 + (descriptionLines.length ? 1.2 : 0);
             }
             if (descriptionLines.length) {
               pdf.setFont('helvetica', 'normal');
@@ -668,7 +669,7 @@ export const downloadInvoicePdf = async ({
               pdf.text('Item particulars', tableX + columns[0] + 2, particularsY);
             }
             pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + itemRowHeight);
-            pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3], rowTop + itemRowHeight / 2);
+            pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3] - 0.4, rowTop + itemRowHeight / 2);
             pdf.setFont('helvetica', 'bold');
             pdf.text('UOM', detailsX + 1.2, rowTop + itemRowHeight / 4 + 1.6);
             pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight * 0.75 + 1.6);
@@ -857,14 +858,14 @@ export const downloadInvoicePdf = async ({
           });
         }
 
-        let cursorY = 53;
+        let cursorY = outerBorderTopY + 4 - bodyShiftUpY;
 
         if (withCustomerBlock) {
           pdf.setTextColor(...primaryTextColor);
           pdf.setFontSize(9);
           const customerRows = getCustomerDetailRows(form);
-          drawCustomerRows(customerRows, contentLeftX + 1, cursorY + 7, 14, 108, 5);
-          cursorY += customerRows.length * 5 + 9;
+          drawCustomerRows(customerRows, contentLeftX + 1, cursorY, 14, 108, 5);
+          cursorY += customerRows.length * 5 + 12;
         }
 
         if (logoDataUrl) {
@@ -1021,7 +1022,7 @@ export const downloadInvoicePdf = async ({
           pdf.text('Item description', descriptionCellX + 2, descriptionTextY);
         }
 
-        pdf.setTextColor(...mutedTextColor);
+        pdf.setTextColor(...primaryTextColor);
         pdf.setFont('helvetica', 'normal');
         pdf.text(fittedRemarksLines, remarksCellX + 2, cursorY + 4.8);
         if (itemImage) {

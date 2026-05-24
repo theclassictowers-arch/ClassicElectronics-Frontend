@@ -50,7 +50,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
   });
 
-  const tableTop = 282;
+  const tableTop = 252;
   const tableHeaderHeight = 48;
   const bodyBottom = 960;
   const detailsBlockHeight = 210;
@@ -113,7 +113,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[44px] top-[142px] flex max-w-[405px] flex-col text-[12px] leading-[14px]">
+      <div className="absolute left-[44px] top-[112px] flex max-w-[405px] flex-col text-[12px] leading-[14px]">
         {customerRows.map(([label, value], index) => (
           <div key={`${label || 'customer'}-${index}`} className="truncate">
             {label ? `${label} ${value || '________________'}` : value || '________________'}
@@ -121,7 +121,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         ))}
       </div>
 
-      <div className="absolute left-[44px] top-[254px] text-[13px] font-bold italic leading-[14px]">
+      <div className="absolute left-[44px] top-[224px] text-[13px] font-bold italic leading-[14px]">
         Reference to your quotation the details is as below.
       </div>
 

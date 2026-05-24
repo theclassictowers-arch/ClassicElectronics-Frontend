@@ -44,7 +44,7 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
       </div>
 
       <div
-        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
+        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-[10px] sm:px-5"
         style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
       >
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
@@ -58,7 +58,7 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
         </div>
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
-        <div className="relative flex h-full flex-1 flex-col">
+        <div className="relative flex h-full flex-1 -translate-y-[30px] flex-col">
           <div className="flex max-w-[460px] flex-col text-[12px] leading-snug text-slate-900">
               {customerRows.map(([label, value], index) => (
                 <div key={`${label || 'customer'}-${index}`} className="min-w-0 break-words">
@@ -89,12 +89,12 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                 {items.map((item, index) => (
                   <tr
                     key={item.id}
-                    className="min-h-24 align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
+                    className="align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
                   >
-                    <td className="border-r-2 border-slate-950 px-3 py-3 text-center text-sm">
+                    <td className="border-r-2 border-slate-950 px-3 py-2 text-center text-sm">
                       {index + 1}
                     </td>
-                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-3 text-[13px] leading-snug">
+                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-2 text-[13px] leading-snug">
                       {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                       {item.description ? (
                         <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
@@ -102,11 +102,11 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                         'Item particulars'
                       ) : null}
                     </td>
-                    <td className="border-r-2 border-slate-950 px-3 py-3 text-[13px] leading-snug">
+                    <td className="border-r-2 border-slate-950 px-3 py-2 text-[13px] leading-snug">
                       {item.remarks}
                     </td>
                     <td className="p-0 text-[13px]">
-                      <div className="grid h-full min-h-[96px] grid-rows-2">
+                      <div className="grid h-full min-h-[48px] grid-rows-2">
                         {[
                           ['UOM', item.uom || 'PCS'],
                           ['QTY', String(item.quantity || '')],

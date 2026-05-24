@@ -75,7 +75,7 @@ export const StandardDocumentPreview = ({
       </div>
 
       <div
-        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-8 sm:px-5"
+        className="relative mt-7 flex flex-1 flex-col overflow-hidden rounded-[34px] border-2 border-violet-600 bg-white px-4 pb-5 pt-[10px] sm:px-5"
         style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
       >
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
@@ -90,7 +90,7 @@ export const StandardDocumentPreview = ({
 
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
-        <div className="relative flex h-full flex-1 flex-col">
+        <div className="relative flex h-full flex-1 -translate-y-[30px] flex-col">
           <div className="mb-3 flex max-w-[430px] flex-col text-[12px] leading-snug text-slate-900">
             {customerRows.map(([label, value], index) => (
               <div key={`${label || 'customer'}-${index}`} className="min-w-0 break-words">
@@ -139,7 +139,7 @@ export const StandardDocumentPreview = ({
                           'Item description'
                         ) : null}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-700 sm:text-[12px]">
+                      <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-950 sm:text-[12px]">
                         <div className="space-y-2">
                           <div className="font-medium text-slate-900">
                             {item.remarks || item.productName || 'Remarks'}
