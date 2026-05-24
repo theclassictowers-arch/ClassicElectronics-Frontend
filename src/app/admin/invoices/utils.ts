@@ -45,16 +45,6 @@ export const documentTypes: Array<{
     fileSlug: 'quotation',
   },
   {
-    type: 'invoice',
-    label: 'Invoice',
-    title: 'Sales Tax Invoice Page',
-    pdfTitle: 'SALES TAX INVOICE',
-    numberLabel: 'Invoice No',
-    purchaseLabel: 'Purchase Order',
-    referenceLabel: 'Quotation No',
-    fileSlug: 'sales-tax-invoice',
-  },
-  {
     type: 'deliveryChallan',
     label: 'Delivery Challan',
     title: 'Delivery Challan Page',
@@ -63,6 +53,16 @@ export const documentTypes: Array<{
     purchaseLabel: 'PO',
     referenceLabel: 'Invoice / PO Ref',
     fileSlug: 'delivery-challan',
+  },
+  {
+    type: 'invoice',
+    label: 'Invoice',
+    title: 'Sales Tax Invoice Page',
+    pdfTitle: 'SALES TAX INVOICE',
+    numberLabel: 'Invoice No',
+    purchaseLabel: 'Purchase Order',
+    referenceLabel: 'Quotation No',
+    fileSlug: 'sales-tax-invoice',
   },
   {
     type: 'bill',

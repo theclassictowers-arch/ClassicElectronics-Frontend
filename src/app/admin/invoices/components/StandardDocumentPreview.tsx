@@ -236,7 +236,7 @@ export const StandardDocumentPreview = ({
               <div className="font-bold">Terms &amp; Conditions</div>
               <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
               <div>
-                Please make cheque payments payable to <span className="text-[16px] font-black">Classic Electronic</span>
+                Please make cheque payments payable to <span className="pl-8 text-[16px] font-black">Classic Electronic</span>
               </div>
               <div className="text-[16px] font-black">
                 Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
@@ -245,13 +245,11 @@ export const StandardDocumentPreview = ({
           ) : null}
           {showInvoiceTaxNotice ? (
             <div
-              className={`absolute left-5 w-[300px] border-2 border-black bg-yellow-200 px-4 py-2 text-center text-[14px] font-black uppercase leading-[18px] text-red-600 ${
+              className={`absolute left-5 w-[300px] border-2 border-black bg-yellow-200 px-3 py-2 text-center text-[12px] font-black uppercase leading-none text-red-600 ${
                 showInvoiceTerms ? 'bottom-[122px]' : 'bottom-[40px]'
               }`}
             >
-              <div>Please do not reduct</div>
-              <div>income tax as it was payed</div>
-              <div>while importing</div>
+              Please do not reduct income tax as it was payed while importing
             </div>
           ) : null}
           <div className="absolute bottom-[10px] left-0 right-0 text-center text-[14px] font-bold leading-none text-black">
