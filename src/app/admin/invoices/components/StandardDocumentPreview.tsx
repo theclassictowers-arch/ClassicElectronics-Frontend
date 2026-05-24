@@ -104,16 +104,16 @@ export const StandardDocumentPreview = ({
             <table className="w-full table-fixed border-collapse text-slate-950">
               <thead>
                 <tr className="border-b-2 border-slate-950">
-                  <th className="w-10 border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                  <th className="w-10 border-r-2 border-slate-950 px-1 py-[5px] text-center text-[11px] font-bold sm:text-[13px]">
                     Sr
                   </th>
-                  <th className="w-[43%] border-r-2 border-slate-950 px-2 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                  <th className="w-[43%] border-r-2 border-slate-950 px-2 py-[5px] text-center text-[11px] font-bold sm:text-[13px]">
                     Description
                   </th>
-                  <th className="w-[30%] border-r-2 border-slate-950 px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                  <th className="w-[30%] border-r-2 border-slate-950 px-1 py-[5px] text-center text-[11px] font-bold sm:text-[13px]">
                     Remarks
                   </th>
-                  <th className="w-[21%] px-1 py-2 text-center text-[11px] font-medium sm:text-[13px]">
+                  <th className="w-[21%] px-1 py-[5px] text-center text-[11px] font-bold sm:text-[13px]">
                     Price
                   </th>
                 </tr>
@@ -130,11 +130,11 @@ export const StandardDocumentPreview = ({
                       <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-sm sm:text-base">
                         {index + 1}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
+                      <td className="border-r-2 border-slate-950 px-2 py-1 text-[10px] leading-[14px]">
                         {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
                         {item.description ? (
                           <div
-                            className={item.productName ? 'mt-1 whitespace-pre-wrap' : 'whitespace-pre-wrap'}
+                            className="whitespace-pre-wrap"
                             style={{
                               display: '-webkit-box',
                               WebkitBoxOrient: 'vertical',

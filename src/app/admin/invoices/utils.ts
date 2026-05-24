@@ -55,7 +55,7 @@ export const documentTypes: Array<{
     pdfTitle: 'DELIVERY CHALLAN',
     numberLabel: 'Delivery Challan No',
     purchaseLabel: 'PO',
-    referenceLabel: 'Invoice / PO Ref',
+    referenceLabel: 'Quotation No',
     fileSlug: 'delivery-challan',
   },
   {

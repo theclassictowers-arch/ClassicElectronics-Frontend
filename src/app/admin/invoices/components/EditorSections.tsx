@@ -55,7 +55,7 @@ export const DocumentDetailsSection = ({
         value={form.purchaseOrder}
         onChange={(value) => onFormChange('purchaseOrder', value)}
       />
-      {activeDocumentType === 'deliveryChallan' ? null : (
+      {activeDocumentType === 'bill' ? null : (
         <Field
           label={activeDocument.referenceLabel}
           value={form.quotationNo}

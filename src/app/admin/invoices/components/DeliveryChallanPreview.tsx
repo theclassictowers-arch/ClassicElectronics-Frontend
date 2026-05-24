@@ -71,16 +71,16 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
             <table className="w-full table-fixed border-collapse text-slate-950">
               <thead>
                 <tr className="border-b-2 border-slate-950">
-                  <th className="w-[10%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                  <th className="w-[10%] border-r-2 border-slate-950 px-2 py-[5px] text-center text-[12px] font-bold">
                     S.No
                   </th>
-                  <th className="w-[48%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                  <th className="w-[48%] border-r-2 border-slate-950 px-2 py-[5px] text-center text-[12px] font-bold">
                     Particulars
                   </th>
-                  <th className="w-[24%] border-r-2 border-slate-950 px-2 py-2 text-center text-[12px] font-semibold">
+                  <th className="w-[24%] border-r-2 border-slate-950 px-2 py-[5px] text-center text-[12px] font-bold">
                     Remarks
                   </th>
-                  <th className="w-[18%] px-2 py-2 text-center text-[12px] font-semibold">
+                  <th className="w-[18%] px-2 py-[5px] text-center text-[12px] font-bold">
                     Details
                   </th>
                 </tr>
@@ -94,11 +94,11 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                     <td className="border-r-2 border-slate-950 px-3 py-1 text-center text-sm">
                       {index + 1}
                     </td>
-                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-1 text-[13px] leading-snug">
+                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-1 text-[10px] leading-[14px]">
                       {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                       {item.description ? (
                         <div
-                          className={item.productName ? 'mt-1' : ''}
+                          className=""
                           style={{
                             display: '-webkit-box',
                             WebkitBoxOrient: 'vertical',

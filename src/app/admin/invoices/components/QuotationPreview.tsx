@@ -60,7 +60,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   });
 
   const tableTop = 252;
-  const tableHeaderHeight = 48;
+  const tableHeaderHeight = 30;
   const bodyBottom = 960;
   const detailsBlockHeight = 210;
   const tableBottomGap = 20;
@@ -138,7 +138,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         className="absolute left-[42px] w-[710px] border-[2px] border-black bg-white text-[14px]"
         style={{ top: tableTop }}
       >
-        <div className="grid h-[48px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[13px]">
+        <div className="grid h-[30px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[13px] font-bold">
           <div className="flex items-center justify-center border-r-[2px] border-black">
             Sr
           </div>
@@ -170,7 +170,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               </div>
 
               <div
-                className="min-h-0 overflow-hidden border-r-[2px] border-black px-3 py-4 text-[14px] leading-[21px]"
+                className="min-h-0 overflow-hidden border-r-[2px] border-black px-2 py-1 text-[10px] leading-[14px]"
                 style={{
                   overflowWrap: 'anywhere',
                   wordBreak: 'break-word',
@@ -179,7 +179,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                 {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                 {item.description ? (
                   <div
-                    className={item.productName ? 'mt-1 whitespace-pre-wrap font-normal' : 'whitespace-pre-wrap font-normal'}
+                    className="whitespace-pre-wrap font-normal"
                     style={{
                       display: '-webkit-box',
                       WebkitBoxOrient: 'vertical',
@@ -195,7 +195,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
                 <div className="flex h-full min-w-0 flex-col items-center gap-2 overflow-hidden">
                   <div
-                    className="w-full min-w-0 whitespace-pre-wrap break-words text-left text-[14px] leading-[21px]"
+                    className="w-full min-w-0 whitespace-pre-wrap break-words text-left text-[10px] leading-[14px]"
                     style={{
                       overflowWrap: 'anywhere',
                       wordBreak: 'break-word',
