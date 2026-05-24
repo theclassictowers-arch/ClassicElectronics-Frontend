@@ -94,7 +94,7 @@ export const StandardDocumentPreview = ({
           <div className="mb-3 grid max-w-[430px] grid-cols-[44px_1fr] gap-x-2 text-[12px] leading-snug text-slate-900">
             {customerRows.map(([label, value], index) => (
               label ? (
-                <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words font-semibold">
+                <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words">
                   {label} {value || '________________'}
                 </div>
               ) : (

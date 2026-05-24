@@ -116,7 +116,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       <div className="absolute left-[44px] top-[142px] grid grid-cols-[42px_1fr] gap-x-2 text-[12px] leading-[14px]">
         {customerRows.map(([label, value], index) => (
           label ? (
-            <div key={`${label}-${index}`} className="col-span-2 max-w-[405px] truncate font-semibold">
+            <div key={`${label}-${index}`} className="col-span-2 max-w-[405px] truncate">
               {label} {value || '________________'}
             </div>
           ) : (

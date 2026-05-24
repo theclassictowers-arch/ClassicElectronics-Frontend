@@ -105,13 +105,12 @@ export const downloadInvoicePdf = async ({
           let rowY = y;
           rows.forEach(([label, value], index) => {
             const availableWidth = label ? valueWidth : valueWidth + labelWidth;
-            if (label) {
-              pdf.setFont('helvetica', 'bold');
-              pdf.text(fitPdfText(`${label} ${value || '________________'}`, availableWidth), x, rowY);
-            } else {
-              pdf.setFont('helvetica', 'normal');
-              pdf.text(fitPdfText(value || '________________', availableWidth), x, rowY);
-            }
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(
+              fitPdfText(label ? `${label} ${value || '________________'}` : value || '________________', availableWidth),
+              x,
+              rowY
+            );
             rowY += lineHeight;
           });
         };
