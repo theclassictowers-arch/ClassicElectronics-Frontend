@@ -244,7 +244,7 @@ export const downloadInvoicePdf = async ({
           const descriptionHeight =
             descriptionLineCount * 4.3 + (nameLines.length && descriptionLines.length ? 14 : 10);
           const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.3;
-          const imageHeight = quotationImageDataUrls[index] ? 20 : 0;
+          const imageHeight = quotationImageDataUrls[index] ? 12 : 0;
           const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 7 : 6);
 
           return Math.min(
@@ -444,7 +444,7 @@ export const downloadInvoicePdf = async ({
           if (itemImage) {
             const imageY = rowY + Math.max(remarksLines.length * 4.3 + 4, 10);
             const maxImageWidth = remarksWidth - 4;
-            const maxImageHeight = Math.max(rowHeight - (imageY - rowY) - 2, 8);
+            const maxImageHeight = Math.min(12, Math.max(rowHeight - (imageY - rowY) - 2, 6));
             const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
             if (imageSize.width > 6 && imageSize.height > 6) {
@@ -976,7 +976,7 @@ export const downloadInvoicePdf = async ({
         const descriptionHeight =
           descriptionLineCount * 4 + (nameLines.length && descriptionLines.length ? 3 : 0);
         const remarksHeight = Math.max(remarksLines.length, 1) * 4;
-        const imageHeight = itemImage ? 18 : 0;
+        const imageHeight = itemImage ? 11 : 0;
         const maxRowHeight = bodyContentBottomY - cursorY - 2;
         const rowHeight = Math.min(
           Math.max(28, maxRowHeight),
@@ -1045,7 +1045,7 @@ export const downloadInvoicePdf = async ({
         if (itemImage) {
           const imageY = cursorY + Math.max(fittedRemarksLines.length * 4 + 4, 10);
           const maxImageWidth = tableColumnWidths[2] - 4;
-          const maxImageHeight = Math.max(finalRowHeight - (imageY - cursorY) - 2, 8);
+          const maxImageHeight = Math.min(11, Math.max(finalRowHeight - (imageY - cursorY) - 2, 6));
           const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
           if (imageSize.width > 6 && imageSize.height > 6) {

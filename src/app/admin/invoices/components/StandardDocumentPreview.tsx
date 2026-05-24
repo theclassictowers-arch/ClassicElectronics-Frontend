@@ -159,7 +159,7 @@ export const StandardDocumentPreview = ({
                               <img
                                 src={getPictureSource(item.picture)}
                                 alt={item.productName || item.description || 'Invoice item'}
-                                className="h-16 w-full object-contain bg-white p-1.5"
+                                className="h-10 w-full object-contain bg-white p-1"
                               />
                             </div>
                           ) : item.picture && item.showPicture ? (
@@ -167,7 +167,7 @@ export const StandardDocumentPreview = ({
                               {item.picture}
                             </div>
                           ) : (
-                            <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
+                            <div className="flex h-10 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
                               {item.showPicture ? 'No picture selected' : 'Photo off'}
                             </div>
                           )}
