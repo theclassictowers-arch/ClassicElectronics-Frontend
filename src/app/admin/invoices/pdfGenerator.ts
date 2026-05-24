@@ -177,7 +177,7 @@ export const downloadInvoicePdf = async ({
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
         const tableX = 15;
-        const tableY = 82.3 - bodyShiftUpY;
+        const tableY = 85 - bodyShiftUpY;
         const tableWidth = 180;
         const headerHeight = 13;
         const minimumRowHeight = 20;
@@ -534,12 +534,13 @@ export const downloadInvoicePdf = async ({
           const contentLeftX = margin + innerPadding;
           const contentRightX = pageWidth - margin - innerPadding;
           const tableX = contentLeftX;
-          const tableY = 98 - bodyShiftUpY;
           const tableWidth = contentRightX - contentLeftX;
           const headerHeight = 10;
           const columns = [18, 87, 43, 34];
           const borderColor: [number, number, number] = [15, 23, 42];
           const customerRows = getCustomerDetailRows(form);
+          const customerTopY = 50 - bodyShiftUpY;
+          const tableY = customerTopY + customerRows.length * 5 + 5;
           const deliveryRowHeights =
             items.length > 0
               ? items.map((item) => {
@@ -611,7 +612,7 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(15, 23, 42);
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(9);
-          drawCustomerRows(customerRows, contentLeftX + 1, 50 - bodyShiftUpY, 14, 110, 5);
+          drawCustomerRows(customerRows, contentLeftX + 1, customerTopY, 14, 110, 5);
 
           pdf.setDrawColor(...borderColor);
           pdf.setLineWidth(0.5);
@@ -865,7 +866,7 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(9);
           const customerRows = getCustomerDetailRows(form);
           drawCustomerRows(customerRows, contentLeftX + 1, cursorY, 14, 108, 5);
-          cursorY += customerRows.length * 5 + 12;
+          cursorY += customerRows.length * 5 + 5;
         }
 
         if (logoDataUrl) {
