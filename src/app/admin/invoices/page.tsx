@@ -538,27 +538,25 @@ const SalesTaxInvoicePage = () => {
       return;
     }
 
-    if (activeDocumentType === 'quotation') {
-      const hasCustomer =
-        form.companyName.trim() && (form.customerAddress1.trim() || form.location.trim());
-      const hasProduct = items.some(
-        (item) =>
-          item.productId.trim() &&
-          (item.productName.trim() || item.description.trim()) &&
-          Number(item.quantity || 0) > 0
-      );
+    const documentLabel = activeDocument.label.toLowerCase();
+    const hasCustomer =
+      form.companyName.trim() && (form.customerAddress1.trim() || form.location.trim());
+    const hasProduct = items.some(
+      (item) =>
+        (item.productId.trim() || item.productName.trim() || item.description.trim()) &&
+        Number(item.quantity || 0) > 0
+    );
 
-      if (!hasCustomer) {
-        setSaveStatus('Please add customer name and location before saving quotation.');
-        alert('Please add customer details before saving quotation.');
-        return;
-      }
+    if (!hasCustomer) {
+      setSaveStatus(`Please add customer name and location before saving ${documentLabel}.`);
+      alert(`Please add customer details before saving ${documentLabel}.`);
+      return;
+    }
 
-      if (!hasProduct) {
-        setSaveStatus('Please select at least one product before saving quotation.');
-        alert('Please select at least one product before saving quotation.');
-        return;
-      }
+    if (!hasProduct) {
+      setSaveStatus(`Please select at least one product before saving ${documentLabel}.`);
+      alert(`Please select at least one product before saving ${documentLabel}.`);
+      return;
     }
 
     setIsSavingDocument(true);
@@ -577,7 +575,9 @@ const SalesTaxInvoicePage = () => {
 
       setSavedDocumentId(savedDocument._id);
       setForm({ ...createInvoiceForm(), ...(savedDocument.form as InvoiceForm) });
-      setSaveStatus(`${activeDocument.label} saved to backend.`);
+      setSaveStatus(`${activeDocument.label} saved to backend and history.`);
+      setHistoryDocumentType(activeDocumentType);
+      await loadHistory(activeDocumentType, historySearch, historySortBy, historySortOrder);
       await loadCustomers();
     } catch (error) {
       console.error('Failed to save document', error);

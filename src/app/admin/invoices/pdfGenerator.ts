@@ -973,18 +973,23 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(7.5);
           pdf.text('Terms & Conditions', contentLeftX + 2, termsBoxY + 3.8);
           pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7);
+          pdf.setFontSize(6.8);
           pdf.text(
-            'All goods remain the property of Classic Electronic until full payment has been received.',
+            fitPdfText(
+              'All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to',
+              contentRightX - contentLeftX - 4
+            ),
             contentLeftX + 2,
             termsBoxY + 7.5
           );
-          pdf.text('Please make cheque payments payable to', contentLeftX + 2, termsBoxY + 11.2);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(7.4);
           pdf.text(
-            'Classic Electronic  Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248',
-            contentLeftX + 73,
+            fitPdfText(
+              'Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248',
+              contentRightX - contentLeftX - 4
+            ),
+            contentLeftX + 2,
             termsBoxY + 11.2
           );
         }
@@ -999,6 +1004,7 @@ export const downloadInvoicePdf = async ({
       pdf.setTextColor(...primaryTextColor);
       let standardRowsOnPage = 0;
       const standardLineHeight = 2.95;
+      const standardMaxRowHeight = hasInvoiceNoticeBlocks ? 34 : 42;
 
       for (const [index, item] of items.entries()) {
         const nameLines = item.productName
@@ -1021,7 +1027,7 @@ export const downloadInvoicePdf = async ({
         const imageHeight = itemImage ? 14 : 0;
         const maxRowHeight = bodyContentBottomY - cursorY - 2;
         const rowHeight = Math.min(
-          Math.max(28, maxRowHeight),
+          Math.max(24, Math.min(maxRowHeight, standardMaxRowHeight)),
           Math.max(24, Math.max(descriptionHeight, remarksHeight + imageHeight + (itemImage ? 2 : 0)) + 3)
         );
 
@@ -1035,7 +1041,7 @@ export const downloadInvoicePdf = async ({
         }
 
         const finalRowHeight = Math.min(
-          Math.max(24, bodyContentBottomY - cursorY - 2),
+          Math.max(24, Math.min(bodyContentBottomY - cursorY - 2, standardMaxRowHeight)),
           Math.max(24, Math.max(descriptionHeight, remarksHeight + imageHeight + (itemImage ? 2 : 0)) + 3)
         );
         const maxDescriptionLines = Math.max(1, Math.floor((finalRowHeight - 4.8) / standardLineHeight));

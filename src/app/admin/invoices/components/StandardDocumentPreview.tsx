@@ -241,14 +241,13 @@ export const StandardDocumentPreview = ({
             {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
           </div>
           {showInvoiceTerms ? (
-            <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[12px] leading-[17px]">
+            <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[11px] leading-[16px]">
               <div className="font-bold">Terms &amp; Conditions</div>
-              <div>All goods remain the property of Classic Electronic until full payment has been received.</div>
-              <div>
-                Please make cheque payments payable to{' '}
-                <span className="text-[13px] font-black">
-                  Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
-                </span>
+              <div className="truncate">
+                All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to
+              </div>
+              <div className="truncate text-[12px] font-black">
+                Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
               </div>
             </div>
           ) : null}
