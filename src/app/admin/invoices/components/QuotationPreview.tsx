@@ -52,7 +52,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       MAX_DESCRIPTION_LINES
     );
     const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 27);
-    const imageHeight = showItemImage(item) ? 56 : 0;
+    const imageHeight = showItemImage(item) ? 76 : 0;
     const descriptionHeight = descriptionRows * 22 + 74;
     const remarksHeight = remarksRows * 22 + imageHeight + 50;
 
@@ -205,7 +205,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-1 h-10 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
+                    <div className="mt-1 h-12 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
