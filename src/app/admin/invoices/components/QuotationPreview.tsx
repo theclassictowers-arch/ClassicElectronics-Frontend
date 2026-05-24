@@ -1,7 +1,13 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
-import { createInvoiceItem, formatCurrency, getCustomerDetailRows, getPictureSource } from '../utils';
+import {
+  MAX_DESCRIPTION_LINES,
+  createInvoiceItem,
+  formatCurrency,
+  getCustomerDetailRows,
+  getPictureSource,
+} from '../utils';
 import { DocumentFooter } from './DocumentFooter';
 
 type QuotationPreviewProps = {
@@ -41,7 +47,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const baseRowHeight =
     quotationItems.length <= 1 ? 150 : quotationItems.length === 2 ? 210 : 165;
   const rowHeights = quotationItems.map((item) => {
-    const descriptionRows = estimateWrappedRows(item.description || item.productName || '', 24);
+    const descriptionRows = Math.min(
+      estimateWrappedRows(item.description || item.productName || '', 24),
+      MAX_DESCRIPTION_LINES
+    );
     const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 27);
     const imageHeight = showItemImage(item) ? 104 : 0;
     const descriptionHeight = descriptionRows * 22 + 74;
@@ -169,7 +178,15 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               >
                 {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                 {item.description ? (
-                  <div className={item.productName ? 'mt-1 whitespace-pre-wrap font-normal' : 'whitespace-pre-wrap font-normal'}>
+                  <div
+                    className={item.productName ? 'mt-1 whitespace-pre-wrap font-normal' : 'whitespace-pre-wrap font-normal'}
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: MAX_DESCRIPTION_LINES,
+                      overflow: 'hidden',
+                    }}
+                  >
                     {item.description}
                   </div>
                 ) : null}

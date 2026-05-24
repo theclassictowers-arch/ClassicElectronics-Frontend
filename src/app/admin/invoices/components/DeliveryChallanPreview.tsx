@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
-import { getCustomerDetailRows } from '../utils';
+import { MAX_DESCRIPTION_LINES, getCustomerDetailRows } from '../utils';
 import { DocumentFooter } from './DocumentFooter';
 
 type DeliveryChallanPreviewProps = {
@@ -97,7 +97,17 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                     <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-1 text-[13px] leading-snug">
                       {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                       {item.description ? (
-                        <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
+                        <div
+                          className={item.productName ? 'mt-1' : ''}
+                          style={{
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: MAX_DESCRIPTION_LINES,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {item.description}
+                        </div>
                       ) : !item.productName ? (
                         'Item particulars'
                       ) : null}

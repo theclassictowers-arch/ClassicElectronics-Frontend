@@ -1,6 +1,7 @@
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from './types';
 import {
+  MAX_DESCRIPTION_LINES,
   SALES_TAX_RATE,
   buildSalesPdfFileName,
   createInvoiceItem,
@@ -232,7 +233,7 @@ export const downloadInvoicePdf = async ({
             ? splitPdfCellText(item.productName, descriptionWidth - 4, 8.4)
             : [];
           const descriptionLines = item.description
-            ? splitPdfCellText(item.description, descriptionWidth - 4, 8)
+            ? splitPdfCellText(item.description, descriptionWidth - 4, 8).slice(0, MAX_DESCRIPTION_LINES)
             : [];
           const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
@@ -390,7 +391,7 @@ export const downloadInvoicePdf = async ({
             ? splitPdfCellText(item.productName, descriptionWidth - 4, 8.4)
             : [];
           const rawDescriptionLines = item.description
-            ? splitPdfCellText(item.description, descriptionWidth - 4, 8)
+            ? splitPdfCellText(item.description, descriptionWidth - 4, 8).slice(0, MAX_DESCRIPTION_LINES)
             : [];
           const maxDescriptionLines = Math.max(1, Math.floor((rowHeight - 9) / 4.3));
           const nameLines = fitPdfLines(rawNameLines, maxDescriptionLines, descriptionWidth - 4);
@@ -552,7 +553,7 @@ export const downloadInvoicePdf = async ({
                     ? splitPdfTextPreservingNewlines(item.productName, columns[1] - 5)
                     : [];
                   const descriptionLines = item.description
-                    ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5)
+                    ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5).slice(0, MAX_DESCRIPTION_LINES)
                     : [];
                   const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
@@ -652,7 +653,7 @@ export const downloadInvoicePdf = async ({
               ? splitPdfTextPreservingNewlines(item.productName, columns[1] - 5)
               : [];
             const descriptionLines = item.description
-              ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5)
+              ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5).slice(0, MAX_DESCRIPTION_LINES)
               : [];
 
             pdf.text(String(index + 1), tableX + columns[0] / 2, rowTop + itemRowHeight / 2 + 2, { align: 'center' });
@@ -958,7 +959,7 @@ export const downloadInvoicePdf = async ({
           ? splitPdfTextPreservingNewlines(item.productName, tableColumnWidths[1] - 4)
           : [];
         const descriptionLines = item.description
-          ? splitPdfTextPreservingNewlines(item.description, tableColumnWidths[1] - 4)
+          ? splitPdfTextPreservingNewlines(item.description, tableColumnWidths[1] - 4).slice(0, MAX_DESCRIPTION_LINES)
           : [];
         const remarksLines = pdf.splitTextToSize(
           item.remarks || item.productName || 'Remarks',

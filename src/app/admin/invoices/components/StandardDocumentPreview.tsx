@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from '../types';
 import {
+  MAX_DESCRIPTION_LINES,
   SALES_TAX_RATE,
   documentTypes,
   formatCurrency,
@@ -132,7 +133,15 @@ export const StandardDocumentPreview = ({
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
                         {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
                         {item.description ? (
-                          <div className={item.productName ? 'mt-1 whitespace-pre-wrap' : 'whitespace-pre-wrap'}>
+                          <div
+                            className={item.productName ? 'mt-1 whitespace-pre-wrap' : 'whitespace-pre-wrap'}
+                            style={{
+                              display: '-webkit-box',
+                              WebkitBoxOrient: 'vertical',
+                              WebkitLineClamp: MAX_DESCRIPTION_LINES,
+                              overflow: 'hidden',
+                            }}
+                          >
                             {item.description}
                           </div>
                         ) : !item.productName ? (
