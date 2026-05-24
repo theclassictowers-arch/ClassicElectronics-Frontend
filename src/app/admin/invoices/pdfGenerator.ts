@@ -886,6 +886,7 @@ export const downloadInvoicePdf = async ({
         const thankYouTopGapY = 5.3;
         const termsBoxHeight = 17;
         const yellowBoxHeight = 8;
+        const yellowBoxWidth = 122;
         const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
         const yellowBoxY = showTerms
           ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
@@ -894,13 +895,13 @@ export const downloadInvoicePdf = async ({
         if (showTaxNotice) {
           pdf.setDrawColor(0, 0, 0);
           pdf.setFillColor(254, 240, 138);
-          pdf.rect(contentLeftX, yellowBoxY, 74, yellowBoxHeight, 'FD');
+          pdf.rect(contentLeftX, yellowBoxY, yellowBoxWidth, yellowBoxHeight, 'FD');
           pdf.setTextColor(220, 38, 38);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(6.9);
+          pdf.setFontSize(9.2);
           pdf.text(
             'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORTING',
-            contentLeftX + 37,
+            contentLeftX + yellowBoxWidth / 2,
             yellowBoxY + 5.1,
             { align: 'center' }
           );

@@ -245,7 +245,7 @@ export const StandardDocumentPreview = ({
           ) : null}
           {showInvoiceTaxNotice ? (
             <div
-              className={`absolute left-5 w-[300px] border-2 border-black bg-yellow-200 px-3 py-2 text-center text-[12px] font-black uppercase leading-none text-red-600 ${
+              className={`absolute left-5 w-[492px] border-2 border-black bg-yellow-200 px-3 py-2 text-center text-[15px] font-black uppercase leading-none text-red-600 ${
                 showInvoiceTerms ? 'bottom-[122px]' : 'bottom-[40px]'
               }`}
             >
