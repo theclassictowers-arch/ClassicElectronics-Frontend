@@ -441,13 +441,15 @@ export const downloadInvoicePdf = async ({
           );
           pdf.text(remarksLines, remarksX + 2, rowY + 5.5);
           if (itemImage) {
-            const maxImageWidth = remarksWidth - 12;
-            const maxImageHeight = Math.min(20, Math.max(rowHeight - 16, 10));
+            const imageY = rowY + Math.max(remarksLines.length * 4.3 + 4, 10);
+            const maxImageWidth = remarksWidth - 4;
+            const maxImageHeight = Math.max(rowHeight - (imageY - rowY) - 2, 8);
             const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
-            const imageX = remarksX + (remarksWidth - imageSize.width) / 2;
-            const textHeight = Math.max(remarksLines.length, 1) * 4.3;
-            const imageY = Math.min(rowY + 5 + textHeight, rowY + rowHeight - imageSize.height - 1.5);
-            pdf.addImage(itemImage, 'PNG', imageX, imageY, imageSize.width, imageSize.height, undefined, 'FAST');
+
+            if (imageSize.width > 6 && imageSize.height > 6) {
+              const imageX = remarksX + 2 + (maxImageWidth - imageSize.width) / 2;
+              pdf.addImage(itemImage, 'PNG', imageX, imageY, imageSize.width, imageSize.height, undefined, 'FAST');
+            }
           }
         };
 

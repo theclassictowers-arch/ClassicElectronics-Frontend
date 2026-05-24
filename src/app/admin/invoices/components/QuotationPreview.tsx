@@ -188,12 +188,12 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-1 flex h-[88px] w-full shrink-0 items-center justify-center overflow-hidden">
+                    <div className="mt-1 h-16 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1.5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
                         alt={item.productName || item.description || 'Item image'}
-                        className="max-h-[88px] max-w-[170px] object-contain"
+                        className="h-full w-full object-contain"
                       />
                     </div>
                   ) : null}
