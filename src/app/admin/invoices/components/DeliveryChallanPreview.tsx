@@ -91,10 +91,10 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                     key={item.id}
                     className="align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
                   >
-                    <td className="border-r-2 border-slate-950 px-3 py-2 text-center text-sm">
+                    <td className="border-r-2 border-slate-950 px-3 py-1 text-center text-sm">
                       {index + 1}
                     </td>
-                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-2 text-[13px] leading-snug">
+                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-1 text-[13px] leading-snug">
                       {item.productName ? <div className="font-bold">{item.productName}</div> : null}
                       {item.description ? (
                         <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
@@ -102,11 +102,11 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                         'Item particulars'
                       ) : null}
                     </td>
-                    <td className="border-r-2 border-slate-950 px-3 py-2 text-[13px] leading-snug">
+                    <td className="border-r-2 border-slate-950 px-3 py-1 text-[13px] leading-snug">
                       {item.remarks}
                     </td>
                     <td className="p-0 text-[13px]">
-                      <div className="grid h-full min-h-[48px] grid-rows-2">
+                      <div className="grid h-full min-h-[36px] grid-rows-2">
                         {[
                           ['UOM', item.uom || 'PCS'],
                           ['QTY', String(item.quantity || '')],

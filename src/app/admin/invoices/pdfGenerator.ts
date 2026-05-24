@@ -553,9 +553,9 @@ export const downloadInvoicePdf = async ({
                   const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
-                  return Math.max(16, Math.max(particularsLineCount, remarksLines.length, 1) * 4.2 + 3.8);
+                  return Math.max(14, Math.max(particularsLineCount, remarksLines.length, 1) * 4.2 + 2.5);
                 })
-              : [16];
+              : [14];
           const tableHeight =
             headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
@@ -641,7 +641,7 @@ export const downloadInvoicePdf = async ({
 
           let rowTop = tableY + headerHeight;
           items.forEach((item, index) => {
-            const itemRowHeight = deliveryRowHeights[index] || 16;
+            const itemRowHeight = deliveryRowHeights[index] || 14;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
             const nameLines = item.productName
@@ -655,9 +655,9 @@ export const downloadInvoicePdf = async ({
             pdf.text(
               splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
-              rowTop + 4.3
+              rowTop + 3.7
             );
-            let particularsY = rowTop + 4.3;
+            let particularsY = rowTop + 3.7;
             if (nameLines.length) {
               pdf.setFont('helvetica', 'bold');
               pdf.text(nameLines, tableX + columns[0] + 2, particularsY);
