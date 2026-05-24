@@ -91,13 +91,18 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
                     key={item.id}
                     className="min-h-24 align-top [&:not(:last-child)]:border-b-2 [&:not(:last-child)]:border-slate-950"
                   >
-                    <td className="border-r-2 border-slate-950 px-3 py-6 text-center text-sm">
+                    <td className="border-r-2 border-slate-950 px-3 py-3 text-center text-sm">
                       {index + 1}
                     </td>
-                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
-                      {item.description || item.productName || 'Item particulars'}
+                    <td className="whitespace-pre-wrap border-r-2 border-slate-950 px-3 py-3 text-[13px] leading-snug">
+                      {item.productName ? <div className="font-bold">{item.productName}</div> : null}
+                      {item.description ? (
+                        <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
+                      ) : !item.productName ? (
+                        'Item particulars'
+                      ) : null}
                     </td>
-                    <td className="border-r-2 border-slate-950 px-3 py-6 text-[13px] leading-snug">
+                    <td className="border-r-2 border-slate-950 px-3 py-3 text-[13px] leading-snug">
                       {item.remarks}
                     </td>
                     <td className="p-0 text-[13px]">

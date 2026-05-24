@@ -542,15 +542,18 @@ export const downloadInvoicePdf = async ({
           const deliveryRowHeights =
             items.length > 0
               ? items.map((item) => {
-                  const particularsLines = splitPdfTextPreservingNewlines(
-                    item.description || item.productName || 'Item particulars',
-                    columns[1] - 5
-                  );
+                  const nameLines = item.productName
+                    ? splitPdfTextPreservingNewlines(item.productName, columns[1] - 5)
+                    : [];
+                  const descriptionLines = item.description
+                    ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5)
+                    : [];
+                  const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
-                  return Math.max(28, Math.max(particularsLines.length, remarksLines.length, 1) * 4.5 + 12);
+                  return Math.max(24, Math.max(particularsLineCount, remarksLines.length, 1) * 4.5 + 7);
                 })
-              : [28];
+              : [24];
           const tableHeight =
             headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
@@ -639,28 +642,41 @@ export const downloadInvoicePdf = async ({
             const itemRowHeight = deliveryRowHeights[index] || 28;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
+            const nameLines = item.productName
+              ? splitPdfTextPreservingNewlines(item.productName, columns[1] - 5)
+              : [];
+            const descriptionLines = item.description
+              ? splitPdfTextPreservingNewlines(item.description, columns[1] - 5)
+              : [];
 
             pdf.text(String(index + 1), tableX + columns[0] / 2, rowTop + itemRowHeight / 2 + 2, { align: 'center' });
             pdf.text(
               splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
-              rowTop + 7
+              rowTop + 5.8
             );
-            pdf.text(
-              splitPdfTextPreservingNewlines(item.description || item.productName || 'Item particulars', columns[1] - 5),
-              tableX + columns[0] + 2,
-              rowTop + 7
-            );
+            let particularsY = rowTop + 5.8;
+            if (nameLines.length) {
+              pdf.setFont('helvetica', 'bold');
+              pdf.text(nameLines, tableX + columns[0] + 2, particularsY);
+              particularsY += nameLines.length * 4.5 + (descriptionLines.length ? 1.5 : 0);
+            }
+            if (descriptionLines.length) {
+              pdf.setFont('helvetica', 'normal');
+              pdf.text(descriptionLines, tableX + columns[0] + 2, particularsY);
+            } else if (!nameLines.length) {
+              pdf.text('Item particulars', tableX + columns[0] + 2, particularsY);
+            }
             pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + itemRowHeight);
             pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3], rowTop + itemRowHeight / 2);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('UOM', detailsX + 1.2, rowTop + 8.8);
-            pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight / 2 + 8.8);
+            pdf.text('UOM', detailsX + 1.2, rowTop + 7.2);
+            pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight / 2 + 7.2);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + 8.8, {
+            pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + 7.2, {
               align: 'center',
             });
-            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight / 2 + 8.8, {
+            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight / 2 + 7.2, {
               align: 'center',
             });
             rowTop += itemRowHeight;
