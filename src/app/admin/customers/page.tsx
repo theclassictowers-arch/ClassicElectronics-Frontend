@@ -13,10 +13,12 @@ import {
   Plus,
   Save,
   Search,
+  Trash2,
   X,
 } from 'lucide-react';
 import {
   createCustomer,
+  deleteCustomer,
   getCustomers,
   updateCustomer,
 } from '@/services/api';
@@ -151,6 +153,7 @@ const CustomersAdminPage = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [form, setForm] = useState<CustomerForm>(emptyCustomerForm);
   const [statusMessage, setStatusMessage] = useState('');
+  const [deletingCustomerId, setDeletingCustomerId] = useState('');
 
   const loadCustomers = async () => {
     const token = localStorage.getItem('adminToken');
@@ -289,6 +292,38 @@ const CustomersAdminPage = () => {
       setStatusMessage(maybeApiError.response?.data?.message || 'Unable to save customer.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (customer: CustomerRecord) => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      alert('Please login as admin first');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete customer "${customer.name || 'Customer'}"?`);
+    if (!confirmed) return;
+
+    setDeletingCustomerId(customer._id);
+    setStatusMessage('');
+
+    try {
+      await deleteCustomer(token, customer._id);
+      setCustomers((current) => current.filter((item) => item._id !== customer._id));
+      if (selectedCustomer?._id === customer._id) {
+        setSelectedCustomer(null);
+      }
+      if (editingCustomer?._id === customer._id) {
+        setEditingCustomer(null);
+        setIsEditorOpen(false);
+      }
+      setStatusMessage('Customer deleted.');
+    } catch (error) {
+      const maybeApiError = error as { response?: { data?: { message?: string } } };
+      setStatusMessage(maybeApiError.response?.data?.message || 'Unable to delete customer.');
+    } finally {
+      setDeletingCustomerId('');
     }
   };
 
@@ -435,6 +470,19 @@ const CustomersAdminPage = () => {
                         >
                           <Edit3 size={16} />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteCustomer(customer)}
+                          disabled={deletingCustomerId === customer._id}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 text-slate-300 transition hover:border-rose-400 hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+                          title="Delete customer"
+                        >
+                          {deletingCustomerId === customer._id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={16} />
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -483,6 +531,21 @@ const CustomersAdminPage = () => {
             <div className="mt-4 flex justify-between text-xs text-slate-500">
               <span>Created: {formatDateTime(selectedCustomer.createdAt)}</span>
               <span>Updated: {formatDateTime(selectedCustomer.updatedAt)}</span>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => void handleDeleteCustomer(selectedCustomer)}
+                disabled={deletingCustomerId === selectedCustomer._id}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingCustomerId === selectedCustomer._id ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Trash2 size={16} />
+                )}
+                Delete Customer
+              </button>
             </div>
           </div>
         </div>

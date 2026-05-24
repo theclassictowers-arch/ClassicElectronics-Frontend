@@ -57,6 +57,7 @@ const SalesTaxInvoicePage = () => {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isSavingDocument, setIsSavingDocument] = useState(false);
   const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
+  const [savedDocumentType, setSavedDocumentType] = useState<DocumentType | null>(null);
   const [saveStatus, setSaveStatus] = useState('');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [historyDocumentType, setHistoryDocumentType] = useState<DocumentType>('invoice');
@@ -454,12 +455,14 @@ const SalesTaxInvoicePage = () => {
     setForm(createInvoiceForm());
     setItems([createInvoiceItem()]);
     setSavedDocumentId(null);
+    setSavedDocumentType(null);
     setSaveStatus('');
   };
 
   const handleDocumentTypeChange = (documentType: DocumentType) => {
     setActiveDocumentType(documentType);
     setSavedDocumentId(null);
+    setSavedDocumentType(null);
     setSaveStatus('');
   };
 
@@ -526,6 +529,7 @@ const SalesTaxInvoicePage = () => {
     setForm({ ...createInvoiceForm(), ...(record.form as InvoiceForm) });
     setItems(normalizeHistoryItems(record.items));
     setSavedDocumentId(record._id);
+    setSavedDocumentType(record.documentType);
     setSaveStatus(`${documentTypes.find((item) => item.type === record.documentType)?.label || 'Document'} loaded from history.`);
     setIsHistoryOpen(false);
   };
@@ -569,13 +573,20 @@ const SalesTaxInvoicePage = () => {
         items,
         totalAmount,
       };
-      const savedDocument = savedDocumentId
-        ? await updateSalesDocument(token, savedDocumentId, payload)
+      const existingDocumentId =
+        savedDocumentType === activeDocumentType ? savedDocumentId : null;
+      const savedDocument = existingDocumentId
+        ? await updateSalesDocument(token, existingDocumentId, payload)
         : await createSalesDocument(token, payload);
 
       setSavedDocumentId(savedDocument._id);
+      setSavedDocumentType(savedDocument.documentType);
       setForm({ ...createInvoiceForm(), ...(savedDocument.form as InvoiceForm) });
-      setSaveStatus(`${activeDocument.label} saved to backend and history.`);
+      setSaveStatus(
+        existingDocumentId
+          ? `${activeDocument.label} updated in history.`
+          : `${activeDocument.label} saved to backend and history.`
+      );
       setHistoryDocumentType(activeDocumentType);
       await loadHistory(activeDocumentType, historySearch, historySortBy, historySortOrder);
       await loadCustomers();
