@@ -540,7 +540,7 @@ export const downloadInvoicePdf = async ({
           const borderColor: [number, number, number] = [15, 23, 42];
           const customerRows = getCustomerDetailRows(form);
           const customerTopY = 50 - bodyShiftUpY;
-          const tableY = customerTopY + customerRows.length * 5 + 5;
+          const tableY = customerTopY + customerRows.length * 5;
           const deliveryRowHeights =
             items.length > 0
               ? items.map((item) => {
@@ -866,7 +866,7 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(9);
           const customerRows = getCustomerDetailRows(form);
           drawCustomerRows(customerRows, contentLeftX + 1, cursorY, 14, 108, 5);
-          cursorY += customerRows.length * 5 + 5;
+          cursorY += customerRows.length * 5;
         }
 
         if (logoDataUrl) {
