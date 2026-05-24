@@ -37,6 +37,7 @@ import {
   getCategoryId,
   getPrimaryProductImage,
   getProductDisplayName,
+  limitTextLines,
   normalizeCustomerGst,
   normalizeHistoryItems,
 } from './utils';
@@ -352,7 +353,9 @@ const SalesTaxInvoicePage = () => {
                   ? Number(value)
                   : field === 'showPicture'
                     ? value === true || value === 'true'
-                  : value,
+                    : field === 'description'
+                      ? limitTextLines(String(value))
+                      : value,
             }
           : item
       )
@@ -423,7 +426,7 @@ const SalesTaxInvoicePage = () => {
           categoryId: getCategoryId(selectedProduct.categoryId),
           productId: selectedProduct._id,
           productName,
-          description: selectedProduct.description?.trim() || selectedProduct.name,
+          description: limitTextLines(selectedProduct.description?.trim() || selectedProduct.name),
           unitPrice: Number(selectedProduct.price || 0),
           remarks: productName,
           picture: getPrimaryProductImage(selectedProduct),

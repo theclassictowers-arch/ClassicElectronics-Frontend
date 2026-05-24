@@ -163,6 +163,8 @@ export const ItemsSection = ({
                 label={activeDocumentType === 'deliveryChallan' ? 'Particulars' : 'Description'}
                 value={item.description}
                 onChange={(value) => onItemChange(item.id, 'description', value)}
+                multiline
+                rows={5}
               />
               <div
                 className={`grid gap-3 ${

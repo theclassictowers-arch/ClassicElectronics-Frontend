@@ -8,6 +8,8 @@ type FieldProps = {
   placeholder?: string;
   inputMode?: 'text' | 'numeric' | 'decimal' | 'email' | 'tel' | 'url';
   maxLength?: number;
+  multiline?: boolean;
+  rows?: number;
 };
 
 export const Field = ({
@@ -18,6 +20,8 @@ export const Field = ({
   placeholder,
   inputMode,
   maxLength,
+  multiline = false,
+  rows = 4,
 }: FieldProps) => {
   const inputValue = type === 'date' ? toDateInputValue(value || '') : value ?? '';
 
@@ -26,17 +30,28 @@ export const Field = ({
       <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
         {label}
       </span>
-      <input
-        type={type}
-        value={inputValue}
-        onChange={(event) =>
-          onChange(type === 'date' ? fromDateInputValue(event.target.value) : event.target.value)
-        }
-        placeholder={placeholder}
-        inputMode={inputMode}
-        maxLength={maxLength}
-        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
-      />
+      {multiline ? (
+        <textarea
+          value={inputValue}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          rows={rows}
+          className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
+        />
+      ) : (
+        <input
+          type={type}
+          value={inputValue}
+          onChange={(event) =>
+            onChange(type === 'date' ? fromDateInputValue(event.target.value) : event.target.value)
+          }
+          placeholder={placeholder}
+          inputMode={inputMode}
+          maxLength={maxLength}
+          className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
+        />
+      )}
     </label>
   );
 };

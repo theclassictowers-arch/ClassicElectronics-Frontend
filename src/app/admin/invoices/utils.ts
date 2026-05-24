@@ -12,6 +12,10 @@ export const GST_REGISTRATION_PLACEHOLDER = '00-00-0000-000-00';
 export const CUSTOMER_GST_PLACEHOLDER = '02-04-2523-002-46';
 export const CUSTOMER_NTN_PLACEHOLDER = '0701669-7';
 export const SALES_TAX_RATE = 0.18;
+export const MAX_DESCRIPTION_LINES = 10;
+
+export const limitTextLines = (value: string, maxLines = MAX_DESCRIPTION_LINES): string =>
+  value.replace(/\r\n/g, '\n').split('\n').slice(0, maxLines).join('\n');
 
 export const deliveryPeriodOptions = [
   { label: '1 Week', value: '1 Week' },
@@ -394,7 +398,7 @@ export const normalizeHistoryItems = (
     categoryId: item.categoryId || '',
     productId: item.productId || '',
     productName: item.productName || '',
-    description: item.description || '',
+    description: limitTextLines(item.description || ''),
     uom: item.uom || 'PCS',
     quantity: Number(item.quantity || 0),
     unitPrice: Number(item.unitPrice || 0),
