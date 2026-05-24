@@ -78,6 +78,22 @@ export const downloadInvoicePdf = async ({
           return text;
         };
 
+        const containImageSize = (imageDataUrl: string, maxWidth: number, maxHeight: number) => {
+          try {
+            const properties = pdf.getImageProperties(imageDataUrl);
+            const imageWidth = properties.width || maxWidth;
+            const imageHeight = properties.height || maxHeight;
+            const scale = Math.min(maxWidth / imageWidth, maxHeight / imageHeight);
+
+            return {
+              width: imageWidth * scale,
+              height: imageHeight * scale,
+            };
+          } catch {
+            return { width: maxWidth, height: maxHeight };
+          }
+        };
+
         const drawCustomerRows = (
           rows: Array<[string, string]>,
           x: number,
@@ -86,12 +102,17 @@ export const downloadInvoicePdf = async ({
           valueWidth: number,
           lineHeight = 5
         ) => {
+          let rowY = y;
           rows.forEach(([label, value], index) => {
-            const rowY = y + index * lineHeight;
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(label, x, rowY);
-            pdf.setFont('helvetica', 'normal');
-            pdf.text(fitPdfText(value || '________________', valueWidth), x + labelWidth, rowY);
+            const availableWidth = label ? valueWidth : valueWidth + labelWidth;
+            if (label) {
+              pdf.setFont('helvetica', 'bold');
+              pdf.text(fitPdfText(`${label} ${value || '________________'}`, availableWidth), x, rowY);
+            } else {
+              pdf.setFont('helvetica', 'normal');
+              pdf.text(fitPdfText(value || '________________', availableWidth), x, rowY);
+            }
+            rowY += lineHeight;
           });
         };
 
@@ -143,7 +164,7 @@ export const downloadInvoicePdf = async ({
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
         const tableX = 15;
-        const tableY = 88;
+        const tableY = 82.3;
         const tableWidth = 180;
         const headerHeight = 13;
         const minimumRowHeight = 20;
@@ -194,22 +215,25 @@ export const downloadInvoicePdf = async ({
 
         const contentBottomY = 250;
         const detailsBlockHeight = 92;
-        const quotationNoteGap = 8;
+        const quotationNoteGap = 5.3;
         const maxQuotationRowHeight =
           contentBottomY - detailsBlockHeight - tableY - headerHeight - quotationNoteGap - 8;
 
         const quotationRowHeights = quotationItems.map((item, index) => {
-          const descriptionLines = splitPdfCellText(
-            item.description || item.productName || '',
-            descriptionWidth - 4,
-            8
-          );
+          const nameLines = item.productName
+            ? splitPdfCellText(item.productName, descriptionWidth - 4, 8.4)
+            : [];
+          const descriptionLines = item.description
+            ? splitPdfCellText(item.description, descriptionWidth - 4, 8)
+            : [];
           const remarksLines = splitPdfCellText(
             item.remarks || item.productName || '',
             remarksWidth - 5,
             7.5
           );
-          const descriptionHeight = Math.max(descriptionLines.length, 1) * 4.3 + 10;
+          const descriptionLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
+          const descriptionHeight =
+            descriptionLineCount * 4.3 + (nameLines.length && descriptionLines.length ? 14 : 10);
           const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.3;
           const imageHeight = quotationImageDataUrls[index] ? 20 : 0;
           const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 7 : 6);
@@ -307,11 +331,11 @@ export const downloadInvoicePdf = async ({
           pdf.stroke();
 
           pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(8.3);
-          drawCustomerRows(getCustomerDetailRows(form), 15, 50, 30, 85, 4);
+          pdf.setFontSize(9);
+          drawCustomerRows(getCustomerDetailRows(form), 15, 50, 14, 101, 4);
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(9.75);
-          pdf.text('Reference to your quotation the details is as below.', 15, 80);
+          pdf.text('Reference to your quotation the details is as below.', 15, 78);
 
           drawClassicFooter();
         };
@@ -354,15 +378,30 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(8);
           pdf.text(String(index + 1), tableX + 5, rowY + rowHeight / 2 + 2, { align: 'center' });
-          pdf.text(
-            fitPdfLines(
-              splitPdfCellText(item.description || item.productName || '', descriptionWidth - 4, 8),
-              Math.max(1, Math.floor((rowHeight - 9) / 4.3)),
-              descriptionWidth - 4
-            ),
-            descriptionX + 2,
-            rowY + 6
-          );
+          const rawNameLines = item.productName
+            ? splitPdfCellText(item.productName, descriptionWidth - 4, 8.4)
+            : [];
+          const rawDescriptionLines = item.description
+            ? splitPdfCellText(item.description, descriptionWidth - 4, 8)
+            : [];
+          const maxDescriptionLines = Math.max(1, Math.floor((rowHeight - 9) / 4.3));
+          const nameLines = fitPdfLines(rawNameLines, maxDescriptionLines, descriptionWidth - 4);
+          const remainingDescriptionLines = Math.max(0, maxDescriptionLines - nameLines.length);
+          const descriptionLines = remainingDescriptionLines
+            ? fitPdfLines(rawDescriptionLines, remainingDescriptionLines, descriptionWidth - 4)
+            : [];
+          let descriptionTextY = rowY + 6;
+          if (nameLines.length) {
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(8.4);
+            pdf.text(nameLines, descriptionX + 2, descriptionTextY);
+            descriptionTextY += nameLines.length * 4.3 + (descriptionLines.length ? 2 : 0);
+          }
+          if (descriptionLines.length) {
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8);
+            pdf.text(descriptionLines, descriptionX + 2, descriptionTextY);
+          }
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
           const priceRows: Array<[string, string, boolean]> = [
@@ -394,12 +433,13 @@ export const downloadInvoicePdf = async ({
           );
           pdf.text(remarksLines, remarksX + 2, rowY + 5.5);
           if (itemImage) {
-            const imageWidth = Math.min(30, remarksWidth - 12);
-            const imageHeight = Math.min(20, Math.max(rowHeight - 16, 10));
-            const imageX = remarksX + (remarksWidth - imageWidth) / 2;
+            const maxImageWidth = remarksWidth - 12;
+            const maxImageHeight = Math.min(20, Math.max(rowHeight - 16, 10));
+            const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
+            const imageX = remarksX + (remarksWidth - imageSize.width) / 2;
             const textHeight = Math.max(remarksLines.length, 1) * 4.3;
-            const imageY = Math.min(rowY + 5 + textHeight, rowY + rowHeight - imageHeight - 1.5);
-            pdf.addImage(itemImage, 'PNG', imageX, imageY, imageWidth, imageHeight, undefined, 'FAST');
+            const imageY = Math.min(rowY + 5 + textHeight, rowY + rowHeight - imageSize.height - 1.5);
+            pdf.addImage(itemImage, 'PNG', imageX, imageY, imageSize.width, imageSize.height, undefined, 'FAST');
           }
         };
 
@@ -407,30 +447,31 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'bolditalic');
           pdf.setFontSize(9);
           pdf.setTextColor(0, 0, 0);
-          pdf.text('Delivery Period :', 15, detailsY);
-          pdf.text('Validity Date:', 15, detailsY + 8);
+          const deliveryLabel = 'Delivery Period :';
+          const validityLabel = 'Validity Date:';
+          pdf.text(deliveryLabel, 15, detailsY);
+          pdf.text(validityLabel, 15, detailsY + 8);
           pdf.setFont('helvetica', 'italic');
-          pdf.rect(58, detailsY - 5, 43, 7);
-          pdf.text(form.deliveryPeriod || '4 Weeks', 79.5, detailsY, { align: 'center' });
-          pdf.rect(58, detailsY + 3, 43, 7);
-          pdf.text(form.validityDate || '1 WEEK', 79.5, detailsY + 8, { align: 'center' });
+          pdf.text(form.deliveryPeriod || '4 Weeks', 15 + pdf.getTextWidth(deliveryLabel) + 2, detailsY);
+          pdf.text(form.validityDate || '1 WEEK', 15 + pdf.getTextWidth(validityLabel) + 2, detailsY + 8);
 
-          const totalsX = 140;
-          const totalsValueX = 165;
-          const totalsBoxWidth = 31;
-          [
-            ['Sub Total', formatPdfRs(totalAmount), detailsY - 5],
-            ['Tax 18%', formatPdfRs(taxAmount), detailsY + 3],
-            ['Total', formatPdfRs(grandTotal), detailsY + 11],
-          ].forEach(([label, value, y]) => {
-          pdf.setFont('helvetica', 'bolditalic');
-          pdf.text(String(label), totalsX - 15, Number(y) + 5);
-          pdf.setFont('helvetica', 'italic');
-          pdf.rect(totalsValueX, Number(y), totalsBoxWidth, 7);
-          pdf.text(String(value), totalsValueX + totalsBoxWidth / 2, Number(y) + 5, {
-            align: 'center',
-          });
-          });
+          const totalBoxWidth = 56;
+          const totalBoxX = tableX + tableWidth - totalBoxWidth;
+          const totalBoxY = detailsY - 5;
+
+          pdf.setDrawColor(15, 23, 42);
+          pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 34, 3, 3, 'S');
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(9);
+          pdf.setTextColor(71, 85, 105);
+          pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
+          pdf.text(formatPdfRs(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
+          pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
+          pdf.text(formatPdfRs(taxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
+          pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
+          pdf.text(formatPdfRs(grandTotal), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
 
           if (stampDataUrl) {
             pdf.addImage(stampDataUrl, 'PNG', 21, detailsY + 18, 45, 27, undefined, 'FAST');
@@ -464,14 +505,15 @@ export const downloadInvoicePdf = async ({
           pdf.addPage();
           drawQuotationShell();
           rowY = drawQuotationTableHeader(tableY);
-          afterTableY = rowY + 5;
+          afterTableY = rowY + quotationNoteGap;
         }
 
         pdf.setFont('helvetica', 'bolditalic');
         pdf.setFontSize(9.75);
         pdf.setTextColor(0, 0, 0);
-        pdf.text('If you have any questions concerning this quotation please tell us.', 18, afterTableY);
-        drawQuotationTotals(afterTableY + 10);
+        const questionY = afterTableY;
+        pdf.text('If you have any questions concerning this quotation please tell us.', tableX, questionY);
+        drawQuotationTotals(questionY + 10);
 
         pdf.save(buildSalesPdfFileName(activeDocumentType, form));
         return;
@@ -557,8 +599,8 @@ export const downloadInvoicePdf = async ({
 
           pdf.setTextColor(15, 23, 42);
           pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(9.3);
-          drawCustomerRows(customerRows, contentLeftX + 1, 58, 32, 92, 5);
+          pdf.setFontSize(9);
+          drawCustomerRows(customerRows, contentLeftX + 1, 58, 14, 110, 5);
 
           pdf.setDrawColor(...borderColor);
           pdf.setLineWidth(0.5);
@@ -796,9 +838,9 @@ export const downloadInvoicePdf = async ({
 
         if (withCustomerBlock) {
           pdf.setTextColor(...primaryTextColor);
-          pdf.setFontSize(9.3);
+          pdf.setFontSize(9);
           const customerRows = getCustomerDetailRows(form);
-          drawCustomerRows(customerRows, contentLeftX + 1, cursorY + 7, 30, 92, 5);
+          drawCustomerRows(customerRows, contentLeftX + 1, cursorY + 7, 14, 108, 5);
           cursorY += customerRows.length * 5 + 9;
         }
 
@@ -872,10 +914,12 @@ export const downloadInvoicePdf = async ({
       pdf.setTextColor(...primaryTextColor);
 
       for (const [index, item] of items.entries()) {
-        const descriptionLines = pdf.splitTextToSize(
-          item.description || 'Item description',
-          tableColumnWidths[1] - 4
-        ) as string[];
+        const nameLines = item.productName
+          ? (pdf.splitTextToSize(item.productName, tableColumnWidths[1] - 4) as string[])
+          : [];
+        const descriptionLines = item.description
+          ? (pdf.splitTextToSize(item.description, tableColumnWidths[1] - 4) as string[])
+          : [];
         const remarksLines = pdf.splitTextToSize(
           item.remarks || item.productName || 'Remarks',
           tableColumnWidths[2] - 4
@@ -883,7 +927,9 @@ export const downloadInvoicePdf = async ({
         const itemImage = itemImageDataUrls[index];
         const itemTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
 
-        const descriptionHeight = Math.max(descriptionLines.length, 1) * 4;
+        const descriptionLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
+        const descriptionHeight =
+          descriptionLineCount * 4 + (nameLines.length && descriptionLines.length ? 3 : 0);
         const remarksHeight = Math.max(remarksLines.length, 1) * 4;
         const imageHeight = itemImage ? 18 : 0;
         const maxRowHeight = bodyContentBottomY - cursorY - 2;
@@ -904,11 +950,12 @@ export const downloadInvoicePdf = async ({
           Math.max(28, bodyContentBottomY - cursorY - 2),
           Math.max(28, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6)
         );
-        const fittedDescriptionLines = fitTableLines(
-          descriptionLines,
-          Math.max(1, Math.floor((finalRowHeight - 7) / 4)),
-          tableColumnWidths[1] - 4
-        );
+        const maxDescriptionLines = Math.max(1, Math.floor((finalRowHeight - 7) / 4));
+        const fittedNameLines = fitTableLines(nameLines, maxDescriptionLines, tableColumnWidths[1] - 4);
+        const remainingDescriptionLines = Math.max(0, maxDescriptionLines - fittedNameLines.length);
+        const fittedDescriptionLines = remainingDescriptionLines
+          ? fitTableLines(descriptionLines, remainingDescriptionLines, tableColumnWidths[1] - 4)
+          : [];
         const fittedRemarksLines = fitTableLines(
           remarksLines,
           Math.max(1, Math.floor((finalRowHeight - imageHeight - 7) / 4)),
@@ -930,18 +977,31 @@ export const downloadInvoicePdf = async ({
         pdf.text(String(index + 1), srX + tableColumnWidths[0] / 2, cursorY + finalRowHeight / 2 + 2, {
           align: 'center',
         });
-        pdf.text(fittedDescriptionLines, descriptionCellX + 2, cursorY + 4.8);
+        let descriptionTextY = cursorY + 4.8;
+        if (fittedNameLines.length) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(fittedNameLines, descriptionCellX + 2, descriptionTextY);
+          descriptionTextY += fittedNameLines.length * 4 + (fittedDescriptionLines.length ? 2 : 0);
+        }
+        if (fittedDescriptionLines.length) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(fittedDescriptionLines, descriptionCellX + 2, descriptionTextY);
+        } else if (!fittedNameLines.length) {
+          pdf.text('Item description', descriptionCellX + 2, descriptionTextY);
+        }
 
         pdf.setTextColor(...mutedTextColor);
+        pdf.setFont('helvetica', 'normal');
         pdf.text(fittedRemarksLines, remarksCellX + 2, cursorY + 4.8);
         if (itemImage) {
           const imageY = cursorY + Math.max(fittedRemarksLines.length * 4 + 4, 10);
           const maxImageWidth = tableColumnWidths[2] - 4;
           const maxImageHeight = Math.max(finalRowHeight - (imageY - cursorY) - 2, 8);
-          const imageSize = Math.min(maxImageWidth, maxImageHeight);
+          const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
-          if (imageSize > 6) {
-            pdf.addImage(itemImage, 'PNG', remarksCellX + 2, imageY, imageSize, imageSize, undefined, 'FAST');
+          if (imageSize.width > 6 && imageSize.height > 6) {
+            const imageX = remarksCellX + 2 + (maxImageWidth - imageSize.width) / 2;
+            pdf.addImage(itemImage, 'PNG', imageX, imageY, imageSize.width, imageSize.height, undefined, 'FAST');
           }
         }
         pdf.setTextColor(...primaryTextColor);

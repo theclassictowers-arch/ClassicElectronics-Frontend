@@ -59,12 +59,17 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
         <div className="relative flex h-full flex-1 flex-col">
-          <div className="grid max-w-[460px] grid-cols-[120px_1fr] gap-x-2 text-[13px] leading-snug text-slate-900 sm:text-[14px]">
-              {customerRows.map(([label, value]) => (
-                <div key={label} className="contents">
-                  <div className="font-semibold">{label}</div>
-                  <div className="min-w-0 break-words">{value || '________________'}</div>
-                </div>
+          <div className="grid max-w-[460px] grid-cols-[44px_1fr] gap-x-2 text-[12px] leading-snug text-slate-900">
+              {customerRows.map(([label, value], index) => (
+                label ? (
+                  <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words font-semibold">
+                    {label} {value || '________________'}
+                  </div>
+                ) : (
+                  <div key={`customer-${index}`} className="col-span-2 min-w-0 break-words">
+                    {value || '________________'}
+                  </div>
+                )
               ))}
           </div>
 

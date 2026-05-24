@@ -50,11 +50,11 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
   });
 
-  const tableTop = 284;
+  const tableTop = 282;
   const tableHeaderHeight = 48;
   const bodyBottom = 960;
   const detailsBlockHeight = 210;
-  const tableBottomGap = 28;
+  const tableBottomGap = 20;
   const maxTableBodyHeight = bodyBottom - tableTop - tableHeaderHeight - detailsBlockHeight - tableBottomGap;
   const cappedRowHeights = rowHeights.map((height) =>
     Math.min(height, Math.max(130, Math.floor(maxTableBodyHeight / quotationItems.length)))
@@ -113,16 +113,21 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[44px] top-[142px] grid grid-cols-[105px_1fr] gap-x-2 text-[12px] leading-[14px]">
-        {customerRows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <div className="font-semibold">{label}</div>
-            <div className="max-w-[300px] truncate">{value || '________________'}</div>
-          </div>
+      <div className="absolute left-[44px] top-[142px] grid grid-cols-[42px_1fr] gap-x-2 text-[12px] leading-[14px]">
+        {customerRows.map(([label, value], index) => (
+          label ? (
+            <div key={`${label}-${index}`} className="col-span-2 max-w-[405px] truncate font-semibold">
+              {label} {value || '________________'}
+            </div>
+          ) : (
+            <div key={`customer-${index}`} className="col-span-2 max-w-[405px] truncate">
+              {value || '________________'}
+            </div>
+          )
         ))}
       </div>
 
-      <div className="absolute left-[42px] top-[256px] text-[13px] font-bold italic">
+      <div className="absolute left-[44px] top-[254px] text-[13px] font-bold italic leading-[14px]">
         Reference to your quotation the details is as below.
       </div>
 
@@ -168,7 +173,12 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   wordBreak: 'break-word',
                 }}
               >
-                {item.description || item.productName || ''}
+                {item.productName ? <div className="font-bold">{item.productName}</div> : null}
+                {item.description ? (
+                  <div className={item.productName ? 'mt-1 font-normal' : 'font-normal'}>
+                    {item.description}
+                  </div>
+                ) : null}
               </div>
 
               <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
@@ -222,44 +232,47 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       </div>
 
       <div
-        className="absolute left-[58px] max-w-[660px] text-[13px] font-bold italic"
+        className="absolute left-[42px] max-w-[660px] text-[13px] font-bold italic"
         style={{ top: noteTop }}
       >
         If you have any questions concerning this quotation please tell us.
       </div>
 
       <div
-        className="absolute left-[40px] grid grid-cols-[150px_130px] text-[16px] font-bold italic leading-[30px]"
+        className="absolute left-[40px] text-[16px] font-bold italic leading-[30px]"
         style={{ top: detailsTop }}
       >
-        <div>Delivery Period:</div>
-        <div className="border-[2px] border-black bg-pink-100 text-center font-normal">
-          {form.deliveryPeriod || '4 Weeks'}
+        <div>
+          <span>Delivery Period:</span>
+          <span className="ml-2 font-normal">{form.deliveryPeriod || '4 Weeks'}</span>
         </div>
-
-        <div>Validity Date:</div>
-        <div className="border-x-[2px] border-b-[2px] border-black bg-pink-100 text-center font-normal">
-          {form.validityDate || '1 WEEK'}
+        <div>
+          <span>Validity Date:</span>
+          <span className="ml-2 font-normal">{form.validityDate || '1 WEEK'}</span>
         </div>
       </div>
 
       <div
-        className="absolute right-[54px] grid grid-cols-[85px_170px] items-center text-[16px] font-bold italic leading-[31px]"
+        className="absolute right-[44px] w-[212px] rounded-[12px] border-2 border-slate-950 bg-white px-4 py-3 text-right"
         style={{ top: detailsTop - 7 }}
       >
-        <div>Sub Total</div>
-        <div className="border-[2px] border-black text-center font-normal">
-          {formatCurrency(totalAmount)}
+        <div className="space-y-1 text-[12px] font-semibold text-slate-700">
+          <div className="flex justify-between gap-4">
+            <span>Sub Total</span>
+            <span>{formatCurrency(totalAmount)}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>GST 18%</span>
+            <span>{formatCurrency(taxAmount)}</span>
+          </div>
         </div>
-
-        <div>Tax 18%</div>
-        <div className="border-x-[2px] border-b-[2px] border-black text-center font-normal">
-          {formatCurrency(taxAmount)}
-        </div>
-
-        <div>Total</div>
-        <div className="border-x-[2px] border-b-[2px] border-black text-center font-normal">
-          {formatCurrency(grandTotal)}
+        <div className="mt-2 border-t border-slate-300 pt-2">
+          <div className="text-[10px] font-semibold uppercase text-slate-500">
+            Grand Total
+          </div>
+          <div className="mt-1 text-[20px] font-black text-slate-950">
+            {formatCurrency(grandTotal)}
+          </div>
         </div>
       </div>
 

@@ -91,12 +91,17 @@ export const StandardDocumentPreview = ({
         <div className="absolute left-6 top-0 h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
 
         <div className="relative flex h-full flex-1 flex-col">
-          <div className="mb-3 grid max-w-[430px] grid-cols-[112px_1fr] gap-x-2 text-[13px] leading-snug text-slate-900 sm:text-[14px]">
-            {customerRows.map(([label, value]) => (
-              <div key={label} className="contents">
-                <div className="font-semibold">{label}</div>
-                <div className="min-w-0 break-words">{value || '________________'}</div>
-              </div>
+          <div className="mb-3 grid max-w-[430px] grid-cols-[44px_1fr] gap-x-2 text-[12px] leading-snug text-slate-900">
+            {customerRows.map(([label, value], index) => (
+              label ? (
+                <div key={`${label}-${index}`} className="col-span-2 min-w-0 break-words font-semibold">
+                  {label} {value || '________________'}
+                </div>
+              ) : (
+                <div key={`customer-${index}`} className="col-span-2 min-w-0 break-words">
+                  {value || '________________'}
+                </div>
+              )
             ))}
           </div>
 
@@ -131,7 +136,12 @@ export const StandardDocumentPreview = ({
                         {index + 1}
                       </td>
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[12px] leading-snug sm:text-[13px]">
-                        {item.description || 'Item description'}
+                        {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
+                        {item.description ? (
+                          <div className={item.productName ? 'mt-1' : ''}>{item.description}</div>
+                        ) : !item.productName ? (
+                          'Item description'
+                        ) : null}
                       </td>
                       <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-700 sm:text-[12px]">
                         <div className="space-y-2">
@@ -139,7 +149,7 @@ export const StandardDocumentPreview = ({
                             {item.remarks || item.productName || 'Remarks'}
                           </div>
                           {item.showPicture && getPictureSource(item.picture) ? (
-                            <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
+                            <div className="overflow-hidden border border-slate-300 bg-white">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={getPictureSource(item.picture)}

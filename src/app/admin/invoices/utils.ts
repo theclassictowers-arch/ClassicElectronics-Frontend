@@ -201,16 +201,16 @@ export const getCustomerDetailRows = (
 ): Array<[string, string]> => {
   const details = getCustomerAddressParts(form);
   const rows: Array<[string, string]> = [
-    ['Customer Name', details.name],
-    ['Address 1', details.address1 || 'Customer Address'],
-    ['Address 2', details.address2 || ''],
-    ['City', details.city],
-    ['Telephone No.', details.phone],
+    ['', details.name],
+    ['', details.address1 || 'Customer Address'],
+    ['', details.address2 || ''],
+    ['', details.city],
+    ['Tel:', details.phone],
   ];
 
   if (options.includeTaxIds !== false) {
-    rows.push(['GST', details.gst || '________________']);
-    rows.push(['NTN', details.ntn || '________________']);
+    rows.push(['GST:', details.gst || '________________']);
+    rows.push(['NTN:', details.ntn || '________________']);
   }
 
   return rows;
