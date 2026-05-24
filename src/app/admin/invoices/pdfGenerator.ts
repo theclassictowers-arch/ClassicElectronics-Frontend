@@ -670,7 +670,7 @@ export const downloadInvoicePdf = async ({
               pdf.text('Item particulars', tableX + columns[0] + 2, particularsY);
             }
             pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + itemRowHeight);
-            pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3] - 0.8, rowTop + itemRowHeight / 2);
+            pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3] - 2.4, rowTop + itemRowHeight / 2);
             pdf.setFont('helvetica', 'bold');
             pdf.text('UOM', detailsX + 1.2, rowTop + itemRowHeight / 4 + 1.6);
             pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight * 0.75 + 1.6);
