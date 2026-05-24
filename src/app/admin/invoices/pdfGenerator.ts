@@ -998,6 +998,7 @@ export const downloadInvoicePdf = async ({
       pdf.setFontSize(9.5);
       pdf.setTextColor(...primaryTextColor);
       let standardRowsOnPage = 0;
+      const standardLineHeight = 2.95;
 
       for (const [index, item] of items.entries()) {
         const nameLines = item.productName
@@ -1015,13 +1016,13 @@ export const downloadInvoicePdf = async ({
 
         const descriptionLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
         const descriptionHeight =
-          descriptionLineCount * 4 + (nameLines.length && descriptionLines.length ? 3 : 0);
-        const remarksHeight = Math.max(remarksLines.length, 1) * 4;
+          descriptionLineCount * standardLineHeight + (nameLines.length && descriptionLines.length ? 1 : 0);
+        const remarksHeight = Math.max(remarksLines.length, 1) * standardLineHeight;
         const imageHeight = itemImage ? 14 : 0;
         const maxRowHeight = bodyContentBottomY - cursorY - 2;
         const rowHeight = Math.min(
           Math.max(28, maxRowHeight),
-          Math.max(28, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6)
+          Math.max(24, Math.max(descriptionHeight, remarksHeight + imageHeight + (itemImage ? 2 : 0)) + 3)
         );
 
         if (standardRowsOnPage >= 3 || cursorY + rowHeight > bodyContentBottomY) {
@@ -1034,10 +1035,10 @@ export const downloadInvoicePdf = async ({
         }
 
         const finalRowHeight = Math.min(
-          Math.max(28, bodyContentBottomY - cursorY - 2),
-          Math.max(28, Math.max(descriptionHeight, remarksHeight + imageHeight) + 6)
+          Math.max(24, bodyContentBottomY - cursorY - 2),
+          Math.max(24, Math.max(descriptionHeight, remarksHeight + imageHeight + (itemImage ? 2 : 0)) + 3)
         );
-        const maxDescriptionLines = Math.max(1, Math.floor((finalRowHeight - 7) / 4));
+        const maxDescriptionLines = Math.max(1, Math.floor((finalRowHeight - 4.8) / standardLineHeight));
         const fittedNameLines = fitTableLines(nameLines, maxDescriptionLines, tableColumnWidths[1] - 4);
         const remainingDescriptionLines = Math.max(0, maxDescriptionLines - fittedNameLines.length);
         const fittedDescriptionLines = remainingDescriptionLines
@@ -1045,7 +1046,7 @@ export const downloadInvoicePdf = async ({
           : [];
         const fittedRemarksLines = fitTableLines(
           remarksLines,
-          Math.max(1, Math.floor((finalRowHeight - imageHeight - 7) / 4)),
+          Math.max(1, Math.floor((finalRowHeight - imageHeight - (itemImage ? 5.5 : 4)) / standardLineHeight)),
           tableColumnWidths[2] - 4
         );
 
@@ -1064,17 +1065,17 @@ export const downloadInvoicePdf = async ({
         pdf.text(String(index + 1), srX + tableColumnWidths[0] / 2, cursorY + finalRowHeight / 2 + 2, {
           align: 'center',
         });
-        let descriptionTextY = cursorY + 4.8;
+        let descriptionTextY = cursorY + 3.9;
         if (fittedNameLines.length) {
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(7.5);
-          pdf.text(fittedNameLines, descriptionCellX + 2, descriptionTextY);
-          descriptionTextY += fittedNameLines.length * 4;
+          pdf.text(fittedNameLines, descriptionCellX + 2, descriptionTextY, { lineHeightFactor: 1 });
+          descriptionTextY += fittedNameLines.length * standardLineHeight;
         }
         if (fittedDescriptionLines.length) {
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(7.5);
-          pdf.text(fittedDescriptionLines, descriptionCellX + 2, descriptionTextY);
+          pdf.text(fittedDescriptionLines, descriptionCellX + 2, descriptionTextY, { lineHeightFactor: 1 });
         } else if (!fittedNameLines.length) {
           pdf.setFontSize(7.5);
           pdf.text('Item description', descriptionCellX + 2, descriptionTextY);
@@ -1083,9 +1084,9 @@ export const downloadInvoicePdf = async ({
         pdf.setTextColor(...primaryTextColor);
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9.5);
-        pdf.text(fittedRemarksLines, remarksCellX + 2, cursorY + 4.8);
+        pdf.text(fittedRemarksLines, remarksCellX + 2, cursorY + 3.9, { lineHeightFactor: 1 });
         if (itemImage) {
-          const imageY = cursorY + Math.max(fittedRemarksLines.length * 4 + 4, 10);
+          const imageY = cursorY + Math.max(fittedRemarksLines.length * standardLineHeight + 3, 8);
           const maxImageWidth = tableColumnWidths[2] - 4;
           const maxImageHeight = Math.min(14, Math.max(finalRowHeight - (imageY - cursorY) - 2, 7));
           const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);

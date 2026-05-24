@@ -130,7 +130,7 @@ export const StandardDocumentPreview = ({
                       <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-sm sm:text-base">
                         {index + 1}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-1 text-[10px] leading-[14px]">
+                      <td className="border-r-2 border-slate-950 px-2 py-[2px] text-[10px] leading-[11px]">
                         {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
                         {item.description ? (
                           <div
@@ -148,8 +148,8 @@ export const StandardDocumentPreview = ({
                           'Item description'
                         ) : null}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-3 text-[11px] leading-relaxed text-slate-950 sm:text-[12px]">
-                        <div className="space-y-2">
+                      <td className="border-r-2 border-slate-950 px-2 py-[2px] text-[11px] leading-[12px] text-slate-950 sm:text-[12px]">
+                        <div className="space-y-1">
                           <div className="font-medium text-slate-900">
                             {item.remarks || item.productName || 'Remarks'}
                           </div>
@@ -159,7 +159,7 @@ export const StandardDocumentPreview = ({
                               <img
                                 src={getPictureSource(item.picture)}
                                 alt={item.productName || item.description || 'Invoice item'}
-                                className="h-12 w-full object-contain bg-white p-1"
+                                className="h-11 w-full object-contain bg-white p-1"
                               />
                             </div>
                           ) : item.picture && item.showPicture ? (
@@ -167,14 +167,14 @@ export const StandardDocumentPreview = ({
                               {item.picture}
                             </div>
                           ) : (
-                            <div className="flex h-12 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
+                            <div className="flex h-11 items-center justify-center rounded-lg border border-dashed border-slate-300 text-[11px] text-slate-400">
                               {item.showPicture ? 'No picture selected' : 'Photo off'}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="p-0 text-[12px] sm:text-[13px]">
-                        <div className="grid h-full min-h-[96px] grid-rows-4">
+                        <div className="grid h-full min-h-[68px] grid-rows-4">
                           {[
                             ['UOM', item.uom || '--', false],
                             ['Price', formatCurrency(item.unitPrice || 0), false],
