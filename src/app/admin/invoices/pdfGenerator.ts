@@ -551,9 +551,9 @@ export const downloadInvoicePdf = async ({
                   const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
-                  return Math.max(24, Math.max(particularsLineCount, remarksLines.length, 1) * 4.5 + 7);
+                  return Math.max(18, Math.max(particularsLineCount, remarksLines.length, 1) * 4.5 + 4.5);
                 })
-              : [24];
+              : [18];
           const tableHeight =
             headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
@@ -639,7 +639,7 @@ export const downloadInvoicePdf = async ({
 
           let rowTop = tableY + headerHeight;
           items.forEach((item, index) => {
-            const itemRowHeight = deliveryRowHeights[index] || 28;
+            const itemRowHeight = deliveryRowHeights[index] || 18;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
             const nameLines = item.productName
@@ -653,9 +653,9 @@ export const downloadInvoicePdf = async ({
             pdf.text(
               splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
-              rowTop + 5.8
+              rowTop + 4.8
             );
-            let particularsY = rowTop + 5.8;
+            let particularsY = rowTop + 4.8;
             if (nameLines.length) {
               pdf.setFont('helvetica', 'bold');
               pdf.text(nameLines, tableX + columns[0] + 2, particularsY);
@@ -670,13 +670,13 @@ export const downloadInvoicePdf = async ({
             pdf.line(detailsX + detailsLabelWidth, rowTop, detailsX + detailsLabelWidth, rowTop + itemRowHeight);
             pdf.line(detailsX, rowTop + itemRowHeight / 2, detailsX + columns[3], rowTop + itemRowHeight / 2);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('UOM', detailsX + 1.2, rowTop + 7.2);
-            pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight / 2 + 7.2);
+            pdf.text('UOM', detailsX + 1.2, rowTop + itemRowHeight / 4 + 1.6);
+            pdf.text('QTY', detailsX + 1.2, rowTop + itemRowHeight * 0.75 + 1.6);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + 7.2, {
+            pdf.text(item.uom || 'PCS', detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight / 4 + 1.6, {
               align: 'center',
             });
-            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight / 2 + 7.2, {
+            pdf.text(String(item.quantity || ''), detailsX + detailsLabelWidth + (columns[3] - detailsLabelWidth) / 2, rowTop + itemRowHeight * 0.75 + 1.6, {
               align: 'center',
             });
             rowTop += itemRowHeight;
@@ -900,7 +900,10 @@ export const downloadInvoicePdf = async ({
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(9.2);
           pdf.text(
-            'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORTING',
+            fitPdfText(
+              'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORTING',
+              yellowBoxWidth - 8
+            ),
             contentLeftX + yellowBoxWidth / 2,
             yellowBoxY + 5.1,
             { align: 'center' }
