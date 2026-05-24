@@ -936,10 +936,12 @@ export const downloadInvoicePdf = async ({
           );
           pdf.text('Please make cheque payments payable to', contentLeftX + 2, termsBoxY + 11.2);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9.4);
-          pdf.text('Classic Electronic', contentLeftX + 73, termsBoxY + 11.2);
-          pdf.setFontSize(9.2);
-          pdf.text('Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248', contentLeftX + 2, termsBoxY + 15.2);
+          pdf.setFontSize(7.4);
+          pdf.text(
+            'Classic Electronic  Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248',
+            contentLeftX + 73,
+            termsBoxY + 11.2
+          );
         }
 
         pdf.setTextColor(...primaryTextColor);
