@@ -538,6 +538,8 @@ export const downloadInvoicePdf = async ({
           const headerHeight = 10;
           const columns = [18, 87, 43, 34];
           const borderColor: [number, number, number] = [15, 23, 42];
+          const deliveryLineHeight = 3.6;
+          const deliveryRowPaddingY = 2;
           const customerRows = getCustomerDetailRows(form);
           const customerTopY = 50 - bodyShiftUpY;
           const tableY = customerTopY + customerRows.length * 5;
@@ -553,9 +555,9 @@ export const downloadInvoicePdf = async ({
                   const particularsLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
                   const remarksLines = splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4);
 
-                  return Math.max(14, Math.max(particularsLineCount, remarksLines.length, 1) * 4.2 + 2.5);
+                  return Math.max(12, Math.max(particularsLineCount, remarksLines.length, 1) * deliveryLineHeight + deliveryRowPaddingY);
                 })
-              : [14];
+              : [12];
           const tableHeight =
             headerHeight + deliveryRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
           const drawDeliveryOutline = () => {
@@ -641,7 +643,7 @@ export const downloadInvoicePdf = async ({
 
           let rowTop = tableY + headerHeight;
           items.forEach((item, index) => {
-            const itemRowHeight = deliveryRowHeights[index] || 14;
+            const itemRowHeight = deliveryRowHeights[index] || 12;
             const detailsX = tableX + columns[0] + columns[1] + columns[2];
             const detailsLabelWidth = 12;
             const nameLines = item.productName
@@ -655,17 +657,18 @@ export const downloadInvoicePdf = async ({
             pdf.text(
               splitPdfTextPreservingNewlines(item.remarks || '', columns[2] - 4),
               tableX + columns[0] + columns[1] + 2,
-              rowTop + 3.7
+              rowTop + 3.3,
+              { lineHeightFactor: 1 }
             );
-            let particularsY = rowTop + 3.7;
+            let particularsY = rowTop + 3.3;
             if (nameLines.length) {
               pdf.setFont('helvetica', 'bold');
-              pdf.text(nameLines, tableX + columns[0] + 2, particularsY);
-              particularsY += nameLines.length * 4.2 + (descriptionLines.length ? 1.2 : 0);
+              pdf.text(nameLines, tableX + columns[0] + 2, particularsY, { lineHeightFactor: 1 });
+              particularsY += nameLines.length * deliveryLineHeight + (descriptionLines.length ? 1 : 0);
             }
             if (descriptionLines.length) {
               pdf.setFont('helvetica', 'normal');
-              pdf.text(descriptionLines, tableX + columns[0] + 2, particularsY);
+              pdf.text(descriptionLines, tableX + columns[0] + 2, particularsY, { lineHeightFactor: 1 });
             } else if (!nameLines.length) {
               pdf.text('Item particulars', tableX + columns[0] + 2, particularsY);
             }
