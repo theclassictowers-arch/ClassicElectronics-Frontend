@@ -1,6 +1,10 @@
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from './types';
 import {
+  DEFAULT_INVOICE_TAX_NOTICE,
+  DEFAULT_INVOICE_TERMS_LINE_1,
+  DEFAULT_INVOICE_TERMS_LINE_2,
+  DEFAULT_INVOICE_TERMS_TITLE,
   MAX_DESCRIPTION_LINES,
   SALES_TAX_RATE,
   buildSalesPdfFileName,
@@ -935,6 +939,10 @@ export const downloadInvoicePdf = async ({
 
         const showTaxNotice = form.showQuotationTaxNotice !== false;
         const showTerms = form.showQuotationTerms !== false;
+        const invoiceTaxNotice = form.invoiceTaxNotice?.trim() || DEFAULT_INVOICE_TAX_NOTICE;
+        const invoiceTermsTitle = form.invoiceTermsTitle?.trim() || DEFAULT_INVOICE_TERMS_TITLE;
+        const invoiceTermsLine1 = form.invoiceTermsLine1?.trim() || DEFAULT_INVOICE_TERMS_LINE_1;
+        const invoiceTermsLine2 = form.invoiceTermsLine2?.trim() || DEFAULT_INVOICE_TERMS_LINE_2;
         const thankYouY = outerBorderBottomY - 10;
         const boxGapY = 1.2;
         const thankYouTopGapY = 5.3;
@@ -955,7 +963,7 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(9);
           pdf.text(
             fitPdfText(
-              'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORTING',
+              invoiceTaxNotice.toUpperCase(),
               yellowBoxWidth - 4
             ),
             contentLeftX + yellowBoxWidth / 2,
@@ -973,14 +981,14 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(7.5);
-          pdf.text('Terms & Conditions', contentLeftX + (contentRightX - contentLeftX) / 2, termsBoxY + 3.8, {
+          pdf.text(invoiceTermsTitle, contentLeftX + (contentRightX - contentLeftX) / 2, termsBoxY + 3.8, {
             align: 'center',
           });
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(6.8);
           pdf.text(
             fitPdfText(
-              'All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to',
+              invoiceTermsLine1,
               contentRightX - contentLeftX - 6
             ),
             contentLeftX + (contentRightX - contentLeftX) / 2,
@@ -991,7 +999,7 @@ export const downloadInvoicePdf = async ({
           pdf.setFontSize(7.4);
           pdf.text(
             fitPdfText(
-              'Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248',
+              invoiceTermsLine2,
               contentRightX - contentLeftX - 6
             ),
             contentLeftX + (contentRightX - contentLeftX) / 2,

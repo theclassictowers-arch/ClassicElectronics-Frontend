@@ -27,18 +27,46 @@ export const FooterDetailsSection = ({ form, activeDocumentType, onFormChange }:
         onChange={(value) => onFormChange('subtitle', value)}
       />
       {activeDocumentType === 'invoice' ? (
-        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
-          <ToggleButton
-            label="Invoice Tax Notice"
-            enabled={form.showQuotationTaxNotice !== false}
-            onToggle={() =>
-              onFormChange('showQuotationTaxNotice', !(form.showQuotationTaxNotice !== false))
-            }
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
+            <ToggleButton
+              label="Invoice Tax Notice"
+              enabled={form.showQuotationTaxNotice !== false}
+              onToggle={() =>
+                onFormChange('showQuotationTaxNotice', !(form.showQuotationTaxNotice !== false))
+              }
+            />
+            <ToggleButton
+              label="Invoice Terms"
+              enabled={form.showQuotationTerms !== false}
+              onToggle={() => onFormChange('showQuotationTerms', !(form.showQuotationTerms !== false))}
+            />
+          </div>
+          <Field
+            label="Tax Notice Text"
+            value={form.invoiceTaxNotice}
+            onChange={(value) => onFormChange('invoiceTaxNotice', value)}
+            multiline
+            rows={2}
           />
-          <ToggleButton
-            label="Invoice Terms"
-            enabled={form.showQuotationTerms !== false}
-            onToggle={() => onFormChange('showQuotationTerms', !(form.showQuotationTerms !== false))}
+          <Field
+            label="Terms Title"
+            value={form.invoiceTermsTitle}
+            onChange={(value) => onFormChange('invoiceTermsTitle', value)}
+          />
+          <Field
+            label="Terms Line 1"
+            value={form.invoiceTermsLine1}
+            onChange={(value) => onFormChange('invoiceTermsLine1', value)}
+            multiline
+            rows={2}
+          />
+          <Field
+            label="Terms Account Line"
+            value={form.invoiceTermsLine2}
+            onChange={(value) => onFormChange('invoiceTermsLine2', value)}
+            multiline
+            rows={2}
           />
         </div>
       ) : null}

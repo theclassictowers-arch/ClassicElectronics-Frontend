@@ -13,6 +13,13 @@ export const CUSTOMER_GST_PLACEHOLDER = '02-04-2523-002-46';
 export const CUSTOMER_NTN_PLACEHOLDER = '0701669-7';
 export const SALES_TAX_RATE = 0.18;
 export const MAX_DESCRIPTION_LINES = 10;
+export const DEFAULT_INVOICE_TAX_NOTICE =
+  'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORT';
+export const DEFAULT_INVOICE_TERMS_TITLE = 'Terms & Conditions';
+export const DEFAULT_INVOICE_TERMS_LINE_1 =
+  'All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to';
+export const DEFAULT_INVOICE_TERMS_LINE_2 =
+  'Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248';
 
 export const limitTextLines = (value: string, maxLines = MAX_DESCRIPTION_LINES): string =>
   value.replace(/\r\n/g, '\n').split('\n').slice(0, maxLines).join('\n');
@@ -172,6 +179,10 @@ export const createInvoiceForm = (): InvoiceForm => ({
   thankYouNote: 'THANK YOU FOR YOUR BUSINESS!',
   showQuotationTaxNotice: true,
   showQuotationTerms: true,
+  invoiceTaxNotice: DEFAULT_INVOICE_TAX_NOTICE,
+  invoiceTermsTitle: DEFAULT_INVOICE_TERMS_TITLE,
+  invoiceTermsLine1: DEFAULT_INVOICE_TERMS_LINE_1,
+  invoiceTermsLine2: DEFAULT_INVOICE_TERMS_LINE_2,
   deliveryPeriod: '4 Weeks',
   validityDate: '1 WEEK',
   website: 'www.classicelectronics.com.pk',

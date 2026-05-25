@@ -2,6 +2,10 @@ import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { DocumentType, InvoiceForm, InvoiceItem } from '../types';
 import {
+  DEFAULT_INVOICE_TAX_NOTICE,
+  DEFAULT_INVOICE_TERMS_LINE_1,
+  DEFAULT_INVOICE_TERMS_LINE_2,
+  DEFAULT_INVOICE_TERMS_TITLE,
   MAX_DESCRIPTION_LINES,
   SALES_TAX_RATE,
   documentTypes,
@@ -34,6 +38,10 @@ export const StandardDocumentPreview = ({
   const showInvoiceTerms = isTaxDocument && form.showQuotationTerms !== false;
   const salesTaxAmount = totalAmount * SALES_TAX_RATE;
   const grandTotalWithTax = isTaxDocument ? totalAmount + salesTaxAmount : totalAmount;
+  const invoiceTaxNotice = form.invoiceTaxNotice?.trim() || DEFAULT_INVOICE_TAX_NOTICE;
+  const invoiceTermsTitle = form.invoiceTermsTitle?.trim() || DEFAULT_INVOICE_TERMS_TITLE;
+  const invoiceTermsLine1 = form.invoiceTermsLine1?.trim() || DEFAULT_INVOICE_TERMS_LINE_1;
+  const invoiceTermsLine2 = form.invoiceTermsLine2?.trim() || DEFAULT_INVOICE_TERMS_LINE_2;
 
   return (
     <>
@@ -242,12 +250,12 @@ export const StandardDocumentPreview = ({
           </div>
           {showInvoiceTerms ? (
             <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-center text-[11px] leading-[16px]">
-              <div className="font-bold">Terms &amp; Conditions</div>
+              <div className="font-bold">{invoiceTermsTitle}</div>
               <div className="truncate">
-                All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to
+                {invoiceTermsLine1}
               </div>
               <div className="truncate text-[12px] font-black">
-                Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248
+                {invoiceTermsLine2}
               </div>
             </div>
           ) : null}
@@ -257,7 +265,7 @@ export const StandardDocumentPreview = ({
                 showInvoiceTerms ? 'bottom-[122px]' : 'bottom-[40px]'
               }`}
             >
-              Please do not reduct income tax as it was payed while importing
+              {invoiceTaxNotice}
             </div>
           ) : null}
           <div className="absolute bottom-[10px] left-0 right-0 text-center text-[14px] font-bold leading-none text-black">

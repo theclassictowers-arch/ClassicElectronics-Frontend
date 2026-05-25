@@ -37,6 +37,10 @@ export type InvoiceForm = {
   thankYouNote: string;
   showQuotationTaxNotice: boolean;
   showQuotationTerms: boolean;
+  invoiceTaxNotice: string;
+  invoiceTermsTitle: string;
+  invoiceTermsLine1: string;
+  invoiceTermsLine2: string;
   deliveryPeriod: string;
   validityDate: string;
   website: string;
