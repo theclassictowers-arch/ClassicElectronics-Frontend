@@ -944,14 +944,14 @@ export const downloadInvoicePdf = async ({
         const invoiceTermsLine1 = form.invoiceTermsLine1?.trim() || DEFAULT_INVOICE_TERMS_LINE_1;
         const invoiceTermsLine2 = form.invoiceTermsLine2?.trim() || DEFAULT_INVOICE_TERMS_LINE_2;
         const thankYouY = outerBorderBottomY - 10;
-        const boxGapY = 1.2;
+        const boxGapY = 0.8;
         const thankYouTopGapY = 5.3;
-        const termsBoxHeight = 17;
+        const termsBoxHeight = 14;
         const yellowBoxHeight = 8;
         const yellowBoxWidth = contentRightX - contentLeftX;
         const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
         const yellowBoxY = showTerms
-          ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
+          ? termsBoxY - boxGapY - yellowBoxHeight
           : thankYouY - thankYouTopGapY - yellowBoxHeight;
 
         if (showTaxNotice) {
