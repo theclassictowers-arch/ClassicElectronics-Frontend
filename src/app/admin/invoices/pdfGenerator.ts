@@ -227,10 +227,10 @@ export const downloadInvoicePdf = async ({
         );
 
         const contentBottomY = 250;
-        const detailsBlockHeight = 92;
+        const detailsBlockHeight = 60;
         const quotationNoteGap = 5.3;
         const quotationLineHeight = 2.55;
-        const quotationMaxRowHeight = 34;
+        const quotationMaxRowHeight = 24;
         const maxQuotationRowHeight =
           contentBottomY - detailsBlockHeight - tableY - headerHeight - quotationNoteGap - 8;
 
@@ -440,7 +440,7 @@ export const downloadInvoicePdf = async ({
             remarksWidth - 5,
             7.5
           );
-          const imageReservedHeight = itemImage ? 25 : 0;
+          const imageReservedHeight = itemImage ? 14 : 0;
           const remarksLines = fitPdfLines(
             rawRemarksLines,
             Math.max(1, Math.floor((rowHeight - imageReservedHeight - 4) / quotationLineHeight)),
@@ -450,7 +450,7 @@ export const downloadInvoicePdf = async ({
           if (itemImage) {
             const imageY = rowY + Math.max(remarksLines.length * quotationLineHeight + 3, 8);
             const maxImageWidth = remarksWidth - 4;
-            const maxImageHeight = Math.min(15, Math.max(rowHeight - (imageY - rowY) - 2, 7));
+            const maxImageHeight = Math.min(10, Math.max(rowHeight - (imageY - rowY) - 2, 5));
             const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
             if (imageSize.width > 6 && imageSize.height > 6) {

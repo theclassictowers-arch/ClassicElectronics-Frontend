@@ -44,24 +44,24 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return hasImage && (item as any).showPicture !== false;
   };
 
-  const baseRowHeight = 118;
+  const baseRowHeight = 112;
   const rowHeights = quotationItems.map((item) => {
     const descriptionRows = Math.min(
       estimateWrappedRows(item.description || item.productName || '', 24),
       MAX_DESCRIPTION_LINES
     );
     const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 27);
-    const imageHeight = showItemImage(item) ? 48 : 0;
+    const imageHeight = showItemImage(item) ? 42 : 0;
     const descriptionHeight = descriptionRows * 10 + 22;
     const remarksHeight = remarksRows * 12 + imageHeight + (imageHeight ? 18 : 10);
 
-    return Math.min(132, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
+    return Math.min(118, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
   });
 
   const tableTop = 252;
   const tableHeaderHeight = 30;
   const bodyBottom = 960;
-  const detailsBlockHeight = 210;
+  const detailsBlockHeight = 170;
   const tableBottomGap = 20;
   const maxTableBodyHeight = bodyBottom - tableTop - tableHeaderHeight - detailsBlockHeight - tableBottomGap;
   const cappedRowHeights = rowHeights.map((height) =>
