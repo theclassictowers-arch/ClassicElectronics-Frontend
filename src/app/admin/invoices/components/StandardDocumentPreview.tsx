@@ -241,7 +241,7 @@ export const StandardDocumentPreview = ({
             {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
           </div>
           {showInvoiceTerms ? (
-            <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-[11px] leading-[16px]">
+            <div className="absolute bottom-[40px] left-5 right-5 border-2 border-dashed border-emerald-700 bg-white px-2 py-1 text-center text-[11px] leading-[16px]">
               <div className="font-bold">Terms &amp; Conditions</div>
               <div className="truncate">
                 All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to
@@ -253,7 +253,7 @@ export const StandardDocumentPreview = ({
           ) : null}
           {showInvoiceTaxNotice ? (
             <div
-              className={`absolute left-5 w-[492px] border-2 border-black bg-yellow-200 px-6 py-2 text-center text-[15px] font-black uppercase leading-none text-red-600 ${
+              className={`absolute left-5 right-5 border-2 border-black bg-yellow-200 px-2 py-2 text-center text-[14px] font-black uppercase leading-none text-red-600 ${
                 showInvoiceTerms ? 'bottom-[122px]' : 'bottom-[40px]'
               }`}
             >

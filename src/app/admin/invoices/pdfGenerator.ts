@@ -940,7 +940,7 @@ export const downloadInvoicePdf = async ({
         const thankYouTopGapY = 5.3;
         const termsBoxHeight = 17;
         const yellowBoxHeight = 8;
-        const yellowBoxWidth = 122;
+        const yellowBoxWidth = contentRightX - contentLeftX;
         const termsBoxY = thankYouY - thankYouTopGapY - termsBoxHeight;
         const yellowBoxY = showTerms
           ? termsBoxY - boxGapY - yellowBoxHeight - 1.5
@@ -952,11 +952,11 @@ export const downloadInvoicePdf = async ({
           pdf.rect(contentLeftX, yellowBoxY, yellowBoxWidth, yellowBoxHeight, 'FD');
           pdf.setTextColor(220, 38, 38);
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9.2);
+          pdf.setFontSize(9);
           pdf.text(
             fitPdfText(
               'PLEASE DO NOT REDUCT INCOME TAX AS IT WAS PAYED WHILE IMPORTING',
-              yellowBoxWidth - 8
+              yellowBoxWidth - 4
             ),
             contentLeftX + yellowBoxWidth / 2,
             yellowBoxY + 5.1,
@@ -973,26 +973,30 @@ export const downloadInvoicePdf = async ({
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(7.5);
-          pdf.text('Terms & Conditions', contentLeftX + 2, termsBoxY + 3.8);
+          pdf.text('Terms & Conditions', contentLeftX + (contentRightX - contentLeftX) / 2, termsBoxY + 3.8, {
+            align: 'center',
+          });
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(6.8);
           pdf.text(
             fitPdfText(
               'All goods remain the property of Classic Electronic until full payment has been received. Please make cheque payments payable to',
-              contentRightX - contentLeftX - 4
+              contentRightX - contentLeftX - 6
             ),
-            contentLeftX + 2,
-            termsBoxY + 7.5
+            contentLeftX + (contentRightX - contentLeftX) / 2,
+            termsBoxY + 7.5,
+            { align: 'center' }
           );
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(7.4);
           pdf.text(
             fitPdfText(
               'Classic Electronic Account No: Meezan Bank PK13 MEZN 0003 1101 1360 2248',
-              contentRightX - contentLeftX - 4
+              contentRightX - contentLeftX - 6
             ),
-            contentLeftX + 2,
-            termsBoxY + 11.2
+            contentLeftX + (contentRightX - contentLeftX) / 2,
+            termsBoxY + 11.2,
+            { align: 'center' }
           );
         }
 
