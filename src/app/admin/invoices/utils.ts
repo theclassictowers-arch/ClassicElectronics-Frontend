@@ -191,6 +191,7 @@ export const createInvoiceForm = (): InvoiceForm => ({
   phonePrimary: '+923 111 777 510',
   phoneSecondary: '+923 215 180 308',
   directorName: 'M Fawad Younas',
+  billIssuerName: 'M Fawad Younas',
 });
 
 export const getCustomerAddressParts = (form: InvoiceForm) => {

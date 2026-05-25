@@ -49,6 +49,7 @@ export type InvoiceForm = {
   phonePrimary: string;
   phoneSecondary: string;
   directorName: string;
+  billIssuerName: string;
 };
 
 export type DocumentType = 'quotation' | 'invoice' | 'deliveryChallan' | 'bill';

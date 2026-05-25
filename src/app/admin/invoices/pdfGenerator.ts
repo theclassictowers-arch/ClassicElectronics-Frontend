@@ -182,7 +182,7 @@ export const downloadInvoicePdf = async ({
         const taxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotal = totalAmount + taxAmount;
         const tableX = 15;
-        const tableY = 85 - bodyShiftUpY;
+        const tableY = 80 - bodyShiftUpY;
         const tableWidth = 180;
         const headerHeight = 10;
         const minimumRowHeight = 20;
@@ -364,12 +364,12 @@ export const downloadInvoicePdf = async ({
           pdf.line(priceX, startY, priceX, startY + headerHeight);
 
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(7.6);
+          pdf.setFontSize(9);
           pdf.setTextColor(0, 0, 0);
-          pdf.text('Sr', tableX + 5, startY + 6.6, { align: 'center' });
-          pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, startY + 6.6, { align: 'center' });
-          pdf.text('Remarks', remarksX + remarksWidth / 2, startY + 6.6, { align: 'center' });
-          pdf.text('Price', priceX + (priceLabelWidth + priceValueWidth) / 2, startY + 6.6, { align: 'center' });
+          pdf.text('Sr', tableX + 5, startY + 6.5, { align: 'center' });
+          pdf.text('DESCRIPTION', descriptionX + descriptionWidth / 2, startY + 6.5, { align: 'center' });
+          pdf.text('Remarks', remarksX + remarksWidth / 2, startY + 6.5, { align: 'center' });
+          pdf.text('Price', priceX + (priceLabelWidth + priceValueWidth) / 2, startY + 6.5, { align: 'center' });
 
           return startY + headerHeight;
         };
@@ -1181,7 +1181,12 @@ export const downloadInvoicePdf = async ({
       pdf.setFont('helvetica', 'italic');
       pdf.setFontSize(15);
       pdf.setTextColor(14, 116, 144);
-      pdf.text(form.directorName || 'Director Name', contentLeftX + 1, signatureNameY);
+      const signatureName =
+        activeDocumentType === 'bill'
+          ? form.billIssuerName?.trim() || form.directorName || 'Issued By'
+          : form.directorName || 'Director Name';
+      const signatureLabel = activeDocumentType === 'bill' ? 'Issued By' : 'Director';
+      pdf.text(signatureName, contentLeftX + 1, signatureNameY);
 
       pdf.setDrawColor(...lightBorderColor);
       pdf.setLineWidth(0.35);
@@ -1190,7 +1195,7 @@ export const downloadInvoicePdf = async ({
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9.5);
       pdf.setTextColor(...primaryTextColor);
-      pdf.text('Director', contentLeftX + 1, signatureLabelY);
+      pdf.text(signatureLabel, contentLeftX + 1, signatureLabelY);
       drawInvoiceNoticeBlocks();
       drawBodyThankYou(105, outerBorderBottomY - 10, 'center');
       drawBodySubtitle(outerBorderBottomY - 4);

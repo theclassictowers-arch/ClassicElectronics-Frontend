@@ -98,6 +98,13 @@ export const FooterDetailsSection = ({ form, activeDocumentType, onFormChange }:
         value={form.directorName}
         onChange={(value) => onFormChange('directorName', value)}
       />
+      {activeDocumentType === 'bill' ? (
+        <Field
+          label="Bill Issued By"
+          value={form.billIssuerName}
+          onChange={(value) => onFormChange('billIssuerName', value)}
+        />
+      ) : null}
     </div>
   </section>
 );

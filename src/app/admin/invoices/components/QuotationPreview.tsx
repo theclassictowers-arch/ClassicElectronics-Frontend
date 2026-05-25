@@ -58,7 +58,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.min(118, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
   });
 
-  const tableTop = 252;
+  const tableTop = 240;
   const tableHeaderHeight = 30;
   const bodyBottom = 960;
   const detailsBlockHeight = 170;
@@ -137,7 +137,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         className="absolute left-[42px] w-[710px] border-[2px] border-black bg-white text-[14px]"
         style={{ top: tableTop }}
       >
-        <div className="grid h-[30px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[13px] font-bold">
+        <div className="grid h-[30px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[12px] font-bold">
           <div className="flex items-center justify-center border-r-[2px] border-black">
             Sr
           </div>

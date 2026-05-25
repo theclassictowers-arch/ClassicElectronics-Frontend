@@ -42,6 +42,11 @@ export const StandardDocumentPreview = ({
   const invoiceTermsTitle = form.invoiceTermsTitle?.trim() || DEFAULT_INVOICE_TERMS_TITLE;
   const invoiceTermsLine1 = form.invoiceTermsLine1?.trim() || DEFAULT_INVOICE_TERMS_LINE_1;
   const invoiceTermsLine2 = form.invoiceTermsLine2?.trim() || DEFAULT_INVOICE_TERMS_LINE_2;
+  const signatureName =
+    activeDocumentType === 'bill'
+      ? form.billIssuerName?.trim() || form.directorName || 'Issued By'
+      : form.directorName || 'Director Name';
+  const signatureLabel = activeDocumentType === 'bill' ? 'Issued By' : 'Director';
 
   return (
     <>
@@ -213,10 +218,10 @@ export const StandardDocumentPreview = ({
           <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-xs">
               <div className="text-[20px] italic text-sky-700 sm:text-[22px]">
-                {form.directorName || 'Director Name'}
+                {signatureName}
               </div>
               <div className="mt-2 w-28 border-t border-slate-400 pt-1 text-[12px] font-semibold text-slate-900">
-                Director
+                {signatureLabel}
               </div>
             </div>
             <div className="w-full max-w-[240px] rounded-[16px] border-2 border-slate-950 bg-white px-3 py-2 text-right">
