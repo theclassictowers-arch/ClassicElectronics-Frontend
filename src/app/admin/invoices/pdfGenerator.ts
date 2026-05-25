@@ -358,7 +358,7 @@ export const downloadInvoicePdf = async ({
         const drawQuotationTableHeader = (startY: number) => {
           pdf.setDrawColor(0, 0, 0);
           pdf.setLineWidth(0.62);
-          pdf.rect(tableX, startY, tableWidth, headerHeight);
+          pdf.roundedRect(tableX, startY, tableWidth, headerHeight, 3, 3, 'S');
           pdf.line(descriptionX, startY, descriptionX, startY + headerHeight);
           pdf.line(remarksX, startY, remarksX, startY + headerHeight);
           pdf.line(priceX, startY, priceX, startY + headerHeight);
@@ -380,7 +380,7 @@ export const downloadInvoicePdf = async ({
 
           pdf.setDrawColor(0, 0, 0);
           pdf.setLineWidth(0.62);
-          pdf.rect(tableX, rowY, tableWidth, rowHeight);
+          pdf.roundedRect(tableX, rowY, tableWidth, rowHeight, 3, 3, 'S');
           pdf.line(descriptionX, rowY, descriptionX, rowY + rowHeight);
           pdf.line(remarksX, rowY, remarksX, rowY + rowHeight);
           pdf.line(priceX, rowY, priceX, rowY + rowHeight);
@@ -804,16 +804,20 @@ export const downloadInvoicePdf = async ({
 
       const drawTableHeader = (startY: number) => {
         let startX = contentLeftX;
+        const tableWidth = tableColumnWidths.reduce((width, columnWidth) => width + columnWidth, 0);
 
         pdf.setDrawColor(...borderColor);
         pdf.setLineWidth(0.5);
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(9.5);
         pdf.setTextColor(...primaryTextColor);
+        pdf.roundedRect(contentLeftX, startY, tableWidth, 10, 3, 3, 'S');
 
         tableHeaders.forEach((header, index) => {
           const cellWidth = tableColumnWidths[index];
-          pdf.rect(startX, startY, cellWidth, 10);
+          if (index > 0) {
+            pdf.line(startX, startY, startX, startY + 10);
+          }
           pdf.text(header, startX + cellWidth / 2, startY + 6.2, {
             align: 'center',
             baseline: 'middle',
@@ -1074,10 +1078,12 @@ export const downloadInvoicePdf = async ({
         const priceCellX = remarksCellX + tableColumnWidths[2];
         const priceLabelWidth = 13;
         const priceValueWidth = tableColumnWidths[3] - priceLabelWidth;
+        const standardTableWidth = tableColumnWidths.reduce((width, columnWidth) => width + columnWidth, 0);
 
         pdf.setDrawColor(...borderColor);
-        [srX, descriptionCellX, remarksCellX, priceCellX].forEach((cellX, cellIndex) => {
-          pdf.rect(cellX, cursorY, tableColumnWidths[cellIndex], finalRowHeight);
+        pdf.roundedRect(srX, cursorY, standardTableWidth, finalRowHeight, 3, 3, 'S');
+        [descriptionCellX, remarksCellX, priceCellX].forEach((cellX) => {
+          pdf.line(cellX, cursorY, cellX, cursorY + finalRowHeight);
         });
 
         pdf.text(String(index + 1), srX + tableColumnWidths[0] / 2, cursorY + finalRowHeight / 2 + 2, {

@@ -45,14 +45,6 @@ export const ItemsSection = ({
         <CalendarDays size={16} />
         {documentLabel} Items
       </div>
-      <button
-        type="button"
-        onClick={onAddItem}
-        className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
-      >
-        <Plus size={14} />
-        Add Item
-      </button>
     </div>
 
     <div className="mb-4 rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
@@ -261,6 +253,14 @@ export const ItemsSection = ({
           </div>
         );
       })}
+      <button
+        type="button"
+        onClick={onAddItem}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-cyan-500/40 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
+      >
+        <Plus size={16} />
+        Add Item
+      </button>
     </div>
   </section>
 );
