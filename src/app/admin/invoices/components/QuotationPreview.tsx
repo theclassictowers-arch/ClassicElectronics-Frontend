@@ -8,6 +8,7 @@ import {
   getCustomerDetailRows,
   getPictureSource,
 } from '../utils';
+import { DocumentBodyBorder } from './DocumentBodyBorder';
 import { DocumentFooter } from './DocumentFooter';
 
 type QuotationPreviewProps = {
@@ -58,7 +59,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return Math.min(118, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
   });
 
-  const tableTop = 240;
+  const customerTop = 146;
+  const customerRowHeight = 14;
+  const referenceTop = customerTop + customerRows.length * customerRowHeight + 12;
+  const tableTop = referenceTop + 20;
   const tableHeaderHeight = 30;
   const bodyBottom = 960;
   const detailsBlockHeight = 170;
@@ -73,7 +77,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const detailsTop = noteTop + 28;
 
   return (
-    <div className="quotation-a4 relative mx-auto h-[1123px] w-[794px] overflow-hidden bg-white text-black">
+    <div className="quotation-a4 relative mx-auto h-[1503px] w-[794px] overflow-hidden bg-white text-black">
       <div className="absolute left-[10px] top-[8px]">
         <Image
           src={CLASSIC_LOGO_SRC}
@@ -86,7 +90,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       </div>
 
       <div
-        className="absolute right-[22px] top-[8px] w-[340px] text-right"
+        className="absolute right-[22px] top-[54px] w-[340px] text-right"
         style={{
           fontFamily: '"Arial Narrow", Arial, Helvetica, sans-serif',
           fontStretch: 'condensed',
@@ -108,8 +112,8 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         </div>
       </div>
 
-      <div className="absolute left-[17px] top-[132px] h-[905px] w-[760px] rounded-[34px] border-2 border-violet-600 bg-white" />
-      <div className="absolute left-[41px] top-[132px] h-6 w-[42%] -translate-y-1/2 rounded-[18px] border-2 border-violet-600 bg-white" />
+      <div className="absolute left-[17px] top-[132px] h-[1285px] w-[760px] bg-white" />
+      <DocumentBodyBorder className="left-[17px] top-[132px] z-10 h-[1285px] w-[760px]" />
 
       <div className="pointer-events-none absolute left-[118px] top-[351px] opacity-[0.14]">
         <Image
@@ -121,7 +125,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-[44px] top-[112px] flex max-w-[405px] flex-col text-[12px] leading-[14px]">
+      <div
+        className="absolute left-[44px] flex max-w-[405px] flex-col text-[12px] leading-[14px]"
+        style={{ top: customerTop }}
+      >
         {customerRows.map(([label, value], index) => (
           <div key={`${label || 'customer'}-${index}`} className="truncate">
             {label ? `${label} ${value || '________________'}` : value || '________________'}
@@ -129,7 +136,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         ))}
       </div>
 
-      <div className="absolute left-[44px] top-[224px] text-[13px] font-bold italic leading-[14px]">
+      <div
+        className="absolute left-[44px] text-[13px] font-bold italic leading-[14px]"
+        style={{ top: referenceTop }}
+      >
         Reference to your quotation the details is as below.
       </div>
 
@@ -296,10 +306,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
         />
       </div>
 
-      <div className="absolute left-0 right-0 top-[996px] text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
+      <div className="absolute left-0 right-0 top-[1350px] text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
         {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
       </div>
-      <div className="absolute left-0 right-0 top-[1015px] text-center text-[14px] font-bold leading-none text-black">
+      <div className="absolute left-0 right-0 top-[1369px] text-center text-[14px] font-bold leading-none text-black">
         {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
       </div>
 

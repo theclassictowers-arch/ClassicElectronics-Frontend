@@ -717,7 +717,7 @@ const SalesTaxInvoicePage = () => {
                 className={
                   activeDocumentType === 'quotation'
                     ? 'invoice-print-sheet mx-auto flex w-full max-w-[794px] flex-col overflow-hidden rounded-[28px] bg-white text-slate-900'
-                    : 'invoice-print-sheet mx-auto flex min-h-[1120px] w-full max-w-[760px] flex-col rounded-[28px] bg-white px-5 py-4 text-slate-900 sm:px-6 sm:py-5'
+                    : 'invoice-print-sheet mx-auto flex w-full max-w-[794px] flex-col overflow-hidden rounded-[28px] bg-white text-slate-900'
                 }
                 style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
               >
