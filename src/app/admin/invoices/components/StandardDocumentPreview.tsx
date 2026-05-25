@@ -58,7 +58,7 @@ export const StandardDocumentPreview = ({
   const bodyContentBottom = (272 - (hasInvoiceNoticeBlocks ? 42 : 22)) * pxPerMm;
   const standardLineHeight = 2.55 * pxPerMm;
   const standardMaxRowHeight = (hasInvoiceNoticeBlocks ? 28 : 34) * pxPerMm;
-  const tableColumnWidths = [10, 77, 55, 40].map((width) => width * pxPerMm);
+  const tableColumnWidths = [10, 77, 55, 36].map((width) => width * pxPerMm);
   const tableWidth = tableColumnWidths.reduce((sum, width) => sum + width, 0);
   const visibleItems = items.slice(0, 4);
   const estimateRows = (value: string, charactersPerLine: number) =>
@@ -147,7 +147,7 @@ export const StandardDocumentPreview = ({
       </div>
 
       <div
-        className="absolute overflow-hidden border border-slate-950 bg-white text-slate-950"
+        className="absolute overflow-hidden rounded-[19px] border border-slate-950 bg-white text-slate-950"
         style={{ left: contentLeft, top: tableTop, width: tableWidth }}
       >
         <div

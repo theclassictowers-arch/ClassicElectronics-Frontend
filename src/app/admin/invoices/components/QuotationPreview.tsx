@@ -144,7 +144,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       </div>
 
       <div
-        className="absolute left-[42px] w-[710px] border-[2px] border-black bg-white text-[14px]"
+        className="absolute left-[42px] w-[710px] overflow-hidden rounded-[19px] border-[2px] border-black bg-white text-[14px]"
         style={{ top: tableTop }}
       >
         <div className="grid h-[30px] grid-cols-[38px_330px_220px_122px] border-b-[2px] border-black text-center text-[12px] font-bold">
