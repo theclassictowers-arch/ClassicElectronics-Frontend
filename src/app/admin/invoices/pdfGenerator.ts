@@ -909,7 +909,7 @@ export const downloadInvoicePdf = async ({
           });
         }
 
-        let cursorY = outerBorderTopY + 4 - bodyShiftUpY;
+        let cursorY = withCustomerBlock ? outerBorderTopY + 4 - bodyShiftUpY : outerBorderTopY + 8;
 
         if (withCustomerBlock) {
           pdf.setTextColor(...primaryTextColor);
