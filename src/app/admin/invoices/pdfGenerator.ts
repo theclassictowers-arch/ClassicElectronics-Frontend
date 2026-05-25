@@ -225,6 +225,8 @@ export const downloadInvoicePdf = async ({
         const contentBottomY = 250;
         const detailsBlockHeight = 92;
         const quotationNoteGap = 5.3;
+        const quotationLineHeight = 2.55;
+        const quotationMaxRowHeight = 34;
         const maxQuotationRowHeight =
           contentBottomY - detailsBlockHeight - tableY - headerHeight - quotationNoteGap - 8;
 
@@ -242,14 +244,14 @@ export const downloadInvoicePdf = async ({
           );
           const descriptionLineCount = Math.max(nameLines.length + descriptionLines.length, 1);
           const descriptionHeight =
-            descriptionLineCount * 4.3 + (nameLines.length && descriptionLines.length ? 14 : 10);
-          const remarksTextHeight = Math.max(remarksLines.length, 1) * 4.3;
+            descriptionLineCount * quotationLineHeight + (nameLines.length && descriptionLines.length ? 1 : 0);
+          const remarksTextHeight = Math.max(remarksLines.length, 1) * quotationLineHeight;
           const imageHeight = quotationImageDataUrls[index] ? 15 : 0;
-          const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 7 : 6);
+          const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 3 : 2);
 
           return Math.min(
-            maxQuotationRowHeight,
-            Math.max(minimumRowHeight, descriptionHeight, remarksHeight)
+            Math.min(maxQuotationRowHeight, quotationMaxRowHeight),
+            Math.max(24, minimumRowHeight, descriptionHeight + 3, remarksHeight)
           );
         });
         const descriptionX = tableX + srWidth;
@@ -393,23 +395,23 @@ export const downloadInvoicePdf = async ({
           const rawDescriptionLines = item.description
             ? splitPdfCellText(item.description, descriptionWidth - 4, 7.5).slice(0, MAX_DESCRIPTION_LINES)
             : [];
-          const maxDescriptionLines = Math.max(1, Math.floor((rowHeight - 9) / 4.3));
+          const maxDescriptionLines = Math.max(1, Math.floor((rowHeight - 4.8) / quotationLineHeight));
           const nameLines = fitPdfLines(rawNameLines, maxDescriptionLines, descriptionWidth - 4);
           const remainingDescriptionLines = Math.max(0, maxDescriptionLines - nameLines.length);
           const descriptionLines = remainingDescriptionLines
             ? fitPdfLines(rawDescriptionLines, remainingDescriptionLines, descriptionWidth - 4)
             : [];
-          let descriptionTextY = rowY + 6;
+          let descriptionTextY = rowY + 3.9;
           if (nameLines.length) {
             pdf.setFont('helvetica', 'bold');
             pdf.setFontSize(7.5);
-            pdf.text(nameLines, descriptionX + 2, descriptionTextY);
-            descriptionTextY += nameLines.length * 4.3;
+            pdf.text(nameLines, descriptionX + 2, descriptionTextY, { lineHeightFactor: 1 });
+            descriptionTextY += nameLines.length * quotationLineHeight;
           }
           if (descriptionLines.length) {
             pdf.setFont('helvetica', 'normal');
             pdf.setFontSize(7.5);
-            pdf.text(descriptionLines, descriptionX + 2, descriptionTextY);
+            pdf.text(descriptionLines, descriptionX + 2, descriptionTextY, { lineHeightFactor: 1 });
           }
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(8.5);
@@ -437,12 +439,12 @@ export const downloadInvoicePdf = async ({
           const imageReservedHeight = itemImage ? 25 : 0;
           const remarksLines = fitPdfLines(
             rawRemarksLines,
-            Math.max(1, Math.floor((rowHeight - imageReservedHeight - 7) / 4.3)),
+            Math.max(1, Math.floor((rowHeight - imageReservedHeight - 4) / quotationLineHeight)),
             remarksWidth - 5
           );
-          pdf.text(remarksLines, remarksX + 2, rowY + 5.5);
+          pdf.text(remarksLines, remarksX + 2, rowY + 3.9, { lineHeightFactor: 1 });
           if (itemImage) {
-            const imageY = rowY + Math.max(remarksLines.length * 4.3 + 4, 10);
+            const imageY = rowY + Math.max(remarksLines.length * quotationLineHeight + 3, 8);
             const maxImageWidth = remarksWidth - 4;
             const maxImageHeight = Math.min(15, Math.max(rowHeight - (imageY - rowY) - 2, 7));
             const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
@@ -471,18 +473,18 @@ export const downloadInvoicePdf = async ({
           const totalBoxY = detailsY - 5;
 
           pdf.setDrawColor(15, 23, 42);
-          pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 34, 3, 3, 'S');
+          pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, 30, 3, 3, 'S');
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(9);
           pdf.setTextColor(71, 85, 105);
-          pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
-          pdf.text(formatPdfRs(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
-          pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
-          pdf.text(formatPdfRs(taxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
-          pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
+          pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 5.5);
+          pdf.text(formatPdfRs(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 5.5, { align: 'right' });
+          pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 13);
+          pdf.text(formatPdfRs(taxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 13, { align: 'right' });
+          pdf.line(totalBoxX + 4, totalBoxY + 17.5, totalBoxX + totalBoxWidth - 4, totalBoxY + 17.5);
           pdf.setTextColor(15, 23, 42);
-          pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
-          pdf.text(formatPdfRs(grandTotal), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
+          pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 25);
+          pdf.text(formatPdfRs(grandTotal), totalBoxX + totalBoxWidth - 4, totalBoxY + 25, { align: 'right' });
 
           if (stampDataUrl) {
             pdf.addImage(stampDataUrl, 'PNG', 21, detailsY + 18, 45, 27, undefined, 'FAST');
@@ -501,7 +503,7 @@ export const downloadInvoicePdf = async ({
           const isLastRow = index === quotationItems.length - 1;
           const requiredBottom = isLastRow ? contentBottomY - detailsBlockHeight : contentBottomY;
 
-          if ((quotationRowsOnPage >= 3 || rowY + rowHeight > requiredBottom) && rowY > tableY + headerHeight) {
+          if ((quotationRowsOnPage >= 4 || rowY + rowHeight > requiredBottom) && rowY > tableY + headerHeight) {
             pdf.addPage();
             drawQuotationShell();
             rowY = drawQuotationTableHeader(tableY);
@@ -546,7 +548,7 @@ export const downloadInvoicePdf = async ({
           const borderColor: [number, number, number] = [15, 23, 42];
           const deliveryLineHeight = 3.6;
           const deliveryRowPaddingY = 2;
-          const maxDeliveryRowHeight = 42;
+          const maxDeliveryRowHeight = 31;
           const fitDeliveryLines = (lines: string[], maxLines: number, width: number) => {
             if (lines.length <= maxLines) return lines;
 
@@ -747,7 +749,7 @@ export const downloadInvoicePdf = async ({
         };
 
         const deliveryItems = items.length > 0 ? items : [createInvoiceItem()];
-        const deliveryItemsPerPage = 3;
+        const deliveryItemsPerPage = 4;
         for (let pageStart = 0; pageStart < deliveryItems.length; pageStart += deliveryItemsPerPage) {
           if (pageStart > 0) pdf.addPage();
           const pageItems = deliveryItems.slice(pageStart, pageStart + deliveryItemsPerPage);
@@ -1003,8 +1005,8 @@ export const downloadInvoicePdf = async ({
       pdf.setFontSize(9.5);
       pdf.setTextColor(...primaryTextColor);
       let standardRowsOnPage = 0;
-      const standardLineHeight = 2.95;
-      const standardMaxRowHeight = hasInvoiceNoticeBlocks ? 34 : 42;
+      const standardLineHeight = 2.55;
+      const standardMaxRowHeight = hasInvoiceNoticeBlocks ? 28 : 34;
 
       for (const [index, item] of items.entries()) {
         const nameLines = item.productName
@@ -1031,7 +1033,7 @@ export const downloadInvoicePdf = async ({
           Math.max(24, Math.max(descriptionHeight, remarksHeight + imageHeight + (itemImage ? 2 : 0)) + 3)
         );
 
-        if (standardRowsOnPage >= 3 || cursorY + rowHeight > bodyContentBottomY) {
+        if (standardRowsOnPage >= 4 || cursorY + rowHeight > bodyContentBottomY) {
           pdf.addPage();
           cursorY = drawPageHeader(false);
           standardRowsOnPage = 0;
@@ -1131,35 +1133,35 @@ export const downloadInvoicePdf = async ({
       }
 
       const totalsBottomLimit = hasInvoiceNoticeBlocks ? outerBorderBottomY - 32 : bodyContentBottomY;
-      const totalsBlockHeight = includeTax ? 34 : 22;
+      const totalsBlockHeight = includeTax ? 28 : 18;
 
-      if (cursorY + 8 + totalsBlockHeight > totalsBottomLimit) {
+      if (cursorY + 4 + totalsBlockHeight > totalsBottomLimit) {
         pdf.addPage();
         cursorY = drawPageHeader(false);
       }
 
       const totalBoxWidth = 56;
       const totalBoxX = contentRightX - totalBoxWidth;
-      const totalBoxY = cursorY + 8;
+      const totalBoxY = cursorY + 4;
 
       pdf.setDrawColor(...borderColor);
-      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, includeTax ? 34 : 22, 3, 3, 'S');
+      pdf.roundedRect(totalBoxX, totalBoxY, totalBoxWidth, totalsBlockHeight, 3, 3, 'S');
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
       pdf.setTextColor(...mutedTextColor);
       if (includeTax) {
-        pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 6);
-        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 6, { align: 'right' });
-        pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 15);
-        pdf.text(formatCurrency(salesTaxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 15, { align: 'right' });
-        pdf.line(totalBoxX + 4, totalBoxY + 20, totalBoxX + totalBoxWidth - 4, totalBoxY + 20);
+        pdf.text('SUB TOTAL', totalBoxX + 4, totalBoxY + 5.2);
+        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 5.2, { align: 'right' });
+        pdf.text('GST 18%', totalBoxX + 4, totalBoxY + 12.2);
+        pdf.text(formatCurrency(salesTaxAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 12.2, { align: 'right' });
+        pdf.line(totalBoxX + 4, totalBoxY + 16.8, totalBoxX + totalBoxWidth - 4, totalBoxY + 16.8);
         pdf.setTextColor(...primaryTextColor);
-        pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 28);
-        pdf.text(formatCurrency(grandTotalWithTax), totalBoxX + totalBoxWidth - 4, totalBoxY + 28, { align: 'right' });
+        pdf.text('GRAND TOTAL', totalBoxX + 4, totalBoxY + 23.6);
+        pdf.text(formatCurrency(grandTotalWithTax), totalBoxX + totalBoxWidth - 4, totalBoxY + 23.6, { align: 'right' });
       } else {
         pdf.setTextColor(...primaryTextColor);
-        pdf.text('TOTAL', totalBoxX + 4, totalBoxY + 13);
-        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 13, { align: 'right' });
+        pdf.text('TOTAL', totalBoxX + 4, totalBoxY + 10.5);
+        pdf.text(formatCurrency(totalAmount), totalBoxX + totalBoxWidth - 4, totalBoxY + 10.5, { align: 'right' });
       }
 
       const signatureNameY = totalBoxY + 8;

@@ -130,7 +130,7 @@ export const StandardDocumentPreview = ({
                       <td className="border-r-2 border-slate-950 px-1 py-3 text-center text-sm sm:text-base">
                         {index + 1}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-[2px] text-[10px] leading-[11px]">
+                      <td className="border-r-2 border-slate-950 px-2 py-[5px] text-[10px] leading-[10px]">
                         {item.productName ? <div className="font-bold text-slate-950">{item.productName}</div> : null}
                         {item.description ? (
                           <div
@@ -148,7 +148,7 @@ export const StandardDocumentPreview = ({
                           'Item description'
                         ) : null}
                       </td>
-                      <td className="border-r-2 border-slate-950 px-2 py-[2px] text-[11px] leading-[12px] text-slate-950 sm:text-[12px]">
+                      <td className="border-r-2 border-slate-950 px-2 py-[5px] text-[11px] leading-[12px] text-slate-950 sm:text-[12px]">
                         <div className="space-y-1">
                           <div className="font-medium text-slate-900">
                             {item.remarks || item.productName || 'Remarks'}
@@ -174,7 +174,7 @@ export const StandardDocumentPreview = ({
                         </div>
                       </td>
                       <td className="p-0 text-[12px] sm:text-[13px]">
-                        <div className="grid h-full min-h-[68px] grid-rows-4">
+                        <div className="grid h-full min-h-[56px] grid-rows-4">
                           {[
                             ['UOM', item.uom || '--', false],
                             ['Price', formatCurrency(item.unitPrice || 0), false],
@@ -211,8 +211,8 @@ export const StandardDocumentPreview = ({
                 Director
               </div>
             </div>
-            <div className="w-full max-w-[240px] rounded-[16px] border-2 border-slate-950 bg-white px-4 py-3 text-right">
-              <div className="space-y-1 text-[12px] font-semibold text-slate-700">
+            <div className="w-full max-w-[240px] rounded-[16px] border-2 border-slate-950 bg-white px-3 py-2 text-right">
+              <div className="space-y-[2px] text-[12px] font-semibold text-slate-700">
                 {isTaxDocument ? (
                   <>
                     <div className="flex justify-between gap-4">
@@ -226,7 +226,7 @@ export const StandardDocumentPreview = ({
                   </>
                 ) : null}
               </div>
-              <div className="mt-2 border-t border-slate-300 pt-2">
+              <div className="mt-1 border-t border-slate-300 pt-1">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">
                   {isTaxDocument ? 'Grand Total' : 'Total'}
                 </div>

@@ -44,19 +44,18 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return hasImage && (item as any).showPicture !== false;
   };
 
-  const baseRowHeight =
-    quotationItems.length <= 1 ? 150 : quotationItems.length === 2 ? 210 : 165;
+  const baseRowHeight = 118;
   const rowHeights = quotationItems.map((item) => {
     const descriptionRows = Math.min(
       estimateWrappedRows(item.description || item.productName || '', 24),
       MAX_DESCRIPTION_LINES
     );
     const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 27);
-    const imageHeight = showItemImage(item) ? 76 : 0;
-    const descriptionHeight = descriptionRows * 22 + 74;
-    const remarksHeight = remarksRows * 22 + imageHeight + 50;
+    const imageHeight = showItemImage(item) ? 48 : 0;
+    const descriptionHeight = descriptionRows * 10 + 22;
+    const remarksHeight = remarksRows * 12 + imageHeight + (imageHeight ? 18 : 10);
 
-    return Math.max(baseRowHeight, descriptionHeight, remarksHeight);
+    return Math.min(132, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
   });
 
   const tableTop = 252;
@@ -66,7 +65,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const tableBottomGap = 20;
   const maxTableBodyHeight = bodyBottom - tableTop - tableHeaderHeight - detailsBlockHeight - tableBottomGap;
   const cappedRowHeights = rowHeights.map((height) =>
-    Math.min(height, Math.max(130, Math.floor(maxTableBodyHeight / quotationItems.length)))
+    Math.min(height, Math.max(118, Math.floor(maxTableBodyHeight / Math.min(quotationItems.length, 3))))
   );
   const tableHeight =
     tableHeaderHeight + cappedRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
@@ -170,7 +169,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
               </div>
 
               <div
-                className="min-h-0 overflow-hidden border-r-[2px] border-black px-2 py-1 text-[10px] leading-[14px]"
+                className="min-h-0 overflow-hidden border-r-[2px] border-black px-2 py-[5px] text-[10px] leading-[10px]"
                 style={{
                   overflowWrap: 'anywhere',
                   wordBreak: 'break-word',
@@ -192,10 +191,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                 ) : null}
               </div>
 
-              <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-3">
+              <div className="min-w-0 overflow-hidden border-r-[2px] border-black px-3 py-[5px]">
                 <div className="flex h-full min-w-0 flex-col items-center gap-2 overflow-hidden">
                   <div
-                    className="w-full min-w-0 whitespace-pre-wrap break-words text-left text-[10px] leading-[14px]"
+                    className="w-full min-w-0 whitespace-pre-wrap break-words text-left text-[10px] leading-[12px]"
                     style={{
                       overflowWrap: 'anywhere',
                       wordBreak: 'break-word',
@@ -205,7 +204,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-1 h-12 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
+                    <div className="mt-1 h-11 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
@@ -264,10 +263,10 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
       </div>
 
       <div
-        className="absolute right-[44px] w-[212px] rounded-[12px] border-2 border-slate-950 bg-white px-4 py-3 text-right"
+        className="absolute right-[44px] w-[212px] rounded-[12px] border-2 border-slate-950 bg-white px-3 py-2 text-right"
         style={{ top: detailsTop - 7 }}
       >
-        <div className="space-y-1 text-[12px] font-semibold text-slate-700">
+        <div className="space-y-[2px] text-[12px] font-semibold text-slate-700">
           <div className="flex justify-between gap-4">
             <span>Sub Total</span>
             <span>{formatCurrency(totalAmount)}</span>
@@ -277,7 +276,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
             <span>{formatCurrency(taxAmount)}</span>
           </div>
         </div>
-        <div className="mt-2 border-t border-slate-300 pt-2">
+        <div className="mt-1 border-t border-slate-300 pt-1">
           <div className="text-[10px] font-semibold uppercase text-slate-500">
             Grand Total
           </div>
