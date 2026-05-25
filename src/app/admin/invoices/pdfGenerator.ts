@@ -504,10 +504,8 @@ export const downloadInvoicePdf = async ({
 
         quotationItems.forEach((item, index) => {
           const rowHeight = quotationRowHeights[index];
-          const isLastRow = index === quotationItems.length - 1;
-          const requiredBottom = isLastRow ? contentBottomY - detailsBlockHeight : contentBottomY;
 
-          if ((quotationRowsOnPage >= 4 || rowY + rowHeight > requiredBottom) && rowY > tableY + headerHeight) {
+          if ((quotationRowsOnPage >= 4 || rowY + rowHeight > contentBottomY) && rowY > tableY + headerHeight) {
             pdf.addPage();
             drawQuotationShell();
             rowY = drawQuotationTableHeader(tableY);
@@ -521,7 +519,7 @@ export const downloadInvoicePdf = async ({
 
         let afterTableY = Math.min(rowY + quotationNoteGap, contentBottomY - detailsBlockHeight);
 
-        if (afterTableY + detailsBlockHeight > contentBottomY) {
+        if (rowY + quotationNoteGap + detailsBlockHeight > contentBottomY) {
           pdf.addPage();
           drawQuotationShell();
           rowY = drawQuotationTableHeader(tableY);
