@@ -358,7 +358,7 @@ export const downloadInvoicePdf = async ({
         const drawQuotationTableHeader = (startY: number) => {
           pdf.setDrawColor(0, 0, 0);
           pdf.setLineWidth(0.62);
-          pdf.roundedRect(tableX, startY, tableWidth, headerHeight, 3, 3, 'S');
+          pdf.rect(tableX, startY, tableWidth, headerHeight, 'S');
           pdf.line(descriptionX, startY, descriptionX, startY + headerHeight);
           pdf.line(remarksX, startY, remarksX, startY + headerHeight);
           pdf.line(priceX, startY, priceX, startY + headerHeight);
@@ -380,7 +380,7 @@ export const downloadInvoicePdf = async ({
 
           pdf.setDrawColor(0, 0, 0);
           pdf.setLineWidth(0.62);
-          pdf.roundedRect(tableX, rowY, tableWidth, rowHeight, 3, 3, 'S');
+          pdf.rect(tableX, rowY, tableWidth, rowHeight, 'S');
           pdf.line(descriptionX, rowY, descriptionX, rowY + rowHeight);
           pdf.line(remarksX, rowY, remarksX, rowY + rowHeight);
           pdf.line(priceX, rowY, priceX, rowY + rowHeight);
