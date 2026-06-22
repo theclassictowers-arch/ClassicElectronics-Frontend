@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
-import { Download, FileText, History, Loader2, Printer, RotateCcw, Save } from 'lucide-react';
+import { Download, FileText, FilePlus, History, Loader2, Printer, Save } from 'lucide-react';
 import type { DocumentType } from '../types';
 import { documentTypes } from '../utils';
 
@@ -84,8 +84,8 @@ export const BuilderHeader = ({
           onClick={onReset}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
         >
-          <RotateCcw size={16} />
-          Reset
+          <FilePlus size={16} />
+          Add New
         </button>
         <button
           type="button"
