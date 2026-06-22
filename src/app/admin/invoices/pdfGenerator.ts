@@ -185,7 +185,6 @@ export const downloadInvoicePdf = async ({
         const tableY = 80 - bodyShiftUpY;
         const tableWidth = 180;
         const headerHeight = 10;
-        const minimumRowHeight = 20;
         const srWidth = 10;
         const descriptionWidth = 83;
         const remarksWidth = 55;
@@ -230,6 +229,7 @@ export const downloadInvoicePdf = async ({
         const detailsBlockHeight = 60;
         const quotationNoteGap = 5.3;
         const quotationLineHeight = 2.55;
+        const quotationMinRowHeight = 16;
         const quotationMaxRowHeight = 24;
         const maxQuotationRowHeight =
           contentBottomY - detailsBlockHeight - tableY - headerHeight - quotationNoteGap - 8;
@@ -255,7 +255,7 @@ export const downloadInvoicePdf = async ({
 
           return Math.min(
             Math.min(maxQuotationRowHeight, quotationMaxRowHeight),
-            Math.max(24, minimumRowHeight, descriptionHeight + 3, remarksHeight)
+            Math.max(quotationMinRowHeight, descriptionHeight + 3, remarksHeight)
           );
         });
         const descriptionX = tableX + srWidth;

@@ -46,7 +46,8 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     return hasImage && (item as any).showPicture !== false;
   };
 
-  const baseRowHeight = 24 * pxPerMm;
+  const minRowHeight = 16 * pxPerMm;
+  const maxRowHeight = 24 * pxPerMm;
   const rowHeights = quotationItems.map((item) => {
     const descriptionRows = Math.min(
       estimateWrappedRows(item.description || item.productName || '', 42),
@@ -57,7 +58,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
     const descriptionHeight = descriptionRows * 2.55 * pxPerMm + 3 * pxPerMm;
     const remarksHeight = remarksRows * 2.55 * pxPerMm + imageHeight + (imageHeight ? 3 * pxPerMm : 2 * pxPerMm);
 
-    return Math.min(24 * pxPerMm, Math.max(baseRowHeight, descriptionHeight, remarksHeight));
+    return Math.min(maxRowHeight, Math.max(minRowHeight, descriptionHeight, remarksHeight));
   });
 
   const contentLeft = 15 * pxPerMm;
@@ -68,13 +69,8 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   const tableBottomGap = 5.3 * pxPerMm;
   const maxTableBodyHeight = bodyBottom - tableTop - tableHeaderHeight - detailsBlockHeight - tableBottomGap;
   const fixedTableBodyHeight = Math.max(118, maxTableBodyHeight);
-  const rowHeightLimit = Math.max(48, Math.floor(fixedTableBodyHeight / quotationItems.length));
-  const cappedRowHeights = rowHeights.map((height) => Math.min(height, rowHeightLimit));
-  const usedRowsHeight = cappedRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
-  const remainingRowsHeight = Math.max(0, fixedTableBodyHeight - usedRowsHeight);
-  if (cappedRowHeights.length > 0) {
-    cappedRowHeights[cappedRowHeights.length - 1] += remainingRowsHeight;
-  }
+  const rowHeightLimit = Math.max(minRowHeight, Math.floor(fixedTableBodyHeight / quotationItems.length));
+  const cappedRowHeights = rowHeights.map((height) => Math.min(height, rowHeightLimit, maxRowHeight));
   const tableHeight =
     tableHeaderHeight + cappedRowHeights.reduce((height, itemRowHeight) => height + itemRowHeight, 0);
   const noteTop = Math.min(tableTop + tableHeight + tableBottomGap, bodyBottom - detailsBlockHeight);
