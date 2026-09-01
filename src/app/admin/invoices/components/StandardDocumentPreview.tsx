@@ -14,7 +14,7 @@ import {
   getPictureSource,
 } from '../utils';
 import { DocumentBodyBorder } from './DocumentBodyBorder';
-import { DocumentFooter } from './DocumentFooter';
+import { DocumentFooter, WebsiteQr } from './DocumentFooter';
 
 type ActiveDocument = (typeof documentTypes)[number];
 
@@ -301,7 +301,15 @@ export const StandardDocumentPreview = ({
           {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
         </span>
       </div>
-      <DocumentFooter form={form} className="absolute bottom-[10px] left-0 right-0" />
+      {isTaxDocument && showInvoiceTaxNotice ? (
+        <div
+          className="absolute left-1/2 z-30 -translate-x-1/2"
+          style={{ top: (showInvoiceTerms ? 233.9 : 248.7) * pxPerMm - 67 }}
+        >
+          <WebsiteQr />
+        </div>
+      ) : null}
+      <DocumentFooter form={form} showQr={!(isTaxDocument && showInvoiceTaxNotice)} className="absolute bottom-[10px] left-0 right-0" />
     </div>
   );
 };

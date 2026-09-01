@@ -10,6 +10,7 @@ import { formatClassicPhoneDisplay } from '../utils';
 type DocumentFooterProps = {
   form: InvoiceForm;
   className?: string;
+  showQr?: boolean;
 };
 
 const getFooterAddressLines = (address?: string) => {
@@ -22,33 +23,34 @@ const getFooterAddressLines = (address?: string) => {
   return [footerAddress.replace(/,?\s*islamabad/i, '').trim(), 'Islamabad'];
 };
 
-export const DocumentFooter = ({ form, className = '' }: DocumentFooterProps) => {
-  const addressLines = getFooterAddressLines(form.address);
+export const WebsiteQr = ({ className = '' }: { className?: string }) => {
   const [websiteQr, setWebsiteQr] = useState('');
 
   useEffect(() => {
     let active = true;
     QRCode.toDataURL('https://classicelectronics.com.pk/', {
-      errorCorrectionLevel: 'H',
-      margin: 1,
-      width: 320,
+      errorCorrectionLevel: 'H', margin: 1, width: 320,
       color: { dark: '#000000', light: '#FFFFFF' },
-    }).then((value) => {
-      if (active) setWebsiteQr(value);
-    }).catch((error) => console.error('Unable to generate website QR code', error));
-
+    }).then((value) => { if (active) setWebsiteQr(value); })
+      .catch((error) => console.error('Unable to generate website QR code', error));
     return () => { active = false; };
   }, []);
+
+  return websiteQr ? (
+    <div className={`rounded bg-white p-[2px] ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={websiteQr} alt="Scan to open Classic Electronics website" className="h-[58px] w-[58px]" />
+    </div>
+  ) : null;
+};
+
+export const DocumentFooter = ({ form, className = '', showQr = true }: DocumentFooterProps) => {
+  const addressLines = getFooterAddressLines(form.address);
 
   return (
     <div className={`h-[66px] w-full shrink-0 px-0 py-0 text-black ${className}`}>
       <div className="relative h-full w-full">
-        {websiteQr ? (
-          <div className="absolute bottom-[1px] left-1/2 z-20 -translate-x-1/2 rounded bg-white p-[2px] text-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={websiteQr} alt="Scan to open Classic Electronics website" className="h-[58px] w-[58px]" />
-          </div>
-        ) : null}
+        {showQr ? <WebsiteQr className="absolute bottom-[1px] left-1/2 z-20 -translate-x-1/2" /> : null}
         <div className="absolute bottom-[4px] left-0 right-0 grid grid-cols-3 items-end text-[12px] leading-[15px]">
           <div className="flex h-[52px] items-end justify-center pl-[68px] text-left">
             <div className="flex w-[250px] items-end justify-center gap-2">
