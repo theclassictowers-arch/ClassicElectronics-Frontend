@@ -74,7 +74,7 @@ export const StandardDocumentPreview = ({
       (item.productName ? estimateRows(item.productName, 34) : 0) +
       (item.description ? Math.min(estimateRows(item.description, 34), MAX_DESCRIPTION_LINES) : 0);
     const remarksLines = estimateRows(item.remarks || item.productName || 'Remarks', 28);
-    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 14 * pxPerMm : 0;
+    const imageHeight = item.showPicture && getPictureSource(item.picture) ? 17 * pxPerMm : 0;
     const contentHeight = Math.max(
       Math.max(descriptionLines, 1) * standardLineHeight,
       Math.max(remarksLines, 1) * standardLineHeight + imageHeight + (imageHeight ? 2 * pxPerMm : 0)
@@ -202,7 +202,7 @@ export const StandardDocumentPreview = ({
               <div className="overflow-hidden border-r border-slate-950 px-2 py-[7px] text-[10px] leading-[10px]">
                 <div className="whitespace-pre-wrap">{item.remarks || item.productName || 'Remarks'}</div>
                 {item.showPicture && imageSource ? (
-                  <div className="mt-2 h-[42px] overflow-hidden bg-white">
+                  <div className="mt-2 h-[52px] overflow-hidden bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imageSource}

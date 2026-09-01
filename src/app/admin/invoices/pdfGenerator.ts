@@ -273,7 +273,7 @@ export const downloadInvoicePdf = async ({
           const descriptionHeight =
             descriptionLineCount * quotationLineHeight + (nameLines.length && descriptionLines.length ? 1 : 0);
           const remarksTextHeight = Math.max(remarksLines.length, 1) * quotationLineHeight;
-          const imageHeight = quotationImageDataUrls[index] ? 15 : 0;
+          const imageHeight = quotationImageDataUrls[index] ? 18 : 0;
           const remarksHeight = remarksTextHeight + imageHeight + (imageHeight ? 3 : 2);
 
           return Math.min(
@@ -463,7 +463,7 @@ export const downloadInvoicePdf = async ({
             remarksWidth - 5,
             7.5
           );
-          const imageReservedHeight = itemImage ? 14 : 0;
+          const imageReservedHeight = itemImage ? 17 : 0;
           const remarksLines = fitPdfLines(
             rawRemarksLines,
             Math.max(1, Math.floor((rowHeight - imageReservedHeight - 4) / quotationLineHeight)),
@@ -473,7 +473,7 @@ export const downloadInvoicePdf = async ({
           if (itemImage) {
             const imageY = rowY + Math.max(remarksLines.length * quotationLineHeight + 3, 8);
             const maxImageWidth = remarksWidth - 4;
-            const maxImageHeight = Math.min(10, Math.max(rowHeight - (imageY - rowY) - 2, 5));
+            const maxImageHeight = Math.min(13, Math.max(rowHeight - (imageY - rowY) - 2, 5));
             const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
             if (imageSize.width > 6 && imageSize.height > 6) {
@@ -1063,7 +1063,7 @@ export const downloadInvoicePdf = async ({
         const descriptionHeight =
           descriptionLineCount * standardLineHeight + (nameLines.length && descriptionLines.length ? 1 : 0);
         const remarksHeight = Math.max(remarksLines.length, 1) * standardLineHeight;
-        const imageHeight = itemImage ? 14 : 0;
+        const imageHeight = itemImage ? 17 : 0;
         const maxRowHeight = bodyContentBottomY - cursorY - 2;
         const rowHeight = Math.min(
           Math.max(24, Math.min(maxRowHeight, standardMaxRowHeight)),
@@ -1135,7 +1135,7 @@ export const downloadInvoicePdf = async ({
         if (itemImage) {
           const imageY = cursorY + Math.max(fittedRemarksLines.length * standardLineHeight + 3, 8);
           const maxImageWidth = tableColumnWidths[2] - 4;
-          const maxImageHeight = Math.min(14, Math.max(finalRowHeight - (imageY - cursorY) - 2, 7));
+          const maxImageHeight = Math.min(17, Math.max(finalRowHeight - (imageY - cursorY) - 2, 7));
           const imageSize = containImageSize(itemImage, maxImageWidth, maxImageHeight);
 
           if (imageSize.width > 6 && imageSize.height > 6) {
