@@ -184,8 +184,8 @@ export const downloadInvoicePdf = async ({
           // Shared by quotation, delivery challan, invoice and bill PDFs.
           if (websiteQrDataUrl) {
             pdf.setFillColor(255, 255, 255);
-            pdf.roundedRect(96, 274, 18, 18, 1, 1, 'F');
-            pdf.addImage(websiteQrDataUrl, 'PNG', 97, 275, 16, 16, undefined, 'FAST');
+            pdf.roundedRect(95, 273, 20, 20, 1, 1, 'F');
+            pdf.addImage(websiteQrDataUrl, 'PNG', 96, 274, 18, 18, undefined, 'FAST');
           }
         };
 
