@@ -1,4 +1,5 @@
 import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
+import QRCode from 'qrcode';
 import type { DocumentType, InvoiceForm, InvoiceItem } from './types';
 import {
   DEFAULT_INVOICE_TAX_NOTICE,
@@ -48,6 +49,12 @@ export const downloadInvoicePdf = async ({
         const logoDataUrl = await loadImageAsPngDataUrl(logoUrl);
         const globeDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-globe.png'));
         const whatsappDataUrl = await loadImageAsPngDataUrl(getFrontendAssetUrl('/quotation-whatsapp.png'));
+        const websiteQrDataUrl = await QRCode.toDataURL('https://classicelectronics.com.pk/', {
+          errorCorrectionLevel: 'H',
+          margin: 1,
+          width: 320,
+          color: { dark: '#000000', light: '#FFFFFF' },
+        });
         const includeTax = activeDocumentType === 'invoice';
         const salesTaxAmount = totalAmount * SALES_TAX_RATE;
         const grandTotalWithTax = includeTax ? totalAmount + salesTaxAmount : totalAmount;
@@ -150,11 +157,11 @@ export const downloadInvoicePdf = async ({
           pdf.text(footerAddressLines, 47.2, 286, { align: 'center' });
 
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(footerFontSize);
-          pdf.text('NTN: 1700506', 106.3, 279.2, { align: 'center' });
-          pdf.text('GST: 05-07-8500-014-73', 106.3, 283.6, { align: 'center' });
+          pdf.setFontSize(7);
+          pdf.text('NTN: 1700506', 116, 279.2);
+          pdf.text('GST: 05-07-8500-014-73', 116, 283.6);
           pdf.setFont('helvetica', 'normal');
-          pdf.text(form.email || 'sales@classicelectronics.com.pk', 106.3, 288, { align: 'center' });
+          pdf.text(fitPdfText(form.email || 'sales@classicelectronics.com.pk', 34), 116, 288);
 
           pdf.setDrawColor(37, 99, 235);
           pdf.setLineWidth(0.35);
@@ -173,6 +180,13 @@ export const downloadInvoicePdf = async ({
           pdf.text(formatClassicPhoneDisplay(form.phoneSecondary, '+923 215 180 308'), 180, 286.6, {
             align: 'center',
           });
+
+          // Shared by quotation, delivery challan, invoice and bill PDFs.
+          if (websiteQrDataUrl) {
+            pdf.setFillColor(255, 255, 255);
+            pdf.roundedRect(96, 274, 18, 18, 1, 1, 'F');
+            pdf.addImage(websiteQrDataUrl, 'PNG', 97, 275, 16, 16, undefined, 'FAST');
+          }
         };
 
       if (activeDocumentType === 'quotation') {
