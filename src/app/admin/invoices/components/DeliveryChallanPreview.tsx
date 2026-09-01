@@ -3,7 +3,7 @@ import { CLASSIC_LOGO_SRC } from '@/lib/brandAssets';
 import type { InvoiceForm, InvoiceItem } from '../types';
 import { MAX_DESCRIPTION_LINES, createInvoiceItem, getCustomerDetailRows } from '../utils';
 import { DocumentBodyBorder } from './DocumentBodyBorder';
-import { DocumentFooter } from './DocumentFooter';
+import { DocumentFooter, WebsiteQr } from './DocumentFooter';
 
 type DeliveryChallanPreviewProps = {
   form: InvoiceForm;
@@ -180,10 +180,11 @@ export const DeliveryChallanPreview = ({ form, items }: DeliveryChallanPreviewPr
       <div className="absolute left-0 right-0 top-[990px] z-20 text-center text-[14px] font-black italic leading-none text-violet-700 drop-shadow-[1px_1px_1px_rgba(15,23,42,0.22)]">
         {form.thankYouNote || 'THANK YOU FOR YOUR BUSINESS!'}
       </div>
+      <WebsiteQr showLabel className="absolute left-1/2 top-[932px] z-30 -translate-x-1/2" />
       <div className="absolute left-0 right-0 top-[1013px] z-20 text-center text-[14px] font-bold leading-none text-black">
         {form.subtitle || 'A wide range of industrial instrument & sensing solutions'}
       </div>
-      <DocumentFooter form={form} className="absolute bottom-[10px] left-0 right-0" />
+      <DocumentFooter form={form} showQr={false} className="absolute bottom-[10px] left-0 right-0" />
     </div>
   );
 };

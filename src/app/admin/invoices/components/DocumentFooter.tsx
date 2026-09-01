@@ -23,7 +23,7 @@ const getFooterAddressLines = (address?: string) => {
   return [footerAddress.replace(/,?\s*islamabad/i, '').trim(), 'Islamabad'];
 };
 
-export const WebsiteQr = ({ className = '' }: { className?: string }) => {
+export const WebsiteQr = ({ className = '', showLabel = false }: { className?: string; showLabel?: boolean }) => {
   const [websiteQr, setWebsiteQr] = useState('');
 
   useEffect(() => {
@@ -37,9 +37,10 @@ export const WebsiteQr = ({ className = '' }: { className?: string }) => {
   }, []);
 
   return websiteQr ? (
-    <div className={`rounded bg-white p-[2px] ${className}`}>
+    <div className={`flex items-center gap-2 rounded bg-white p-[2px] ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={websiteQr} alt="Scan to open Classic Electronics website" className="h-[58px] w-[58px]" />
+      <img src={websiteQr} alt="Scan to open Classic Electronics website" className={showLabel ? 'h-[48px] w-[48px]' : 'h-[58px] w-[58px]'} />
+      {showLabel ? <span className="whitespace-nowrap text-[10px] font-bold text-slate-900">Scan to visit our website</span> : null}
     </div>
   ) : null;
 };

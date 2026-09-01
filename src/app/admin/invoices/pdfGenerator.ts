@@ -184,12 +184,17 @@ export const downloadInvoicePdf = async ({
           // Shared by quotation, delivery challan, invoice and bill PDFs.
           if (websiteQrDataUrl) {
             const invoiceNoticeY = (form.showQuotationTerms !== false ? 233.9 : 248.7);
-            const qrTopY = activeDocumentType === 'invoice' && form.showQuotationTaxNotice !== false
+            const invoiceQr = activeDocumentType === 'invoice' && form.showQuotationTaxNotice !== false;
+            const qrTopY = invoiceQr
               ? invoiceNoticeY - 20 - (5 / (794 / 210))
-              : 273;
+              : 244;
             pdf.setFillColor(255, 255, 255);
-            pdf.roundedRect(95, qrTopY, 20, 20, 1, 1, 'F');
-            pdf.addImage(websiteQrDataUrl, 'PNG', 96, qrTopY + 1, 18, 18, undefined, 'FAST');
+            pdf.roundedRect(70, qrTopY, 70, invoiceQr ? 20 : 15, 1, 1, 'F');
+            pdf.addImage(websiteQrDataUrl, 'PNG', 72, qrTopY + 1, invoiceQr ? 18 : 13, invoiceQr ? 18 : 13, undefined, 'FAST');
+            pdf.setTextColor(15, 23, 42);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(8);
+            pdf.text('Scan to visit our website', invoiceQr ? 92 : 89, qrTopY + (invoiceQr ? 11 : 8.5));
           }
         };
 

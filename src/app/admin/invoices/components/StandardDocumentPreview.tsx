@@ -304,12 +304,15 @@ export const StandardDocumentPreview = ({
       {isTaxDocument && showInvoiceTaxNotice ? (
         <div
           className="absolute left-1/2 z-30 -translate-x-1/2"
-          style={{ top: (showInvoiceTerms ? 233.9 : 248.7) * pxPerMm - 67 }}
+          style={{ top: (showInvoiceTerms ? 233.9 : 248.7) * pxPerMm - 57 }}
         >
-          <WebsiteQr />
+          <WebsiteQr showLabel />
         </div>
       ) : null}
-      <DocumentFooter form={form} showQr={!(isTaxDocument && showInvoiceTaxNotice)} className="absolute bottom-[10px] left-0 right-0" />
+      {!isTaxDocument || !showInvoiceTaxNotice ? (
+        <WebsiteQr showLabel className="absolute left-1/2 top-[932px] z-30 -translate-x-1/2" />
+      ) : null}
+      <DocumentFooter form={form} showQr={false} className="absolute bottom-[10px] left-0 right-0" />
     </div>
   );
 };
