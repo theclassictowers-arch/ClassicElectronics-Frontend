@@ -32,11 +32,13 @@ export type AdminProduct = {
   price: number;
   stock: number;
   description?: string;
+  adminNote?: string;
   images?: string[];
   status?: 'active' | 'inactive';
   categoryId?: ProductCategoryRef;
   showPrice?: boolean;
   pdfUrl?: string;
+  pdfUrls?: string[];
   specifications?: {
     basicInformation?: Array<{ label?: string; value?: string }>;
     operatingSpecifications?: Array<{ label?: string; value?: string }>;
@@ -74,11 +76,11 @@ const ProductsAdmin = () => {
       
       // Use the centralized 'api' instance and correct the endpoints
       const [prodRes, catRes] = await Promise.all([
-        api.get('products', { params: { includeSpecs: '1' } }),
+        api.get('products/admin', { params: { limit: 1000 }, headers }),
         api.get('categories', { headers }),
       ]);
 
-      setProducts(Array.isArray(prodRes.data) ? (prodRes.data as AdminProduct[]) : []);
+      setProducts(Array.isArray(prodRes.data?.products) ? (prodRes.data.products as AdminProduct[]) : []);
       setCategories(Array.isArray(catRes.data) ? (catRes.data as AdminCategory[]) : []);
     } catch (error) {
       console.error('Failed to load data', error);
@@ -99,7 +101,8 @@ const ProductsAdmin = () => {
     try {
       const productToDelete = products.find((p) => p._id === id);
       if (productToDelete) {
-        if (productToDelete.pdfUrl) await deleteFileFromServer(token, productToDelete.pdfUrl);
+        const pdfs = productToDelete.pdfUrls?.length ? productToDelete.pdfUrls : (productToDelete.pdfUrl ? [productToDelete.pdfUrl] : []);
+        pdfs.forEach(pdf => deleteFileFromServer(token, pdf));
         productToDelete.images?.forEach(img => deleteFileFromServer(token, img));
       }
       await api.delete(`products/${id}`, { headers: { Authorization: `Bearer ${token}` } });

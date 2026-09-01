@@ -2,16 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
-import axios from 'axios';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import ImageUploader from '@/components/admin/ImageUploader';
 import PdfUploader from '@/components/admin/PdfUploader';
 import {
   uploadProductImages,
-  uploadProductPdf,
-  validateImageFiles,
-  validatePdfFile,
-  deleteFileFromServer,
+  uploadProductPdfs,
+  validatePdfFiles,
 } from '@/services/uploadService';
 import type { AdminProduct, AdminCategory, ProductCategoryRef } from '@/types/adminProduct';
 
@@ -39,11 +36,12 @@ type ProductFormData = {
   categoryId: string;
   price: string;
   description: string;
+  adminNote: string;
   stock: string;
   images: string[];
   status: 'active' | 'inactive';
   showPrice: boolean;
-  pdfUrl: string;
+  pdfUrls: string[];
   specifications: ProductSpecificationsFormData;
 };
 
@@ -62,11 +60,12 @@ const EMPTY_FORM_DATA: ProductFormData = {
   categoryId: '',
   price: '',
   description: '',
+  adminNote: '',
   stock: '',
   images: [],
   status: 'active',
   showPrice: false,
-  pdfUrl: '',
+  pdfUrls: [],
   specifications: EMPTY_SPECIFICATIONS,
 };
 
@@ -91,10 +90,9 @@ const sanitizeTextRows = (rows: string[]): string[] => rows.map((row) => row.tri
 const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories, onClose, onSuccess }) => {
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM_DATA);
   const [pendingImages, setPendingImages] = useState<File[]>([]);
-  const [pendingPdf, setPendingPdf] = useState<File | null>(null);
+  const [pendingPdfs, setPendingPdfs] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [pdfUploadError, setPdfUploadError] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [pdfUploading, setPdfUploading] = useState(false);
@@ -112,11 +110,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
         categoryId: getCategoryId(product.categoryId),
         price: String(product.price ?? ''),
         description: product.description || '',
+        adminNote: product.adminNote || '',
         stock: String(product.stock ?? ''),
         images: Array.isArray(product.images) ? product.images : [],
         status: product.status === 'inactive' ? 'inactive' : 'active',
         showPrice: product.showPrice ?? false,
-        pdfUrl: product.pdfUrl || '',
+        pdfUrls: Array.isArray(product.pdfUrls) && product.pdfUrls.length > 0 ? product.pdfUrls : (product.pdfUrl ? [product.pdfUrl] : []),
         specifications: {
           basicInformation: getKeyValueSections(product.specifications?.basicInformation, [
             { label: 'Model', value: product.specifications?.model || product.name || '' },
@@ -146,7 +145,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
     setSaving(true);
     try {
       let uploadedImages = [...formData.images];
-      let uploadedPdfUrl = formData.pdfUrl || '';
+      let uploadedPdfUrls = [...formData.pdfUrls];
 
       if (pendingImages.length > 0) {
         setImageUploading(true);
@@ -154,9 +153,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
         uploadedImages = [...uploadedImages, ...newImageUrls];
       }
 
-      if (pendingPdf) {
+      if (pendingPdfs.length > 0) {
         setPdfUploading(true);
-        uploadedPdfUrl = await uploadProductPdf(token, pendingPdf);
+        const newPdfUrls = await uploadProductPdfs(token, pendingPdfs);
+        uploadedPdfUrls = [...uploadedPdfUrls, ...newPdfUrls];
       }
 
       const basicInformation = sanitizeKeyValueRows(formData.specifications.basicInformation);
@@ -176,7 +176,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
         price: Number(formData.price),
         stock: Number(formData.stock),
         images: uploadedImages,
-        pdfUrl: uploadedPdfUrl,
+        pdfUrls: uploadedPdfUrls,
+        pdfUrl: uploadedPdfUrls[0] || '',
         specifications,
       };
 
@@ -186,7 +187,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
         await api.post('products', payload, { headers: { Authorization: `Bearer ${token}` } });
       }
       onSuccess();
-    } catch (error) {
+    } catch {
       setSubmitError('Error saving product.');
     } finally {
       setSaving(false);
@@ -275,17 +276,33 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
           />
 
           <PdfUploader
-            value={formData.pdfUrl}
-            pendingFile={pendingPdf}
-            onSelectFile={setPendingPdf}
-            onRemoveUploaded={() => setFormData({...formData, pdfUrl: ''})}
-            onRemovePending={() => setPendingPdf(null)}
+            values={formData.pdfUrls}
+            pendingFiles={pendingPdfs}
+            onAddFiles={(files) => {
+              const error = validatePdfFiles(files, formData.pdfUrls.length + pendingPdfs.length);
+              setPdfUploadError(error);
+              if (!error) setPendingPdfs([...pendingPdfs, ...files]);
+            }}
+            onRemoveUploaded={(index) => setFormData({...formData, pdfUrls: formData.pdfUrls.filter((_, i) => i !== index)})}
+            onRemovePending={(index) => setPendingPdfs(pendingPdfs.filter((_, i) => i !== index))}
             uploading={pdfUploading}
+            error={pdfUploadError}
           />
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-400 uppercase ml-1">Description</label>
             <textarea className="w-full bg-[#0b1120] border border-gray-600 rounded p-3 text-white h-24" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-amber-400 uppercase ml-1">Admin Note (Private)</label>
+            <textarea
+              className="w-full bg-[#0b1120] border border-amber-700/60 rounded p-3 text-white h-24"
+              value={formData.adminNote}
+              onChange={(e) => setFormData({ ...formData, adminNote: e.target.value })}
+              placeholder="Internal note for admins only. Customers cannot see this."
+            />
+            <p className="text-xs text-gray-500">This note is only returned by the protected admin API.</p>
           </div>
 
           <div className="border border-gray-700 rounded-lg p-4 bg-[#0f172a] space-y-4">

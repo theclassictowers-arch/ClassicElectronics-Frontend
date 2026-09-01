@@ -4,6 +4,7 @@ import { API_URL } from '@/lib/apiConfig';
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const MAX_PRODUCT_IMAGES = 10;
+export const MAX_PRODUCT_PDFS = 10;
 
 const IMAGE_MIME_TYPES = new Set([
   'image/jpeg',
@@ -93,6 +94,16 @@ export const validatePdfFile = (file: File | null | undefined): string | null =>
   return null;
 };
 
+export const validatePdfFiles = (files: File[], existingCount = 0): string | null => {
+  if (files.length === 0) return 'Please select at least one PDF file.';
+  if (existingCount + files.length > MAX_PRODUCT_PDFS) return 'Maximum 10 PDFs allowed per product.';
+  for (const file of files) {
+    const error = validatePdfFile(file);
+    if (error) return `"${file.name}": ${error}`;
+  }
+  return null;
+};
+
 export const uploadProductImages = async (token: string, files: File[]): Promise<string[]> => {
   if (!token.trim()) {
     throw new Error('Admin session expired or unauthorized. Please log in again.');
@@ -143,6 +154,23 @@ export const uploadProductPdf = async (token: string, file: File): Promise<strin
     return String(response.data?.url || '');
   } catch (error) {
     throw new Error(getUploadErrorMessage(error, 'Failed to upload PDF. Please try again.'));
+  }
+};
+
+export const uploadProductPdfs = async (token: string, files: File[]): Promise<string[]> => {
+  if (!token.trim()) throw new Error('Admin session expired or unauthorized. Please log in again.');
+  const validationError = validatePdfFiles(files);
+  if (validationError) throw new Error(validationError);
+
+  const formData = new FormData();
+  files.forEach((file) => formData.append('pdfs', file));
+  try {
+    const response = await axios.post(`${API_URL}/upload/pdfs`, formData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return Array.isArray(response.data?.urls) ? response.data.urls.map(String) : [];
+  } catch (error) {
+    throw new Error(getUploadErrorMessage(error, 'Failed to upload PDFs. Please try again.'));
   }
 };
 

@@ -33,10 +33,12 @@ export type AdminProduct = {
   price: number;
   stock: number;
   description?: string;
+  adminNote?: string;
   images?: string[];
   status?: 'active' | 'inactive';
   categoryId?: ProductCategoryRef;
   showPrice?: boolean;
   pdfUrl?: string;
+  pdfUrls?: string[];
   specifications?: ProductSpecifications;
 };

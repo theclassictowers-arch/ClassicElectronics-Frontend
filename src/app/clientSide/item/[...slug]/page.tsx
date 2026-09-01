@@ -25,6 +25,7 @@ type ProductLookup = {
   stock?: number;
   stockStatus?: string;
   pdfUrl?: string;
+  pdfUrls?: string[];
   specifications?: {
     basicInformation?: Array<{ label?: string; value?: string }>;
     operatingSpecifications?: Array<{ label?: string; value?: string }>;
@@ -161,9 +162,8 @@ export default function ValveItemDetailPage() {
         ? matchedImages
         : ['/images/products/valvesSliderimg.jpeg'];
   const stockLabel = itemData.stockStatus || (itemData.stock ? `${itemData.stock} in stock` : 'In Stock');
-  const pdfDownloadUrl = itemData.pdfUrl
-    ? resolveAssetUrl(itemData.pdfUrl)
-    : '';
+  const productPdfUrls = (itemData.pdfUrls?.length ? itemData.pdfUrls : (itemData.pdfUrl ? [itemData.pdfUrl] : []))
+    .map(resolveAssetUrl);
   const features = itemData.specifications?.features || itemData.features || [
     'Built with industrial-grade materials',
     'Reliable performance in demanding environments',
@@ -365,17 +365,11 @@ export default function ValveItemDetailPage() {
               >
                 <FileText size={20} /> Request Quote
               </Link>
-              {pdfDownloadUrl && (
-                <a
-                  href={pdfDownloadUrl}
-                  download={`${itemData.name?.replace(/\s+/g, '_') || 'product'}_specifications.pdf`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 px-8 py-4 rounded font-bold uppercase tracking-wide transition-all bg-transparent border border-gray-600 text-gray-300 hover:border-white hover:text-white flex items-center justify-center gap-2"
-                >
-                  <FileText size={20} /> Download Specs (PDF)
+              {productPdfUrls.map((pdfUrl, index) => (
+                <a key={pdfUrl} href={pdfUrl} download target="_blank" rel="noreferrer" className="flex-1 px-8 py-4 rounded font-bold uppercase tracking-wide transition-all bg-transparent border border-gray-600 text-gray-300 hover:border-white hover:text-white flex items-center justify-center gap-2">
+                  <FileText size={20} /> Download PDF {productPdfUrls.length > 1 ? index + 1 : ''}
                 </a>
-              )}
+              ))}
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-800">
@@ -506,17 +500,11 @@ export default function ValveItemDetailPage() {
             >
               Contact Sales
             </Link>
-            {pdfDownloadUrl && (
-              <a
-                href={pdfDownloadUrl}
-                download={`${itemData.name?.replace(/\s+/g, '_') || 'product'}_specifications.pdf`}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-transparent border border-gray-600 text-gray-200 hover:border-white hover:text-white px-8 py-3 rounded-lg font-semibold transition"
-              >
-                Download Specs (PDF)
+            {productPdfUrls.map((pdfUrl, index) => (
+              <a key={pdfUrl} href={pdfUrl} download target="_blank" rel="noreferrer" className="bg-transparent border border-gray-600 text-gray-200 hover:border-white hover:text-white px-8 py-3 rounded-lg font-semibold transition">
+                Download PDF {productPdfUrls.length > 1 ? index + 1 : ''}
               </a>
-            )}
+            ))}
           </div>
         </div>
       </div>
