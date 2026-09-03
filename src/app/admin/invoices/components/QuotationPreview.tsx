@@ -47,14 +47,14 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
   };
 
   const minRowHeight = 16 * pxPerMm;
-  const maxRowHeight = 24 * pxPerMm;
+  const maxRowHeight = 44 * pxPerMm;
   const rowHeights = quotationItems.map((item) => {
     const descriptionRows = Math.min(
       estimateWrappedRows(item.description || item.productName || '', 42),
       MAX_DESCRIPTION_LINES
     );
     const remarksRows = estimateWrappedRows(item.remarks || item.productName || '', 28);
-    const imageHeight = showItemImage(item) ? 18 * pxPerMm : 0;
+    const imageHeight = showItemImage(item) ? 36 * pxPerMm : 0;
     const descriptionHeight = descriptionRows * 2.55 * pxPerMm + 3 * pxPerMm;
     const remarksHeight = remarksRows * 2.55 * pxPerMm + imageHeight + (imageHeight ? 3 * pxPerMm : 2 * pxPerMm);
 
@@ -225,7 +225,7 @@ export const QuotationPreview = ({ form, items, totalAmount }: QuotationPreviewP
                   </div>
 
                   {showItemImage(item) && imageSrc ? (
-                    <div className="mt-1 h-14 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
+                    <div className="mt-1 h-28 w-full shrink-0 overflow-hidden border border-slate-300 bg-white p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageSrc}
